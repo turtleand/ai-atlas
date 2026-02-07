@@ -8,6 +8,7 @@ import { MapLegend } from './MapLegend.tsx';
 import { CompassRose } from './CompassRose.tsx';
 import { MapTitle } from './MapTitle.tsx';
 import { AiTurtle } from './AiTurtle.tsx';
+import { MapDecorations } from './MapDecorations.tsx';
 
 interface ArchipelagoMapProps {
   categories: Category[];
@@ -96,9 +97,8 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
             />
           ))}
 
-          {/* "Here Be Dragons" text */}
-          <text x="130" y="1470" className="dragons-text">Here Be Dragons</text>
-          <text x="2000" y="130" className="dragons-text">Terra Incognita</text>
+          {/* Map decorations (ships, dragon, waves, text labels, etc.) */}
+          <MapDecorations />
 
           {/* AI turtle sailing between islands */}
           <AiTurtle routes={layout.routes} />
