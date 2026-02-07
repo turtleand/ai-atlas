@@ -225,7 +225,56 @@
   transform: translateX(-50%);
   z-index: 20;
   text-align: center;
-  pointer-events: none;
+}
+
+.map-nav {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 8px;
+  pointer-events: auto;
+}
+
+.nav-link {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: #b0a898;
+  text-decoration: none;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border: 1px solid rgba(176, 168, 152, 0.3);
+  border-radius: 4px;
+  background: rgba(10, 22, 40, 0.6);
+  backdrop-filter: blur(4px);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link:hover {
+  color: #D4A03A;
+  border-color: rgba(212, 160, 58, 0.5);
+  background: rgba(10, 22, 40, 0.8);
+  transform: translateY(-1px);
+}
+
+.nav-icon {
+  font-size: 14px;
+}
+
+/* Hub link - more prominent */
+.nav-link-hub {
+  color: #D4A03A;
+  border-color: rgba(212, 160, 58, 0.5);
+  font-weight: 600;
+  background: rgba(10, 22, 40, 0.75);
+}
+
+.nav-link-hub:hover {
+  color: #f4e8c1;
+  border-color: #D4A03A;
+  box-shadow: 0 0 12px rgba(212, 160, 58, 0.3);
 }
 
 .map-title h1 {
