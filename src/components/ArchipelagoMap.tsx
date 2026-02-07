@@ -1,9 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import type { Category } from '../utils/parseTools.ts';
 import { computeLayout, type BeaconPosition, type IslandLayout } from '../utils/layoutEngine.ts';
 import { useMapControls } from '../hooks/useMapControls.ts';
 import { Island } from './Island.tsx';
-import { ToolTooltip } from './ToolTooltip.tsx';
 import { JournalPanel } from './JournalPanel.tsx';
 import { MapLegend } from './MapLegend.tsx';
 import { CompassRose } from './CompassRose.tsx';
@@ -12,12 +11,6 @@ import { AiTurtle } from './AiTurtle.tsx';
 
 interface ArchipelagoMapProps {
   categories: Category[];
-}
-
-interface TooltipState {
-  beacon: BeaconPosition;
-  x: number;
-  y: number;
 }
 
 interface JournalState {
@@ -29,19 +22,27 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
   const layout = useMemo(() => computeLayout(categories), [categories]);
   const { transform, containerRef, handlers, resetView, panTo } = useMapControls();
 
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const [journal, setJournal] = useState<JournalState | null>(null);
 
   const handleBeaconHover = useCallback((beacon: BeaconPosition, e: React.PointerEvent) => {
-    setTooltip({ beacon, x: e.clientX, y: e.clientY });
+    const el = tooltipRef.current;
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.left = `${e.clientX + 16}px`;
+    el.style.top = `${e.clientY - 10}px`;
+    el.querySelector('.tooltip-name')!.textContent = beacon.tool.name;
+    el.querySelector('.tooltip-desc')!.textContent = beacon.tool.description;
   }, []);
 
   const handleBeaconHoverEnd = useCallback(() => {
-    setTooltip(null);
+    const el = tooltipRef.current;
+    if (el) el.style.display = 'none';
   }, []);
 
   const handleBeaconClick = useCallback((beacon: BeaconPosition, island: IslandLayout) => {
-    setTooltip(null);
+    const el = tooltipRef.current;
+    if (el) el.style.display = 'none';
     setJournal({ beacon, island });
   }, []);
 
@@ -124,15 +125,11 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       <MapLegend islands={layout.islands} onIslandClick={handleLegendIslandClick} />
       <CompassRose onResetView={resetView} />
 
-      {/* Tooltip */}
-      {tooltip && (
-        <ToolTooltip
-          name={tooltip.beacon.tool.name}
-          description={tooltip.beacon.tool.description}
-          x={tooltip.x}
-          y={tooltip.y}
-        />
-      )}
+      {/* Tooltip (ref-driven, no re-renders) */}
+      <div ref={tooltipRef} className="tooltip" style={{ display: 'none' }}>
+        <div className="tooltip-name" />
+        <div className="tooltip-desc" />
+      </div>
 
       {/* Journal panel */}
       {journal && (
