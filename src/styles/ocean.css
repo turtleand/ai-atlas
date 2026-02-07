@@ -1,0 +1,85 @@
+.ocean {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #0a1628 0%, #122240 40%, #1a3a5c 100%);
+  overflow: hidden;
+}
+
+.ocean::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Wave layer 1 */
+.ocean::before {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(100, 180, 255, 0.03) 25%,
+      transparent 50%
+    );
+  background-size: 400px 100%;
+  animation: wave1 15s linear infinite;
+}
+
+.ocean-wave-3 {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      95deg,
+      transparent 0%,
+      rgba(60, 140, 220, 0.02) 20%,
+      transparent 40%
+    );
+  background-size: 800px 100%;
+  animation: wave3 30s linear infinite;
+}
+
+@keyframes wave1 {
+  from { background-position: 0 0; }
+  to { background-position: 400px 0; }
+}
+
+@keyframes wave3 {
+  from { background-position: 0 0; }
+  to { background-position: 800px 0; }
+}
+
+.fog-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 70% at 50% 50%,
+    transparent 40%,
+    rgba(15, 25, 50, 0.4) 70%,
+    rgba(10, 15, 30, 0.8) 100%
+  );
+  z-index: 10;
+}
+
+.map-container {
+  position: fixed;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+  z-index: 1;
+}
+
+.map-container:active {
+  cursor: grabbing;
+}
+
+.map-svg {
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.cloud {
+  opacity: 0.06;
+}
