@@ -22,6 +22,7 @@ export function MapLegend({ islands, onIslandClick }: MapLegendProps) {
           <span className="legend-dot" style={{ background: island.color }} />
           <span>{island.category.name}</span>
           <span className="legend-count">{island.category.tools.length}</span>
+          <span className="legend-arrow">›</span>
         </div>
       ))}
     </div>
