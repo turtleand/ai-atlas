@@ -13,6 +13,7 @@ export function ToolBeacon({ beacon, color, onHover, onHoverEnd, onClick }: Tool
     <g
       className="beacon"
       onPointerEnter={(e) => onHover(beacon, e)}
+      onPointerDown={(e) => e.stopPropagation()}
       onPointerLeave={onHoverEnd}
       onClick={(e) => { e.stopPropagation(); onClick(beacon); }}
     >
@@ -40,9 +41,23 @@ export function ToolBeacon({ beacon, color, onHover, onHoverEnd, onClick }: Tool
         y={beacon.y - 18}
         className="beacon-label"
         textAnchor="middle"
+        stroke="rgba(10, 18, 35, 0.9)"
+        strokeWidth={3}
+        paintOrder="stroke"
       >
         {beacon.tool.name}
       </text>
+      {/* Explored badge */}
+      <circle cx={beacon.x + 7} cy={beacon.y + 7} r={4.5} fill="#0a1628" />
+      <circle cx={beacon.x + 7} cy={beacon.y + 7} r={3.5} fill="#56F5DF" />
+      <path
+        d={`M ${beacon.x + 5} ${beacon.y + 7} L ${beacon.x + 6.5} ${beacon.y + 8.5} L ${beacon.x + 9} ${beacon.y + 5.5}`}
+        fill="none"
+        stroke="#0a1628"
+        strokeWidth={1.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </g>
   );
 }

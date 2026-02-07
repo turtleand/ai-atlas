@@ -18,25 +18,34 @@ interface MapControls {
   panTo: (cx: number, cy: number) => void;
 }
 
-const INITIAL_TRANSFORM: MapTransform = { x: 0, y: 0, scale: 0.85 };
+const INITIAL_TRANSFORM: MapTransform = { x: 0, y: 0, scale: 0.7 };
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 2.0;
 
 export function useMapControls(): MapControls {
   const [transform, setTransform] = useState<MapTransform>(INITIAL_TRANSFORM);
   const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const startPos = useRef({ x: 0, y: 0 });
   const lastPos = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const onPointerDown = useCallback((e: PointerEvent) => {
     if (e.button !== 0) return;
     isDragging.current = true;
+    hasDragged.current = false;
+    startPos.current = { x: e.clientX, y: e.clientY };
     lastPos.current = { x: e.clientX, y: e.clientY };
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   }, []);
 
   const onPointerMove = useCallback((e: PointerEvent) => {
     if (!isDragging.current) return;
+    if (!hasDragged.current) {
+      const dist = Math.hypot(e.clientX - startPos.current.x, e.clientY - startPos.current.y);
+      if (dist < 3) return;
+      hasDragged.current = true;
+    }
     const dx = e.clientX - lastPos.current.x;
     const dy = e.clientY - lastPos.current.y;
     lastPos.current = { x: e.clientX, y: e.clientY };

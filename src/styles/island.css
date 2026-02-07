@@ -51,9 +51,9 @@
   font-family: 'Cinzel', serif;
   font-size: 22px;
   font-weight: 700;
-  fill: #1a1a1a;
   text-anchor: middle;
   pointer-events: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
 .sailing-route {

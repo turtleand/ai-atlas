@@ -8,6 +8,7 @@ import { JournalPanel } from './JournalPanel.tsx';
 import { MapLegend } from './MapLegend.tsx';
 import { CompassRose } from './CompassRose.tsx';
 import { MapTitle } from './MapTitle.tsx';
+import { AiTurtle } from './AiTurtle.tsx';
 
 interface ArchipelagoMapProps {
   categories: Category[];
@@ -79,8 +80,8 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
           }}
         >
           {/* Ambient clouds */}
-          <ellipse className="cloud" cx="400" cy="200" rx="120" ry="30" fill="#ffffff" />
-          <ellipse className="cloud" cx="1400" cy="350" rx="160" ry="25" fill="#ffffff" />
+          <ellipse className="cloud" cx="530" cy="260" rx="120" ry="30" fill="#ffffff" />
+          <ellipse className="cloud" cx="1870" cy="470" rx="160" ry="25" fill="#ffffff" />
 
           {/* Sailing routes */}
           {layout.routes.map((route, i) => (
@@ -95,8 +96,11 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
           ))}
 
           {/* "Here Be Dragons" text */}
-          <text x="100" y="1100" className="dragons-text">Here Be Dragons</text>
-          <text x="1500" y="100" className="dragons-text">Terra Incognita</text>
+          <text x="130" y="1470" className="dragons-text">Here Be Dragons</text>
+          <text x="2000" y="130" className="dragons-text">Terra Incognita</text>
+
+          {/* AI turtle sailing between islands */}
+          <AiTurtle routes={layout.routes} />
 
           {/* Islands */}
           {layout.islands.map((island, index) => (

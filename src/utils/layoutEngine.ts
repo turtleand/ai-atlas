@@ -118,12 +118,12 @@ function positionBeacons(
 export function computeLayout(categories: Category[]): MapLayout {
   const numIslands = categories.length;
   if (numIslands === 0) {
-    return { islands: [], width: 1800, height: 1200, routes: [] };
+    return { islands: [], width: 2400, height: 1600, routes: [] };
   }
 
-  const mapCx = 900;
-  const mapCy = 600;
-  const baseOrbitRadius = 340;
+  const mapCx = 1200;
+  const mapCy = 800;
+  const baseOrbitRadius = 520;
   const baseIslandRadius = 90;
   const radiusPerTool = 20;
   const minIslandRadius = 85;
@@ -135,7 +135,7 @@ export function computeLayout(categories: Category[]): MapLayout {
     const angle = angleStep * i - Math.PI / 2;
 
     // Deterministic radius variation
-    const radiusOffset = ((hash % 100) / 100) * 120 - 60;
+    const radiusOffset = ((hash % 100) / 100) * 100 - 50;
     const orbitRadius = baseOrbitRadius + radiusOffset;
 
     const cx = mapCx + Math.cos(angle) * orbitRadius;
@@ -152,7 +152,7 @@ export function computeLayout(categories: Category[]): MapLayout {
     return { category: cat, cx, cy, radius, beacons, color, colorDark, shapePoints };
   });
 
-  // Compute sailing routes: connect each island to its 2 nearest neighbors
+  // Compute sailing routes: connect each island to its 5 nearest neighbors
   const routes: MapLayout['routes'] = [];
   const routeSet = new Set<string>();
 
@@ -165,7 +165,7 @@ export function computeLayout(categories: Category[]): MapLayout {
         return da - db;
       });
 
-    for (const neighbor of sorted.slice(0, 2)) {
+    for (const neighbor of sorted.slice(0, 5)) {
       const key = [island.category.id, neighbor.category.id].sort().join('::');
       if (!routeSet.has(key)) {
         routeSet.add(key);
@@ -174,7 +174,7 @@ export function computeLayout(categories: Category[]): MapLayout {
     }
   }
 
-  return { islands, width: 1800, height: 1200, routes };
+  return { islands, width: 2400, height: 1600, routes };
 }
 
 // Convert blob shape points to a smooth SVG path using cubic bezier curves

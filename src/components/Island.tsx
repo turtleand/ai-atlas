@@ -1,6 +1,7 @@
 import type { IslandLayout, BeaconPosition } from '../utils/layoutEngine.ts';
 import { shapeToPath } from '../utils/layoutEngine.ts';
 import { ToolBeacon } from './ToolBeacon.tsx';
+import { IslandDetails } from './IslandDetails.tsx';
 
 interface IslandProps {
   island: IslandLayout;
@@ -21,6 +22,13 @@ export function Island({ island, index, onBeaconHover, onBeaconHoverEnd, onBeaco
       className="island-group"
       style={{ animationDelay: `${index * 200}ms` }}
     >
+      {/* Beach / sand ring */}
+      <path
+        d={shapePath}
+        fill="rgba(210, 180, 120, 0.2)"
+        transform={`translate(${island.cx} ${island.cy}) scale(1.08) translate(${-island.cx} ${-island.cy})`}
+      />
+
       {/* Coastline / outer ring */}
       <path
         d={shapePath}
@@ -46,12 +54,25 @@ export function Island({ island, index, onBeaconHover, onBeaconHoverEnd, onBeaco
         opacity={0.35}
       />
 
+      {/* Island details (palms, mountains, huts, flags) */}
+      <IslandDetails island={island} />
+
+      {/* Category label background pill */}
+      <rect
+        x={island.cx - (island.category.name.length * 13) / 2 - 8}
+        y={island.cy + island.radius + 30 - 18}
+        width={island.category.name.length * 13 + 16}
+        height={28}
+        rx={6}
+        fill="rgba(10, 18, 35, 0.7)"
+      />
+
       {/* Category label */}
       <text
         x={island.cx}
         y={island.cy + island.radius + 30}
         className="category-label"
-        fill={island.color}
+        style={{ fill: island.color }}
       >
         {island.category.name}
       </text>

@@ -11,7 +11,7 @@ export function MapLegend({ islands, onIslandClick }: MapLegendProps) {
   return (
     <div className="legend">
       <div className="legend-header">
-        {totalTools} tools charted across {islands.length} islands
+        {totalTools} tools explored across {islands.length} islands
       </div>
       {islands.map((island) => (
         <div
