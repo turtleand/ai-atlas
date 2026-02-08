@@ -139,8 +139,8 @@ categories:
         url: https://cursor.sh/
         description: AI-first code editor
         usage: |
-          Full IDE experience with AI built-in. Great for visual code exploration
-          and when I need more context-aware suggestions.
+          Initial exploration on vibe coding capabilities.
+          Full IDE experience with AI built-in for visual code exploration.
         tags: [daily-driver]
 
       - name: Sourcegraph DeepSearch
