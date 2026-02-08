@@ -21,11 +21,9 @@
 - Sourcegraph AMP | https://ampcode.com/ | Agentic coding with autonomous workflows
 - OpenAI Codex | https://openai.com/blog/openai-codex | Code generation model powering Copilot
 
-## General
-- Google AI Studio | https://aistudio.google.com/ | Google's AI dev platform
-
 ## Research
 - ChatGPT Deep Search | https://chat.openai.com/ | Advanced AI research
+- Perplexity Comet | https://comet.perplexity.ai/ | AI-powered desktop assistant
 
 ## Education
 - NotebookLM | https://notebooklm.google/ | AI-powered learning notebook
