@@ -79,7 +79,10 @@ categories:
         description: AI background removal
         usage: |
           Quick and clean background removal from images.
-          Used for preparing avatar assets with transparent backgrounds.
+          Used for preparing Turtleand avatar assets with transparent backgrounds.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
 
       - name: Gemini Drawing
         url: https://gemini.google.com/
