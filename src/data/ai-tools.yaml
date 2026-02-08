@@ -44,11 +44,23 @@ categories:
           Creating illustrations for blog posts and conceptual visuals.
           Best for photorealistic and artistic styles.
 
-      - name: Reve
-        url: https://reve.art/
-        description: Free text-to-image generator
+      - name: Recraft
+        url: https://www.recraft.ai/
+        description: AI image generation and design
         usage: |
-          Quick image generation without usage limits. Great for experimentation.
+          Used to create and refine the Turtleand portal logo.
+          Great for vector-style graphics and brand assets.
+        related:
+          - title: Turtleand Portal
+            url: https://turtleand.com/
+        tags: [logo-design]
+
+      - name: Adobe Firefly
+        url: https://firefly.adobe.com/
+        description: AI-powered image editing
+        usage: |
+          Quick image edits like background removal and object cleanup.
+          Integrated into Creative Cloud workflow.
 
       - name: Gemini Drawing
         url: https://gemini.google.com/
