@@ -13,8 +13,11 @@ categories:
         url: https://claude.ai/
         description: Anthropic's AI assistant
         usage: |
-          Primary assistant for deep analysis and long-form writing.
-          Excellent at nuanced reasoning and following complex instructions.
+          The core thinking for my OpenClaw instance and default fully
+          agentic workflow. Excellent at nuanced reasoning and complex tasks.
+        related:
+          - title: Persistent Agents
+            url: https://openclaw.turtleand.com/topics/persistent-agents/
         tags: [daily-driver]
 
       - name: Grok
