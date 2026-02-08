@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { IslandLayout } from '../utils/layoutEngine.ts';
 
 interface MapLegendProps {
@@ -6,12 +7,14 @@ interface MapLegendProps {
 }
 
 export function MapLegend({ islands, onIslandClick }: MapLegendProps) {
+  const [expanded, setExpanded] = useState(false);
   const totalTools = islands.reduce((sum, i) => sum + i.category.tools.length, 0);
 
   return (
-    <div className="legend">
-      <div className="legend-header">
+    <div className={`legend${expanded ? ' legend--expanded' : ''}`}>
+      <div className="legend-header" onClick={() => setExpanded(prev => !prev)}>
         {totalTools} tools explored across {islands.length} islands
+        <span className="legend-toggle-icon">{expanded ? '▾' : '▸'}</span>
       </div>
       {islands.map((island) => (
         <div

@@ -318,3 +318,105 @@
 .compass:hover {
   opacity: 0.8;
 }
+
+.legend-toggle-icon {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Legend — collapsed bottom bar */
+  .legend {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    min-width: unset;
+    padding: 10px 14px;
+    max-height: 44px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .legend--expanded {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .legend-header {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+
+  .legend-toggle-icon {
+    display: inline-block;
+    color: #D4A03A;
+    font-size: 14px;
+  }
+
+  .legend-item {
+    font-size: 13px;
+    gap: 8px;
+    padding: 4px 4px;
+  }
+
+  .legend-item:first-of-type {
+    margin-top: 10px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* Title — compact */
+  .map-title {
+    top: 10px;
+  }
+
+  .map-title h1 {
+    font-size: 18px;
+  }
+
+  .map-subtitle {
+    display: none;
+  }
+
+  .map-title-border {
+    width: 120px;
+  }
+
+  /* Nav links */
+  .map-nav {
+    gap: 8px;
+  }
+
+  .nav-link {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  /* Compass — above collapsed legend */
+  .compass {
+    width: 50px;
+    height: 50px;
+    bottom: 68px;
+    right: 12px;
+    opacity: 0.4;
+  }
+
+  /* Journal panel — full width */
+  .journal-panel {
+    width: 100vw;
+    max-width: 100vw;
+    padding: 24px 20px;
+  }
+
+  /* Tooltip — smaller */
+  .tooltip {
+    max-width: 200px;
+    font-size: 12px;
+  }
+}

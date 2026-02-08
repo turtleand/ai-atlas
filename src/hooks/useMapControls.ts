@@ -18,12 +18,25 @@ interface MapControls {
   panTo: (cx: number, cy: number) => void;
 }
 
-const INITIAL_TRANSFORM: MapTransform = { x: 0, y: 0, scale: 0.7 };
+function getInitialTransform(): MapTransform {
+  const viewW = window.innerWidth;
+  if (viewW <= 768) {
+    const scale = 0.45;
+    const viewH = window.innerHeight;
+    return {
+      x: viewW / 2 - 1200 * scale,
+      y: viewH / 2 - 800 * scale,
+      scale,
+    };
+  }
+  return { x: 0, y: 0, scale: 0.7 };
+}
+
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 2.0;
 
 export function useMapControls(): MapControls {
-  const [transform, setTransform] = useState<MapTransform>(INITIAL_TRANSFORM);
+  const [transform, setTransform] = useState<MapTransform>(getInitialTransform);
   const isDragging = useRef(false);
   const hasDragged = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
@@ -99,7 +112,7 @@ export function useMapControls(): MapControls {
   }, []);
 
   const resetView = useCallback(() => {
-    setTransform(INITIAL_TRANSFORM);
+    setTransform(getInitialTransform());
   }, []);
 
   const panTo = useCallback((cx: number, cy: number) => {
