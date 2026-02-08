@@ -234,6 +234,26 @@ categories:
           The GitHub of AI models.
         tags: [infrastructure]
 
+  - name: Agents
+    tools:
+      - name: OpenClaw
+        url: https://github.com/openclaw/openclaw
+        description: Persistent AI agent platform
+        usage: |
+          My always-on AI partner running 24/7. Handles Telegram messages,
+          voice note transcription, autonomous GitHub development, scheduled
+          tasks, and proactive check-ins. The infrastructure behind this atlas.
+        related:
+          - title: OpenClaw Lab
+            url: https://openclaw.turtleand.com/
+          - title: Persistent Agents Guide
+            url: https://openclaw.turtleand.com/topics/persistent-agents/
+          - title: Voice Notes Integration
+            url: https://openclaw.turtleand.com/topics/voice-notes-telegram/
+          - title: Git Autonomous Development
+            url: https://openclaw.turtleand.com/topics/git-autonomous-development/
+        tags: [daily-driver, infrastructure]
+
   - name: Auxiliary Tools
     tools:
       - name: ntfy
