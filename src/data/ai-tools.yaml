@@ -24,7 +24,8 @@ categories:
         url: https://grok.x.ai/
         description: xAI's chatbot
         usage: |
-          Useful for real-time information and a different perspective on topics.
+          Initial exploration on general models. Useful as an additional
+          point of comparison alongside ChatGPT and Gemini.
 
       - name: Gemini
         url: https://gemini.google.com/
