@@ -8,6 +8,7 @@ import { MapLegend } from './MapLegend.tsx';
 import { CompassRose } from './CompassRose.tsx';
 import { MapTitle } from './MapTitle.tsx';
 import { AiTurtle } from './AiTurtle.tsx';
+import { AiOctopus } from './AiOctopus.tsx';
 import { MapDecorations } from './MapDecorations.tsx';
 
 interface ArchipelagoMapProps {
@@ -100,8 +101,9 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
           {/* Map decorations (ships, dragon, waves, text labels, etc.) */}
           <MapDecorations />
 
-          {/* AI turtle sailing between islands */}
+          {/* AI creatures sailing between islands */}
           <AiTurtle routes={layout.routes} />
+          <AiOctopus routes={layout.routes} />
 
           {/* Islands */}
           {layout.islands.map((island, index) => (
