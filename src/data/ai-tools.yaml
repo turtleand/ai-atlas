@@ -1,0 +1,180 @@
+categories:
+  - name: Chatbot
+    tools:
+      - name: ChatGPT
+        url: https://chat.openai.com/
+        description: OpenAI's conversational AI
+        usage: |
+          My daily thinking partner for brainstorming, writing drafts, and exploring ideas.
+          Great for quick research and explaining complex concepts.
+        tags: [daily-driver]
+
+      - name: Claude
+        url: https://claude.ai/
+        description: Anthropic's AI assistant
+        usage: |
+          Primary assistant for deep analysis and long-form writing.
+          Excellent at nuanced reasoning and following complex instructions.
+        tags: [daily-driver]
+
+      - name: Grok
+        url: https://grok.x.ai/
+        description: xAI's chatbot
+        usage: |
+          Useful for real-time information and a different perspective on topics.
+
+      - name: Gemini
+        url: https://gemini.google.com/
+        description: Google's AI assistant
+        usage: |
+          Integrated with Google ecosystem. Good for quick searches and multimodal tasks.
+
+      - name: Sesame
+        url: https://www.sesame.com/
+        description: Voice-based AI companion
+        usage: |
+          Exploring voice-first AI interactions for hands-free workflows.
+
+  - name: Images
+    tools:
+      - name: DALL-E 3
+        url: https://openai.com/dall-e-3/
+        description: OpenAI's image generation
+        usage: |
+          Creating illustrations for blog posts and conceptual visuals.
+          Best for photorealistic and artistic styles.
+
+      - name: Reve
+        url: https://reve.art/
+        description: Free text-to-image generator
+        usage: |
+          Quick image generation without usage limits. Great for experimentation.
+
+      - name: Gemini Drawing
+        url: https://gemini.google.com/
+        description: Collaborative AI drawing
+        usage: |
+          Iterative image creation with conversational refinement.
+
+  - name: Video Generation
+    tools:
+      - name: Sora
+        url: https://openai.com/sora
+        description: OpenAI's text-to-video model
+        usage: |
+          Exploring AI video generation capabilities for future content creation.
+
+  - name: Code
+    tools:
+      - name: GitHub Copilot
+        url: https://github.com/features/copilot
+        description: AI pair programmer
+        usage: |
+          Inline code suggestions while typing. Best for boilerplate and patterns.
+        tags: [daily-driver]
+
+      - name: Claude Code
+        url: https://claude.ai/
+        description: AI coding assistant in terminal
+        usage: |
+          My primary coding companion for complex tasks. Powers the OpenClaw agent.
+          Used for debugging, refactoring, and building entire features.
+        related:
+          - title: OpenClaw Lab
+            url: https://openclaw.turtleand.com/
+        tags: [daily-driver]
+
+      - name: Cursor
+        url: https://cursor.sh/
+        description: AI-first code editor
+        usage: |
+          Full IDE experience with AI built-in. Great for visual code exploration
+          and when I need more context-aware suggestions.
+        tags: [daily-driver]
+
+      - name: Sourcegraph DeepSearch
+        url: https://sourcegraph.com/
+        description: AI-powered semantic code search
+        usage: |
+          Finding code patterns across large codebases. Useful for understanding
+          how similar problems were solved elsewhere.
+
+      - name: Sourcegraph AMP
+        url: https://ampcode.com/
+        description: Agentic coding with autonomous workflows
+        usage: |
+          Experimenting with autonomous coding agents that can plan and execute
+          multi-step development tasks.
+
+      - name: OpenAI Codex
+        url: https://openai.com/blog/openai-codex
+        description: Code generation model powering Copilot
+        usage: |
+          The foundation model behind many code assistants. Understanding its
+          capabilities helps me use derived tools more effectively.
+
+  - name: Research
+    tools:
+      - name: ChatGPT Deep Search
+        url: https://chat.openai.com/
+        description: Advanced AI research
+        usage: |
+          In-depth research sessions when I need comprehensive analysis
+          of a topic with cited sources.
+
+      - name: Perplexity Comet
+        url: https://comet.perplexity.ai/
+        description: AI-powered desktop assistant
+        usage: |
+          Quick desktop searches and answers without context switching.
+          Great for fact-checking while writing.
+
+  - name: Education
+    tools:
+      - name: NotebookLM
+        url: https://notebooklm.google/
+        description: AI-powered learning notebook
+        usage: |
+          Turning documents into interactive study materials.
+          Great for synthesizing research papers and long-form content.
+        related:
+          - title: AI Lab
+            url: https://lab.turtleand.com/
+
+      - name: Gamma
+        url: https://gamma.app/
+        description: AI presentation creation
+        usage: |
+          Rapid prototyping of presentations and visual documents.
+          Useful for turning ideas into shareable formats quickly.
+
+  - name: Local & Infrastructure
+    tools:
+      - name: llama.cpp
+        url: https://github.com/ggerganov/llama.cpp
+        description: Local LLM inference engine
+        usage: |
+          Running models locally for privacy-sensitive tasks and offline work.
+          Essential for understanding LLM internals.
+        related:
+          - title: Running Inference Locally
+            url: https://lab.turtleand.com/topics/running-inference-locally/
+        tags: [infrastructure]
+
+      - name: Hugging Face
+        url: https://huggingface.co/
+        description: Model repository & community hub
+        usage: |
+          Discovering and downloading models. The GitHub of AI models.
+        tags: [infrastructure]
+
+      - name: ntfy
+        url: https://ntfy.sh/
+        description: Push notifications for AI agents
+        usage: |
+          Getting notified when long-running AI tasks complete.
+          Essential for agent workflows.
+        related:
+          - title: Agent Notifications
+            url: https://lab.turtleand.com/topics/agent-notifications/
+        tags: [infrastructure]

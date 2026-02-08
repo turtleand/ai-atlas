@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { parseToolsMarkdown } from './utils/parseTools.ts';
+import { parseToolsYaml } from './utils/parseTools.ts';
 import { ArchipelagoMap } from './components/ArchipelagoMap.tsx';
-import toolsMarkdown from './data/ai-tools.md?raw';
+import toolsYaml from './data/ai-tools.yaml?raw';
 
 export default function App() {
-  const categories = useMemo(() => parseToolsMarkdown(toolsMarkdown), []);
+  const categories = useMemo(() => parseToolsYaml(toolsYaml), []);
 
   return <ArchipelagoMap categories={categories} />;
 }

@@ -1,8 +1,18 @@
+import YAML from 'yaml';
+
+export interface RelatedLink {
+  title: string;
+  url: string;
+}
+
 export interface Tool {
   id: string;
   name: string;
   url: string;
   description: string;
+  usage?: string;
+  related?: RelatedLink[];
+  tags?: string[];
 }
 
 export interface Category {
@@ -11,10 +21,47 @@ export interface Category {
   tools: Tool[];
 }
 
+interface YAMLTool {
+  name: string;
+  url: string;
+  description: string;
+  usage?: string;
+  related?: RelatedLink[];
+  tags?: string[];
+}
+
+interface YAMLCategory {
+  name: string;
+  tools: YAMLTool[];
+}
+
+interface YAMLData {
+  categories: YAMLCategory[];
+}
+
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+export function parseToolsYaml(yamlContent: string): Category[] {
+  const data: YAMLData = YAML.parse(yamlContent);
+  
+  return data.categories.map(cat => ({
+    id: slugify(cat.name),
+    name: cat.name,
+    tools: cat.tools.map(tool => ({
+      id: slugify(tool.name),
+      name: tool.name,
+      url: tool.url,
+      description: tool.description,
+      usage: tool.usage?.trim(),
+      related: tool.related,
+      tags: tool.tags,
+    })),
+  })).filter(c => c.tools.length > 0);
+}
+
+// Keep legacy parser for backwards compatibility
 export function parseToolsMarkdown(markdown: string): Category[] {
   const categories: Category[] = [];
   let currentCategory: Category | null = null;
@@ -24,7 +71,6 @@ export function parseToolsMarkdown(markdown: string): Category[] {
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // Category heading
     const headingMatch = trimmed.match(/^##\s+(.+)$/);
     if (headingMatch) {
       currentCategory = {
@@ -36,7 +82,6 @@ export function parseToolsMarkdown(markdown: string): Category[] {
       continue;
     }
 
-    // Tool line
     const toolMatch = trimmed.match(/^-\s+(.+?)\s*\|\s*(.+?)\s*\|\s*(.+)$/);
     if (toolMatch && currentCategory) {
       currentCategory.tools.push({
@@ -48,6 +93,5 @@ export function parseToolsMarkdown(markdown: string): Category[] {
     }
   }
 
-  // Filter out empty categories
   return categories.filter(c => c.tools.length > 0);
 }

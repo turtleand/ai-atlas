@@ -1,9 +1,9 @@
-import type { Category } from './parseTools.ts';
+import type { Category, Tool } from './parseTools.ts';
 
 export interface BeaconPosition {
   x: number;
   y: number;
-  tool: { id: string; name: string; url: string; description: string };
+  tool: Tool;
 }
 
 export interface IslandLayout {
