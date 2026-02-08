@@ -16,12 +16,14 @@
 ## Code
 - GitHub Copilot | https://github.com/features/copilot | AI pair programmer
 - Claude Code | https://claude.ai/ | AI coding assistant in terminal
-
-## General
-- Google AI Studio | https://aistudio.google.com/ | Google's AI dev platform
+- Cursor | https://cursor.sh/ | AI-first code editor
+- Sourcegraph DeepSearch | https://sourcegraph.com/ | AI-powered semantic code search
+- Sourcegraph AMP | https://ampcode.com/ | Agentic coding with autonomous workflows
+- OpenAI Codex | https://openai.com/blog/openai-codex | Code generation model powering Copilot
 
 ## Research
 - ChatGPT Deep Search | https://chat.openai.com/ | Advanced AI research
+- Perplexity Comet | https://comet.perplexity.ai/ | AI-powered desktop assistant
 
 ## Education
 - NotebookLM | https://notebooklm.google/ | AI-powered learning notebook
