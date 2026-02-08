@@ -81,7 +81,9 @@ categories:
         url: https://gemini.google.com/
         description: Collaborative AI drawing
         usage: |
-          Iterative image creation with conversational refinement.
+          Fun tool for quick sketches. Draw something rudimentary and
+          watch it transform into a polished illustration. Great for
+          playing around with visual ideas.
 
   - name: Video Generation
     tools:
