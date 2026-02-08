@@ -161,8 +161,8 @@ categories:
         url: https://openai.com/blog/openai-codex
         description: Code generation model powering Copilot
         usage: |
-          The foundation model behind many code assistants. Understanding its
-          capabilities helps me use derived tools more effectively.
+          Initial exploration on agentic workflows.
+          Understanding autonomous code generation capabilities.
 
   - name: Research
     tools:
