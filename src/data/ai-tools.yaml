@@ -177,8 +177,8 @@ categories:
         url: https://comet.perplexity.ai/
         description: AI-powered desktop assistant
         usage: |
-          Quick desktop searches and answers without context switching.
-          Great for fact-checking while writing.
+          Initial exploration on agentic browsers.
+          AI assistant that can navigate and interact with web content.
 
   - name: Education
     tools:
