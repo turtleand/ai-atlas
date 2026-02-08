@@ -202,6 +202,9 @@ categories:
         related:
           - title: AI Lab
             url: https://lab.turtleand.com/
+          - title: "Human-Centered AI Deep Dive"
+            url: https://notebooklm.google.com/notebook/17fc4b1a-66c3-40c9-9a9e-d1c189f25bfa
+        tags: [concrete-example]
 
       - name: Gamma
         url: https://gamma.app/
