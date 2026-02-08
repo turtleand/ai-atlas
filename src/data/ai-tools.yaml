@@ -219,13 +219,15 @@ categories:
           Discovering and downloading models. The GitHub of AI models.
         tags: [infrastructure]
 
+  - name: Auxiliary Tools
+    tools:
       - name: ntfy
         url: https://ntfy.sh/
         description: Push notifications for AI agents
         usage: |
-          Getting notified when long-running AI tasks complete.
-          Essential for agent workflows.
+          Get notified whenever an AI flow stops or completes.
+          Essential for long-running agent workflows so I don't have
+          to keep watching the terminal.
         related:
           - title: Agent Notifications
             url: https://lab.turtleand.com/topics/agent-notifications/
-        tags: [infrastructure]
