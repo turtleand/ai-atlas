@@ -70,12 +70,12 @@ categories:
             url: https://turtleand.com/
         tags: [logo-design]
 
-      - name: Adobe Firefly
-        url: https://firefly.adobe.com/
-        description: AI-powered image editing
+      - name: Adobe Express
+        url: https://www.adobe.com/express/feature/image/remove-background
+        description: AI background removal
         usage: |
-          Quick image edits like background removal and object cleanup.
-          Integrated into Creative Cloud workflow.
+          Quick and clean background removal from images.
+          Used for preparing avatar assets with transparent backgrounds.
 
       - name: Gemini Drawing
         url: https://gemini.google.com/
