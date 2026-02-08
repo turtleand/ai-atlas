@@ -93,6 +93,28 @@ categories:
         usage: |
           Exploring AI video generation capabilities for future content creation.
 
+      - name: VEO 3
+        url: https://deepmind.google/technologies/veo/
+        description: Google's AI video generation
+        usage: |
+          Created videos for the Turtleand YouTube channel.
+          High quality output with good motion coherence.
+        related:
+          - title: Turtleand YouTube
+            url: https://www.youtube.com/@turtleand-world
+        tags: [content-creation]
+
+      - name: Hailuo Minimax
+        url: https://hailuoai.video/
+        description: AI video generation
+        usage: |
+          Another tool for crafting Turtleand YouTube content.
+          Good for varied styles and quick iterations.
+        related:
+          - title: Turtleand YouTube
+            url: https://www.youtube.com/@turtleand-world
+        tags: [content-creation]
+
   - name: Code
     tools:
       - name: GitHub Copilot
