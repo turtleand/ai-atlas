@@ -216,7 +216,8 @@ categories:
         url: https://huggingface.co/
         description: Model repository & community hub
         usage: |
-          Discovering and downloading models. The GitHub of AI models.
+          For downloading and hosting open source models in the cloud.
+          The GitHub of AI models.
         tags: [infrastructure]
 
   - name: Auxiliary Tools
