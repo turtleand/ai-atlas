@@ -95,7 +95,11 @@ categories:
         url: https://openai.com/sora
         description: OpenAI's text-to-video model
         usage: |
-          Exploring AI video generation capabilities for future content creation.
+          Auxiliary tool for creating content for the Turtleand YouTube channel.
+        related:
+          - title: Turtleand YouTube
+            url: https://www.youtube.com/@turtleand-world
+        tags: [content-creation]
 
       - name: VEO 3
         url: https://deepmind.google/technologies/veo/
@@ -125,7 +129,7 @@ categories:
         url: https://github.com/features/copilot
         description: AI pair programmer
         usage: |
-          Inline code suggestions while typing. Best for boilerplate and patterns.
+          Initial exploration on assisted coding and PR reviews.
         tags: [daily-driver]
 
       - name: Claude Code
