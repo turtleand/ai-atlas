@@ -37,12 +37,27 @@ categories:
 
   - name: Images
     tools:
-      - name: DALL-E 3
-        url: https://openai.com/dall-e-3/
-        description: OpenAI's image generation
+      - name: Nano Banana
+        url: https://nanobanana.com/
+        description: AI image generation
         usage: |
-          Creating illustrations for blog posts and conceptual visuals.
-          Best for photorealistic and artistic styles.
+          Used to craft iterations of the Turtleand avatar.
+          Great for character design and stylized illustrations.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
+        tags: [avatar-design]
+
+      - name: ChatGPT Image
+        url: https://chat.openai.com/
+        description: OpenAI's image generation in ChatGPT
+        usage: |
+          Created several Turtleand avatar variations.
+          Useful for quick concept iterations with conversational refinement.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
+        tags: [avatar-design]
 
       - name: Recraft
         url: https://www.recraft.ai/
