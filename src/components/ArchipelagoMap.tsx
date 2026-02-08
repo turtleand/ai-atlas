@@ -137,6 +137,9 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
           toolName={journal.beacon.tool.name}
           toolDescription={journal.beacon.tool.description}
           toolUrl={journal.beacon.tool.url}
+          toolUsage={journal.beacon.tool.usage}
+          toolRelated={journal.beacon.tool.related}
+          toolTags={journal.beacon.tool.tags}
           categoryName={journal.island.category.name}
           categoryColor={journal.island.color}
           onClose={handleJournalClose}
