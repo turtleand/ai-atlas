@@ -1,0 +1,268 @@
+categories:
+  - name: Chatbot
+    tools:
+      - name: ChatGPT
+        url: https://chat.openai.com/
+        description: OpenAI's conversational AI
+        usage: |
+          My daily thinking partner for brainstorming, writing drafts, and exploring ideas.
+          Great for quick research and explaining complex concepts.
+        tags: [daily-driver]
+
+      - name: Claude
+        url: https://claude.ai/
+        description: Anthropic's AI assistant
+        usage: |
+          The core thinking for my OpenClaw instance and default fully
+          agentic workflow. Excellent at nuanced reasoning and complex tasks.
+        related:
+          - title: Persistent Agents
+            url: https://openclaw.turtleand.com/topics/persistent-agents/
+        tags: [daily-driver]
+
+      - name: Grok
+        url: https://grok.x.ai/
+        description: xAI's chatbot
+        usage: |
+          Initial exploration on general models. Useful as an additional
+          point of comparison alongside ChatGPT and Gemini.
+
+      - name: Gemini
+        url: https://gemini.google.com/
+        description: Google's AI assistant
+        usage: |
+          Integrated with Google ecosystem. Good for quick searches and multimodal tasks.
+
+      - name: Sesame
+        url: https://www.sesame.com/
+        description: Voice-based AI companion
+        usage: |
+          Exploring voice-first AI interactions for hands-free workflows.
+
+  - name: Images
+    tools:
+      - name: Nano Banana
+        url: https://nanobanana.com/
+        description: AI image generation
+        usage: |
+          Used to craft iterations of the Turtleand avatar.
+          Great for character design and stylized illustrations.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
+        tags: [avatar-design]
+
+      - name: ChatGPT Image
+        url: https://chat.openai.com/
+        description: OpenAI's image generation in ChatGPT
+        usage: |
+          Created several Turtleand avatar variations.
+          Useful for quick concept iterations with conversational refinement.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
+        tags: [avatar-design]
+
+      - name: Recraft
+        url: https://www.recraft.ai/
+        description: AI image generation and design
+        usage: |
+          Used to create and refine the Turtleand portal logo.
+          Great for vector-style graphics and brand assets.
+        related:
+          - title: Turtleand Portal
+            url: https://turtleand.com/
+        tags: [logo-design]
+
+      - name: Adobe Express
+        url: https://www.adobe.com/express/feature/image/remove-background
+        description: AI background removal
+        usage: |
+          Quick and clean background removal from images.
+          Used for preparing Turtleand avatar assets with transparent backgrounds.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
+
+      - name: Gemini Drawing
+        url: https://gemini.google.com/
+        description: Collaborative AI drawing
+        usage: |
+          Fun tool for quick sketches. Draw something rudimentary and
+          watch it transform into a polished illustration. Great for
+          playing around with visual ideas.
+
+  - name: Video Generation
+    tools:
+      - name: Sora
+        url: https://openai.com/sora
+        description: OpenAI's text-to-video model
+        usage: |
+          Auxiliary tool for creating content for the Turtleand YouTube channel.
+        related:
+          - title: Turtleand YouTube
+            url: https://www.youtube.com/@turtleand-world
+        tags: [content-creation]
+
+      - name: VEO 3
+        url: https://deepmind.google/technologies/veo/
+        description: Google's AI video generation
+        usage: |
+          Created videos for the Turtleand YouTube channel.
+          High quality output with good motion coherence.
+        related:
+          - title: Turtleand YouTube
+            url: https://www.youtube.com/@turtleand-world
+        tags: [content-creation]
+
+      - name: Hailuo Minimax
+        url: https://hailuoai.video/
+        description: AI video generation
+        usage: |
+          Another tool for crafting Turtleand YouTube content.
+          Good for varied styles and quick iterations.
+        related:
+          - title: Turtleand YouTube
+            url: https://www.youtube.com/@turtleand-world
+        tags: [content-creation]
+
+  - name: Code
+    tools:
+      - name: GitHub Copilot
+        url: https://github.com/features/copilot
+        description: AI pair programmer
+        usage: |
+          Initial exploration on assisted coding and PR reviews.
+        tags: [daily-driver]
+
+      - name: Claude Code
+        url: https://claude.ai/
+        description: AI coding assistant in terminal
+        usage: |
+          My primary coding companion for complex tasks. Powers the OpenClaw agent.
+          Used for debugging, refactoring, and building entire features.
+        related:
+          - title: OpenClaw Lab
+            url: https://openclaw.turtleand.com/
+        tags: [daily-driver]
+
+      - name: Cursor
+        url: https://cursor.sh/
+        description: AI-first code editor
+        usage: |
+          Initial exploration on vibe coding capabilities.
+          Full IDE experience with AI built-in for visual code exploration.
+        tags: [daily-driver]
+
+      - name: Sourcegraph DeepSearch
+        url: https://sourcegraph.com/
+        description: AI-powered semantic code search
+        usage: |
+          Finding code patterns across large codebases. Useful for understanding
+          how similar problems were solved elsewhere.
+
+      - name: Sourcegraph AMP
+        url: https://ampcode.com/
+        description: Agentic coding with autonomous workflows
+        usage: |
+          Experimenting with autonomous coding agents that can plan and execute
+          multi-step development tasks.
+
+      - name: OpenAI Codex
+        url: https://openai.com/blog/openai-codex
+        description: Code generation model powering Copilot
+        usage: |
+          Initial exploration on agentic workflows.
+          Understanding autonomous code generation capabilities.
+
+  - name: Research
+    tools:
+      - name: ChatGPT Deep Search
+        url: https://chat.openai.com/
+        description: Advanced AI research
+        usage: |
+          In-depth research sessions when I need comprehensive analysis
+          of a topic with cited sources.
+
+      - name: Perplexity Comet
+        url: https://comet.perplexity.ai/
+        description: AI-powered desktop assistant
+        usage: |
+          Initial exploration on agentic browsers.
+          AI assistant that can navigate and interact with web content.
+
+  - name: Education
+    tools:
+      - name: NotebookLM
+        url: https://notebooklm.google/
+        description: AI-powered learning notebook
+        usage: |
+          Turning documents into interactive study materials.
+          Great for synthesizing research papers and long-form content.
+        related:
+          - title: AI Lab
+            url: https://lab.turtleand.com/
+          - title: "Human-Centered AI Deep Dive"
+            url: https://notebooklm.google.com/notebook/17fc4b1a-66c3-40c9-9a9e-d1c189f25bfa
+        tags: [concrete-example]
+
+      - name: Gamma
+        url: https://gamma.app/
+        description: AI presentation creation
+        usage: |
+          Rapid prototyping of presentations and visual documents.
+          Useful for turning ideas into shareable formats quickly.
+
+  - name: Local & Infrastructure
+    tools:
+      - name: llama.cpp
+        url: https://github.com/ggerganov/llama.cpp
+        description: Local LLM inference engine
+        usage: |
+          Running models locally for privacy-sensitive tasks and offline work.
+          Essential for understanding LLM internals.
+        related:
+          - title: Running Inference Locally
+            url: https://lab.turtleand.com/topics/running-inference-locally/
+        tags: [infrastructure]
+
+      - name: Hugging Face
+        url: https://huggingface.co/
+        description: Model repository & community hub
+        usage: |
+          For downloading and hosting open source models in the cloud.
+          The GitHub of AI models.
+        tags: [infrastructure]
+
+  - name: Agents
+    tools:
+      - name: OpenClaw
+        url: https://github.com/openclaw/openclaw
+        description: Persistent AI agent platform
+        usage: |
+          My always-on AI partner running 24/7. Handles Telegram messages,
+          voice note transcription, autonomous GitHub development, scheduled
+          tasks, and proactive check-ins. The infrastructure behind this atlas.
+        related:
+          - title: OpenClaw Lab
+            url: https://openclaw.turtleand.com/
+          - title: Persistent Agents Guide
+            url: https://openclaw.turtleand.com/topics/persistent-agents/
+          - title: Voice Notes Integration
+            url: https://openclaw.turtleand.com/topics/voice-notes-telegram/
+          - title: Git Autonomous Development
+            url: https://openclaw.turtleand.com/topics/git-autonomous-development/
+        tags: [daily-driver, infrastructure]
+
+  - name: Auxiliary Tools
+    tools:
+      - name: ntfy
+        url: https://ntfy.sh/
+        description: Push notifications for AI agents
+        usage: |
+          Get notified whenever an AI flow stops or completes.
+          Essential for long-running agent workflows so I don't have
+          to keep watching the terminal.
+        related:
+          - title: Agent Notifications
+            url: https://lab.turtleand.com/topics/agent-notifications/

@@ -1,0 +1,10 @@
+/*
+  Content-Signal: ai-train=yes, search=yes, ai-input=yes
+  X-Robots-Tag: all
+
+/llms.txt
+  Content-Type: text/markdown; charset=utf-8
+
+/ai-tools.yaml
+  Content-Type: text/yaml; charset=utf-8
+  Content-Signal: ai-train=yes, search=yes, ai-input=yes
