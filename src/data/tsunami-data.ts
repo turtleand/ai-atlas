@@ -92,7 +92,7 @@ export function calculateWavePercent(): number {
 export function calculateCompositeScore(scores: Record<string, number>): number {
   let total = 0;
   SKILL_DIMENSIONS.forEach((dim) => {
-    const value = scores[dim.id] || dim.defaultValue;
+    const value = scores[dim.id] ?? dim.defaultValue;
     const adjustedValue = dim.inverse ? 100 - value : value;
     total += adjustedValue * dim.weight;
   });
