@@ -1,45 +1,62 @@
-import { getVerdict, calculateWavePercent } from '../../data/tsunami-data';
+import { motion, useMotionValue, useTransform, animate } from 'motion/react';
+import { useEffect } from 'react';
+import { getVerdict, getSurferState } from '../../data/tsunami-data';
 
 interface ScoreDisplayProps {
   score: number;
+  wavePercent: number;
 }
 
-export function ScoreDisplay({ score }: ScoreDisplayProps) {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, wavePercent }) => {
+  const motionScore = useMotionValue(score);
+  const rounded = useTransform(motionScore, (latest) => Math.round(latest));
+  
   const verdict = getVerdict(score);
-  const wavePercent = calculateWavePercent();
+  const surferState = getSurferState(score, wavePercent);
+  const difference = score - wavePercent;
   
-  // Approximate percentile (simplified - in reality would need population data)
-  const percentile = Math.min(99, Math.max(1, Math.round(score)));
-  
-  // Determine status relative to wave
-  let status: 'safe' | 'at-risk' | 'danger';
-  if (score > wavePercent + 10) {
-    status = 'safe';
-  } else if (score > wavePercent) {
-    status = 'at-risk';
-  } else {
-    status = 'danger';
-  }
-  
+  // Determine border color based on surfer state
+  const getBorderColor = () => {
+    switch (surferState) {
+      case 'surfing':
+        return '#4CAF50'; // Green
+      case 'riding':
+        return '#D4A03A'; // Amber/Gold
+      case 'struggling':
+        return '#FF9800'; // Amber-Red
+      case 'drowning':
+        return '#f44336'; // Red
+    }
+  };
+
+  useEffect(() => {
+    const controls = animate(motionScore, score, {
+      duration: 0.5,
+      ease: 'easeOut',
+    });
+    return controls.stop;
+  }, [score, motionScore]);
+
   return (
-    <div className="score-display">
-      <div style={{ fontSize: '0.9rem', color: 'rgba(224, 216, 200, 0.7)' }}>
-        Composite Score
+    <div 
+      className="score-card"
+      style={{ borderLeftColor: getBorderColor() }}
+    >
+      <div className="score-main">
+        <motion.span className="score-number">
+          {rounded}
+        </motion.span>
+        <span className="score-separator">·</span>
+        <span className="score-verdict-emoji">{verdict.emoji}</span>
+        <span className="score-verdict-title">{verdict.title}</span>
       </div>
-      <div className="composite-score">{score}</div>
-      <div className="percentile">~{percentile}th percentile</div>
-      
-      <div className="verdict">
-        <div className="verdict-emoji">{verdict.emoji}</div>
-        <div className="verdict-title">{verdict.title}</div>
-        <div className="verdict-description">{verdict.description}</div>
+      <div className="score-subtitle">
+        {difference > 0 
+          ? `${Math.round(difference)} points above the waterline`
+          : `${Math.abs(Math.round(difference))} points below the waterline`
+        }
       </div>
-      
-      <div className={`status-indicator ${status}`}>
-        {status === 'safe' && `✓ ${(score - wavePercent).toFixed(0)} points above the waterline`}
-        {status === 'at-risk' && `⚠ ${(score - wavePercent).toFixed(0)} points above (but close!)`}
-        {status === 'danger' && `⚠ ${(wavePercent - score).toFixed(0)} points below the waterline`}
-      </div>
+      <div className="score-description">{verdict.description}</div>
     </div>
   );
-}
+};

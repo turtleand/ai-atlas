@@ -134,3 +134,12 @@ export function getVerdict(score: number): { emoji: string; title: string; descr
     description: 'The tsunami has passed you',
   };
 }
+
+export type SurferState = 'surfing' | 'riding' | 'struggling' | 'drowning';
+
+export function getSurferState(score: number, wavePercent: number): SurferState {
+  if (score > wavePercent + 15) return 'surfing';
+  if (score > wavePercent + 5) return 'riding';
+  if (score > wavePercent - 5) return 'struggling';
+  return 'drowning';
+}

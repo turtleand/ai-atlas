@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export function TsunamiNav() {
+export const TsunamiNav: React.FC = () => {
   return (
     <nav className="tsunami-nav">
       <h1>🌊 AI Tsunami Tracker</h1>
@@ -9,4 +9,4 @@ export function TsunamiNav() {
       </Link>
     </nav>
   );
-}
+};

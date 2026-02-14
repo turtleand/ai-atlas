@@ -1,152 +1,129 @@
-import { useMemo } from 'react';
-import { calculateWavePercent, calculateDaysSinceStart, TSUNAMI_EVENTS } from '../../data/tsunami-data';
+import { TsunamiSurfer } from './TsunamiSurfer';
+import { getSurferState, type SurferState } from '../../data/tsunami-data';
 
 interface WaveVisualizationProps {
   score: number;
+  wavePercent: number;
+  daysSinceStart: number;
 }
 
-export function WaveVisualization({ score }: WaveVisualizationProps) {
-  const wavePercent = calculateWavePercent();
-  const currentDay = calculateDaysSinceStart();
-  
-  const viewBox = { width: 800, height: 600 };
-  
-  // Calculate positions
-  const waterlineY = useMemo(() => {
-    return viewBox.height * (1 - wavePercent / 100);
-  }, [wavePercent, viewBox.height]);
-  
-  const boatY = useMemo(() => {
-    return viewBox.height * (1 - score / 100);
-  }, [score, viewBox.height]);
-  
-  // Determine boat status
-  const boatStatus = useMemo(() => {
-    if (score > wavePercent + 10) return 'safe';
-    if (score > wavePercent) return 'at-risk';
-    return 'danger';
-  }, [score, wavePercent]);
-  
-  // Generate wave path with sine curve
-  const wavePath = useMemo(() => {
-    const amplitude = 20;
-    const frequency = 0.02;
-    let path = `M 0 ${waterlineY}`;
+export const WaveVisualization: React.FC<WaveVisualizationProps> = ({
+  score,
+  wavePercent,
+  daysSinceStart,
+}) => {
+  const surferState: SurferState = getSurferState(score, wavePercent);
+
+  // Generate wave path (simple sine-like pattern)
+  const generateWavePath = (amplitude: number, frequency: number, yOffset: number) => {
+    const points: string[] = [];
+    const width = 200; // 2x viewport width for seamless loop
+    const segments = 50;
     
-    for (let x = 0; x <= viewBox.width; x += 10) {
-      const y = waterlineY + Math.sin(x * frequency) * amplitude;
-      path += ` L ${x} ${y}`;
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * width;
+      const y = yOffset + Math.sin((i / segments) * Math.PI * frequency) * amplitude;
+      points.push(`${x},${y}`);
     }
     
-    path += ` L ${viewBox.width} ${viewBox.height} L 0 ${viewBox.height} Z`;
-    return path;
-  }, [waterlineY, viewBox.width, viewBox.height]);
-  
-  // Foam path (slightly above wave)
-  const foamPath = useMemo(() => {
-    const amplitude = 15;
-    const frequency = 0.025;
-    let path = `M 0 ${waterlineY - 5}`;
+    // Close the path at the bottom
+    points.push(`200,100`);
+    points.push(`0,100`);
     
-    for (let x = 0; x <= viewBox.width; x += 8) {
-      const y = waterlineY - 5 + Math.sin(x * frequency + Math.PI) * amplitude;
-      path += ` L ${x} ${y}`;
-    }
-    
-    path += ` L ${viewBox.width} ${waterlineY - 5} Z`;
-    return path;
-  }, [waterlineY, viewBox.width]);
-  
-  // Event markers (only for past events)
-  const eventMarkers = useMemo(() => {
-    return TSUNAMI_EVENTS.filter(e => e.day <= currentDay).map(event => {
-      const x = (event.day / Math.max(currentDay, 1)) * (viewBox.width - 100) + 50;
-      const eventWavePercent = Math.min(95, 15 + event.day * 0.15);
-      const y = viewBox.height * (1 - eventWavePercent / 100);
-      return { ...event, x, y };
-    });
-  }, [currentDay, viewBox.width, viewBox.height]);
-  
+    return `M ${points.join(' L ')} Z`;
+  };
+
   return (
     <div className="wave-container">
-      <svg className="wave-svg" viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}>
-        {/* Gradients */}
+      <svg
+        className="wave-svg"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <defs>
-          <linearGradient id="oceanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0a1628" />
-            <stop offset="100%" stopColor="#0a1628" />
+          {/* Gradient for ocean depth */}
+          <linearGradient id="ocean-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1a5276" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#1a5276" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#0a1628" stopOpacity="1" />
           </linearGradient>
-          <linearGradient id="waveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1a3a5c" stopOpacity="0.9" />
-            <stop offset="50%" stopColor="#2a5a8c" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#0a1628" stopOpacity="0.95" />
+          
+          {/* Gradient for wave layers */}
+          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#4fc3f7" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#1a5276" stopOpacity="0.3" />
+          </linearGradient>
+          
+          <linearGradient id="wave-gradient-2" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+            <stop offset="30%" stopColor="#4fc3f7" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#1a5276" stopOpacity="0.6" />
+          </linearGradient>
+          
+          <linearGradient id="wave-gradient-3" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+            <stop offset="30%" stopColor="#4fc3f7" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#1a5276" stopOpacity="1" />
           </linearGradient>
         </defs>
-        
+
         {/* Ocean background */}
-        <rect className="wave-ocean" width={viewBox.width} height={viewBox.height} />
-        
-        {/* Wave */}
-        <path className="wave-path" d={wavePath} />
-        
-        {/* Foam */}
-        <path className="wave-foam" d={foamPath} />
-        
-        {/* Waterline */}
-        <line
-          className="waterline"
-          x1="0"
-          y1={waterlineY}
-          x2={viewBox.width}
-          y2={waterlineY}
-        />
-        
-        {/* Event markers */}
-        {eventMarkers.map((event, i) => (
-          <g key={i} className="event-marker">
-            <circle
-              className="event-dot"
-              cx={event.x}
-              cy={event.y}
-              r="6"
-            />
-            <text
-              className="event-label"
-              x={event.x}
-              y={event.y - 12}
-              textAnchor="middle"
-            >
-              {event.label}
-            </text>
-          </g>
-        ))}
-        
-        {/* Boat */}
-        <g className={`boat ${boatStatus}`} transform={`translate(${viewBox.width / 2}, ${boatY})`}>
-          {/* Simple boat shape */}
+        <rect x="0" y="0" width="100" height="100" fill="url(#ocean-gradient)" />
+
+        {/* Wave Layer 1 (back) - slowest, lightest */}
+        <g className="wave-layer wave-layer-1">
           <path
-            d="M -20 0 L -25 10 L 25 10 L 20 0 L 15 -10 L -15 -10 Z"
-            fill="#8B4513"
-            stroke="#e0d8c8"
-            strokeWidth="2"
+            d={generateWavePath(6, 3, 100 - wavePercent - 8)}
+            fill="url(#wave-gradient-1)"
           />
-          {/* Mast */}
-          <line x1="0" y1="-10" x2="0" y2="-35" stroke="#e0d8c8" strokeWidth="2" />
-          {/* Sail */}
-          <path d="M 0 -35 L 15 -25 L 0 -15 Z" fill="rgba(224, 216, 200, 0.8)" />
         </g>
-        
-        {/* Labels */}
-        <text className="wave-label" x="20" y="30" fontWeight="bold">
-          AI Tsunami
-        </text>
-        <text className="day-label" x="20" y="55">
-          Day {currentDay} • {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </text>
-        <text className="day-label" x="20" y="75">
-          Waterline: {wavePercent.toFixed(1)}%
-        </text>
+
+        {/* Wave Layer 2 (mid) - medium */}
+        <g className="wave-layer wave-layer-2">
+          <path
+            d={generateWavePath(5, 4, 100 - wavePercent - 4)}
+            fill="url(#wave-gradient-2)"
+          />
+        </g>
+
+        {/* Wave Layer 3 (front) - fastest, full opacity */}
+        <g className="wave-layer wave-layer-3">
+          <path
+            d={generateWavePath(4, 5, 100 - wavePercent)}
+            fill="url(#wave-gradient-3)"
+          />
+        </g>
+
+        {/* Foam/spray at wave crests */}
+        <g className="foam-particles" opacity="0.6">
+          <circle cx="20" cy={100 - wavePercent - 2} r="1" fill="#ffffff">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="45" cy={100 - wavePercent - 1} r="1.2" fill="#ffffff">
+            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.8s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="70" cy={100 - wavePercent - 3} r="0.8" fill="#ffffff">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="90" cy={100 - wavePercent - 1.5} r="1" fill="#ffffff">
+            <animate attributeName="opacity" values="0.6;0.95;0.6" dur="1.9s" repeatCount="indefinite" />
+          </circle>
+        </g>
+
+        {/* Turtle Surfer */}
+        <g transform="translate(35, 0) scale(0.25)">
+          <TsunamiSurfer score={score} wavePercent={wavePercent} state={surferState} />
+        </g>
       </svg>
+
+      {/* Overlay text */}
+      <div className="wave-overlay-text">
+        <span className="wave-day">Day {daysSinceStart}</span>
+        <span className="wave-separator">·</span>
+        <span className="wave-waterline">Waterline: {wavePercent.toFixed(1)}%</span>
+      </div>
     </div>
   );
-}
+};
