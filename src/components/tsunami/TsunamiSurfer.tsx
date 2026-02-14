@@ -1,198 +1,163 @@
-import { motion } from 'motion/react';
+import type { SurferState } from '../../data/tsunami-data';
 
 interface TsunamiSurferProps {
-  score: number;
-  wavePercent: number;
-  state: 'surfing' | 'riding' | 'struggling' | 'drowning';
+  state: SurferState;
 }
 
-export const TsunamiSurfer: React.FC<TsunamiSurferProps> = ({ score, state }) => {
-  // Map score (0-100) to vertical position within wave area
-  const verticalPosition = `${100 - score}%`;
+export const TsunamiSurfer: React.FC<TsunamiSurferProps> = ({ state }) => {
+  // Rotation based on state
+  const rotation =
+    state === 'surfing' ? -12 :
+    state === 'riding' ? -3 :
+    state === 'struggling' ? 5 :
+    10;
 
-  // State-specific transforms and visibility
-  const getStateStyles = () => {
-    switch (state) {
-      case 'surfing':
-        return { rotation: -10, boardOffset: 0 };
-      case 'riding':
-        return { rotation: 0, boardOffset: 0 };
-      case 'struggling':
-        return { rotation: 5, boardOffset: 0 };
-      case 'drowning':
-        return { rotation: 8, boardOffset: 15 };
-    }
-  };
+  // How much of the turtle is visible (clip from bottom)
+  // For drowning, clip most of the body
+  const clipPercent =
+    state === 'drowning' ? 55 :
+    state === 'struggling' ? 20 :
+    0;
 
-  const { rotation, boardOffset } = getStateStyles();
+  // Glow color
+  const glowColor =
+    state === 'surfing' ? 'rgba(76, 175, 80, 0.7)' :
+    state === 'riding' ? 'rgba(212, 160, 58, 0.5)' :
+    state === 'struggling' ? 'rgba(255, 152, 0, 0.6)' :
+    'rgba(244, 67, 54, 0.7)';
 
   return (
-    <motion.g
-      className={`surfer ${state}`}
-      initial={{ y: verticalPosition }}
-      animate={{ y: verticalPosition }}
-      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+    <div
+      className={`surfer surfer--${state}`}
+      style={{
+        filter: `drop-shadow(0 0 12px ${glowColor})`,
+      }}
     >
-      {/* Surfboard */}
-      <g transform={`translate(${boardOffset}, 0)`}>
-        <ellipse
-          cx="60"
-          cy="50"
-          rx="35"
-          ry="8"
-          fill="#8B4513"
-          opacity={state === 'drowning' ? 0.7 : 1}
-        />
-        <ellipse
-          cx="60"
-          cy="50"
-          rx="30"
-          ry="3"
-          fill="#D4A03A"
-        />
-      </g>
+      <svg
+        viewBox="0 0 120 90"
+        width="120"
+        height="90"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: 'transform 0.6s ease-out',
+        }}
+      >
+        <defs>
+          <clipPath id="water-clip">
+            <rect x="0" y="0" width="120" height={90 - clipPercent * 0.9} />
+          </clipPath>
+        </defs>
 
-      {/* Turtle body */}
-      <g transform={`rotate(${rotation}, 60, 40)`}>
-        {/* Shell */}
-        <ellipse
-          cx="60"
-          cy="40"
-          rx="20"
-          ry="16"
-          fill="#2E7D32"
-          filter={
-            state === 'surfing' ? 'url(#glow-green)' :
-            state === 'riding' ? 'url(#glow-amber)' :
-            state === 'struggling' ? 'url(#glow-amber-red)' :
-            'url(#glow-red)'
-          }
-        />
-        
-        {/* Shell pattern */}
-        <g opacity="0.6">
-          <polygon points="60,28 67,35 60,42 53,35" fill="#388E3C" />
-          <polygon points="60,42 67,49 60,56 53,49" fill="#388E3C" />
-          <polygon points="50,35 57,42 50,49 43,42" fill="#4CAF50" />
-          <polygon points="70,35 77,42 70,49 63,42" fill="#4CAF50" />
+        <g clipPath={clipPercent > 0 ? 'url(#water-clip)' : undefined}>
+          {/* ===== SURFBOARD ===== */}
+          <g className={state === 'drowning' ? 'board-drifting' : ''}>
+            <ellipse cx="60" cy="68" rx="40" ry="7" fill="#6D4C2A" />
+            {/* Board stripe */}
+            <ellipse cx="60" cy="68" rx="34" ry="3" fill="#D4A03A" opacity="0.8" />
+            {/* Board shine */}
+            <ellipse cx="45" cy="66" rx="12" ry="1.5" fill="#fff" opacity="0.15" />
+          </g>
+
+          {/* ===== TURTLE BODY ===== */}
+          {/* Shell (main) */}
+          <ellipse cx="60" cy="48" rx="22" ry="18" fill="#2E7D32" />
+          {/* Shell pattern — hexagonal plates */}
+          <ellipse cx="60" cy="48" rx="18" ry="14" fill="none" stroke="#388E3C" strokeWidth="1.5" />
+          <line x1="60" y1="34" x2="60" y2="62" stroke="#388E3C" strokeWidth="1" opacity="0.6" />
+          <line x1="42" y1="48" x2="78" y2="48" stroke="#388E3C" strokeWidth="1" opacity="0.6" />
+          <line x1="48" y1="36" x2="72" y2="60" stroke="#388E3C" strokeWidth="0.8" opacity="0.4" />
+          <line x1="72" y1="36" x2="48" y2="60" stroke="#388E3C" strokeWidth="0.8" opacity="0.4" />
+          {/* Shell highlight */}
+          <ellipse cx="55" cy="42" rx="8" ry="5" fill="#4CAF50" opacity="0.4" />
+
+          {/* ===== HEAD ===== */}
+          <ellipse cx="60" cy="28" rx="9" ry="8" fill="#43A047" />
+          {/* Cheeks */}
+          <circle cx="54" cy="30" r="2" fill="#66BB6A" opacity="0.5" />
+          <circle cx="66" cy="30" r="2" fill="#66BB6A" opacity="0.5" />
+          {/* Eyes */}
+          <circle cx="56" cy="26" r="2.5" fill="#fff" />
+          <circle cx="64" cy="26" r="2.5" fill="#fff" />
+          <circle cx={state === 'surfing' ? '57' : '56.5'} cy="26" r="1.3" fill="#1a1a1a" />
+          <circle cx={state === 'surfing' ? '65' : '64.5'} r="1.3" cy="26" fill="#1a1a1a" />
+          {/* Determined expression for surfing, worried for struggling/drowning */}
+          {state === 'surfing' || state === 'riding' ? (
+            <path d="M56,31 Q60,34 64,31" fill="none" stroke="#1a1a1a" strokeWidth="1" strokeLinecap="round" />
+          ) : (
+            <path d="M56,32 Q60,30 64,32" fill="none" stroke="#1a1a1a" strokeWidth="1" strokeLinecap="round" />
+          )}
+
+          {/* ===== FLIPPERS ===== */}
+          {state === 'surfing' ? (
+            /* Surfing: arms wide, confident */
+            <>
+              <ellipse cx="35" cy="42" rx="12" ry="5" fill="#2E7D32" transform="rotate(-25, 35, 42)" />
+              <ellipse cx="85" cy="38" rx="12" ry="5" fill="#2E7D32" transform="rotate(30, 85, 38)" />
+            </>
+          ) : state === 'riding' ? (
+            /* Riding: arms at sides, relaxed */
+            <>
+              <ellipse cx="38" cy="50" rx="10" ry="5" fill="#2E7D32" transform="rotate(-10, 38, 50)" />
+              <ellipse cx="82" cy="50" rx="10" ry="5" fill="#2E7D32" transform="rotate(10, 82, 50)" />
+            </>
+          ) : state === 'struggling' ? (
+            /* Struggling: arms reaching up */
+            <>
+              <ellipse cx="38" cy="38" rx="10" ry="5" fill="#2E7D32" transform="rotate(-50, 38, 38)" />
+              <ellipse cx="82" cy="38" rx="10" ry="5" fill="#2E7D32" transform="rotate(50, 82, 38)" />
+            </>
+          ) : (
+            /* Drowning: one arm reaching up */
+            <>
+              <ellipse cx="52" cy="26" rx="10" ry="4" fill="#2E7D32" transform="rotate(-75, 52, 26)" />
+            </>
+          )}
+
+          {/* Back flippers (hidden when drowning) */}
+          {state !== 'drowning' && (
+            <>
+              <ellipse cx="44" cy="62" rx="8" ry="4" fill="#2E7D32" transform="rotate(-15, 44, 62)" />
+              <ellipse cx="76" cy="62" rx="8" ry="4" fill="#2E7D32" transform="rotate(15, 76, 62)" />
+            </>
+          )}
+
+          {/* Tail */}
+          {state !== 'drowning' && (
+            <ellipse cx="60" cy="66" rx="4" ry="3" fill="#2E7D32" />
+          )}
         </g>
 
-        {/* Head */}
-        <circle
-          cx="60"
-          cy={state === 'drowning' ? '22' : '25'}
-          r="7"
-          fill="#2E7D32"
-        />
-        
-        {/* Eyes */}
-        <circle cx="58" cy="24" r="1.5" fill="#000" />
-        <circle cx="62" cy="24" r="1.5" fill="#000" />
-        
-        {/* Front flippers */}
-        {state === 'surfing' ? (
-          <>
-            <ellipse cx="45" cy="38" rx="8" ry="4" fill="#2E7D32" transform="rotate(-30, 45, 38)" />
-            <ellipse cx="75" cy="30" rx="8" ry="4" fill="#2E7D32" transform="rotate(45, 75, 30)" />
-          </>
-        ) : state === 'struggling' ? (
-          <>
-            <ellipse cx="42" cy="45" rx="8" ry="4" fill="#2E7D32" transform="rotate(-60, 42, 45)" />
-            <ellipse cx="78" cy="45" rx="8" ry="4" fill="#2E7D32" transform="rotate(60, 78, 45)" />
-          </>
-        ) : state === 'drowning' ? (
-          <>
-            <ellipse cx="52" cy="18" rx="8" ry="4" fill="#2E7D32" transform="rotate(-80, 52, 18)" />
-          </>
-        ) : (
-          <>
-            <ellipse cx="45" cy="40" rx="8" ry="4" fill="#2E7D32" transform="rotate(-15, 45, 40)" />
-            <ellipse cx="75" cy="40" rx="8" ry="4" fill="#2E7D32" transform="rotate(15, 75, 40)" />
-          </>
+        {/* ===== SPRAY PARTICLES (surfing only) ===== */}
+        {state === 'surfing' && (
+          <g className="spray-particles">
+            <circle cx="92" cy="55" r="2.5" fill="#fff" opacity="0.8" />
+            <circle cx="98" cy="50" r="2" fill="#fff" opacity="0.6" />
+            <circle cx="88" cy="48" r="1.8" fill="#fff" opacity="0.7" />
+            <circle cx="95" cy="60" r="1.5" fill="#fff" opacity="0.5" />
+            <circle cx="100" cy="56" r="1.2" fill="#4fc3f7" opacity="0.4" />
+          </g>
         )}
-        
-        {/* Back flippers */}
-        {state !== 'drowning' && (
-          <>
-            <ellipse cx="48" cy="50" rx="7" ry="3" fill="#2E7D32" transform="rotate(-20, 48, 50)" />
-            <ellipse cx="72" cy="50" rx="7" ry="3" fill="#2E7D32" transform="rotate(20, 72, 50)" />
-          </>
+
+        {/* ===== WATER SPLASH (struggling) ===== */}
+        {state === 'struggling' && (
+          <g className="splash-particles">
+            <circle cx="30" cy="55" r="2" fill="#4fc3f7" opacity="0.5" />
+            <circle cx="90" cy="55" r="2" fill="#4fc3f7" opacity="0.5" />
+            <circle cx="35" cy="50" r="1.5" fill="#fff" opacity="0.4" />
+            <circle cx="85" cy="50" r="1.5" fill="#fff" opacity="0.4" />
+          </g>
         )}
-        
-        {/* Tail */}
-        {state !== 'drowning' && (
-          <ellipse cx="60" cy="56" rx="3" ry="4" fill="#2E7D32" />
+
+        {/* ===== BUBBLES (drowning) ===== */}
+        {state === 'drowning' && (
+          <g className="bubble-particles">
+            <circle cx="55" cy="45" r="2" fill="none" stroke="#fff" strokeWidth="0.5" opacity="0.5" />
+            <circle cx="65" cy="50" r="1.5" fill="none" stroke="#fff" strokeWidth="0.5" opacity="0.4" />
+            <circle cx="58" cy="55" r="1" fill="none" stroke="#fff" strokeWidth="0.5" opacity="0.3" />
+          </g>
         )}
-      </g>
-
-      {/* Spray particles for surfing state */}
-      {state === 'surfing' && (
-        <g className="spray-particles">
-          <circle cx="80" cy="35" r="2" fill="#fff" opacity="0.8">
-            <animate attributeName="cy" values="35;30;35" dur="0.8s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="85" cy="40" r="1.5" fill="#fff" opacity="0.7">
-            <animate attributeName="cy" values="40;35;40" dur="1s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="75" cy="32" r="1.8" fill="#fff" opacity="0.6">
-            <animate attributeName="cy" values="32;28;32" dur="0.9s" repeatCount="indefinite" />
-          </circle>
-        </g>
-      )}
-
-      {/* Wobble animation for struggling */}
-      {state === 'struggling' && (
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          values="0 60 40; 3 60 40; -3 60 40; 0 60 40"
-          dur="1.5s"
-          repeatCount="indefinite"
-        />
-      )}
-
-      {/* Slow sink for drowning */}
-      {state === 'drowning' && (
-        <animateTransform
-          attributeName="transform"
-          type="translate"
-          values="0 0; 0 3; 0 0"
-          dur="3s"
-          repeatCount="indefinite"
-        />
-      )}
-
-      {/* Glow filters */}
-      <defs>
-        <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <filter id="glow-amber" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <filter id="glow-amber-red" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-    </motion.g>
+      </svg>
+    </div>
   );
 };

@@ -13,15 +13,31 @@ import {
 } from '../../data/tsunami-data';
 import '../../styles/tsunami.css';
 
-export const TsunamiPage: React.FC = () => {
-  // Initialize scores with defaults
-  const initialScores = SKILL_DIMENSIONS.reduce((acc, dim) => {
+const STORAGE_KEY = 'tsunami-tracker-scores';
+
+function getInitialScores(): Record<string, number> {
+  // Try localStorage first
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Validate it has all keys
+      const valid = SKILL_DIMENSIONS.every((dim) => typeof parsed[dim.id] === 'number');
+      if (valid) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  // Fall back to Turtleand's defaults
+  return SKILL_DIMENSIONS.reduce((acc, dim) => {
     acc[dim.id] = dim.defaultValue;
     return acc;
   }, {} as Record<string, number>);
+}
 
-  const [scores, setScores] = useState(initialScores);
-  
+export const TsunamiPage: React.FC = () => {
+  const [scores, setScores] = useState(getInitialScores);
+
   const daysSinceStart = calculateDaysSinceStart();
   const wavePercent = calculateWavePercent();
   const compositeScore = calculateCompositeScore(scores);
@@ -34,20 +50,16 @@ export const TsunamiPage: React.FC = () => {
       transition={{ duration: 0.5 }}
     >
       <TsunamiNav />
-      
-      {/* Full-width wave visualization */}
+
       <WaveVisualization
         score={compositeScore}
         wavePercent={wavePercent}
         daysSinceStart={daysSinceStart}
       />
-      
-      {/* Constrained content area */}
+
       <div className="tsunami-content">
         <ScoreDisplay score={compositeScore} wavePercent={wavePercent} />
-        
         <SkillSliders scores={scores} onScoresChange={setScores} />
-        
         <TsunamiTimeline />
       </div>
     </motion.div>
