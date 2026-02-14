@@ -1,0 +1,55 @@
+# AI Atlas by Turtleand
+
+> A curated directory of AI tools with detailed profiles, use cases, and honest evaluations.
+
+## Tools
+
+### Chatbot
+- [ChatGPT](https://ai-atlas.turtleand.com/#chatgpt): OpenAI's conversational AI
+- [Claude](https://ai-atlas.turtleand.com/#claude): Anthropic's AI assistant
+- [Grok](https://ai-atlas.turtleand.com/#grok): xAI's chatbot
+- [Gemini](https://ai-atlas.turtleand.com/#gemini): Google's AI assistant
+- [Sesame](https://ai-atlas.turtleand.com/#sesame): Voice-based AI companion
+
+### Images
+- [Nano Banana](https://ai-atlas.turtleand.com/#nano-banana): AI image generation
+- [ChatGPT Image](https://ai-atlas.turtleand.com/#chatgpt-image): OpenAI's image generation in ChatGPT
+- [Recraft](https://ai-atlas.turtleand.com/#recraft): AI image generation and design
+- [Adobe Express](https://ai-atlas.turtleand.com/#adobe-express): AI background removal
+- [Gemini Drawing](https://ai-atlas.turtleand.com/#gemini-drawing): Collaborative AI drawing
+
+### Video Generation
+- [Sora](https://ai-atlas.turtleand.com/#sora): OpenAI's text-to-video model
+- [VEO 3](https://ai-atlas.turtleand.com/#veo-3): Google's AI video generation
+- [Hailuo Minimax](https://ai-atlas.turtleand.com/#hailuo-minimax): AI video generation
+
+### Code
+- [GitHub Copilot](https://ai-atlas.turtleand.com/#github-copilot): AI pair programmer
+- [Claude Code](https://ai-atlas.turtleand.com/#claude-code): AI coding assistant in terminal
+- [Cursor](https://ai-atlas.turtleand.com/#cursor): AI-first code editor
+- [Sourcegraph DeepSearch](https://ai-atlas.turtleand.com/#sourcegraph-deepsearch): AI-powered semantic code search
+- [Sourcegraph AMP](https://ai-atlas.turtleand.com/#sourcegraph-amp): Agentic coding with autonomous workflows
+- [OpenAI Codex](https://ai-atlas.turtleand.com/#openai-codex): Code generation model powering Copilot
+
+### Research
+- [ChatGPT Deep Search](https://ai-atlas.turtleand.com/#chatgpt-deep-search): Advanced AI research
+- [Perplexity Comet](https://ai-atlas.turtleand.com/#perplexity-comet): AI-powered desktop assistant
+
+### Education
+- [NotebookLM](https://ai-atlas.turtleand.com/#notebooklm): AI-powered learning notebook
+- [Gamma](https://ai-atlas.turtleand.com/#gamma): AI presentation creation
+
+### Local & Infrastructure
+- [llama.cpp](https://ai-atlas.turtleand.com/#llama-cpp): Local LLM inference engine
+- [Hugging Face](https://ai-atlas.turtleand.com/#hugging-face): Model repository & community hub
+
+### Agents
+- [OpenClaw](https://ai-atlas.turtleand.com/#openclaw): Persistent AI agent platform
+
+### Auxiliary Tools
+- [ntfy](https://ai-atlas.turtleand.com/#ntfy): Push notifications for AI agents
+
+## About
+Curated by Turtleand — exploring how humans and technology evolve together.
+- Portal: https://turtleand.com
+- GitHub: https://github.com/turtleand
