@@ -50,8 +50,13 @@
 .storm-canvas-container {
   position: relative;
   width: 100%;
-  height: 500px;
-  background: #040810;
+  height: 550px;
+  background: #030508;
+  cursor: grab;
+}
+
+.storm-canvas-container:active {
+  cursor: grabbing;
 }
 
 .storm-canvas-container canvas {
@@ -375,7 +380,7 @@
    ============================================ */
 @media (max-width: 768px) {
   .storm-canvas-container {
-    height: 350px;
+    height: 400px;
   }
 
   .tsunami-nav {
