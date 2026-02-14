@@ -102,8 +102,10 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
                 id={dimension.id}
                 min="0"
                 max="100"
+                step="1"
                 value={value}
                 onChange={(e) => handleSliderChange(dimension.id, parseInt(e.target.value))}
+                onInput={(e) => handleSliderChange(dimension.id, parseInt((e.target as HTMLInputElement).value))}
                 className="slider-input"
                 style={{
                   background: `linear-gradient(to right, #D4A03A 0%, #D4A03A ${value}%, #1a2a3a ${value}%, #1a2a3a 100%)`

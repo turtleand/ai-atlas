@@ -51,7 +51,7 @@
   position: relative;
   width: 100%;
   height: 550px;
-  background: #030508;
+  background: #0c1e35;
   cursor: grab;
 }
 
@@ -194,13 +194,15 @@
 .sliders-list {
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: 1.8rem;
 }
 
 .slider-item {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  /* Extra padding for touch comfort */
+  padding: 0.5rem 0;
 }
 
 .slider-label-row {
@@ -210,18 +212,21 @@
 }
 
 .slider-label {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.05rem;
+  font-weight: 600;
   color: #e0d8c8;
 }
 
 .slider-value {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #D4A03A;
   min-width: 2.5rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  background: rgba(212, 160, 58, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
 }
 
 /* Custom range input — track */
@@ -229,55 +234,83 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 8px;
-  border-radius: 4px;
+  height: 12px;
+  border-radius: 6px;
   outline: none;
   cursor: pointer;
   transition: opacity 0.2s;
+  touch-action: none;
+  /* Extra vertical padding for touch targets */
+  padding: 8px 0;
+  margin: 0;
+  box-sizing: content-box;
 }
 
 .slider-input:hover {
   opacity: 0.9;
 }
 
-/* Webkit thumb */
+/* Webkit track (explicit styling) */
+.slider-input::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 6px;
+  background: transparent; /* inline style handles gradient */
+}
+
+/* Webkit thumb — big enough for touch */
 .slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #D4A03A;
-  border: 2px solid #fff;
+  border: 3px solid #fff;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  margin-top: -9px; /* center on 12px track */
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .slider-input::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 12px rgba(212, 160, 58, 0.8);
+  box-shadow: 0 0 14px rgba(212, 160, 58, 0.9);
   transform: scale(1.1);
 }
 
 .slider-input:active::-webkit-slider-thumb {
-  box-shadow: 0 0 16px rgba(212, 160, 58, 1);
-  transform: scale(1.15);
+  box-shadow: 0 0 18px rgba(212, 160, 58, 1);
+  transform: scale(1.2);
 }
 
-/* Firefox thumb */
+/* Firefox track */
+.slider-input::-moz-range-track {
+  height: 12px;
+  border-radius: 6px;
+  background: #1a2a3a;
+  border: none;
+}
+
+/* Firefox progress (filled part) */
+.slider-input::-moz-range-progress {
+  height: 12px;
+  border-radius: 6px 0 0 6px;
+  background: #D4A03A;
+}
+
+/* Firefox thumb — big for touch */
 .slider-input::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #D4A03A;
-  border: 2px solid #fff;
+  border: 3px solid #fff;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .slider-input::-moz-range-thumb:hover {
-  box-shadow: 0 0 12px rgba(212, 160, 58, 0.8);
+  box-shadow: 0 0 14px rgba(212, 160, 58, 0.9);
 }
 
 .slider-description {
@@ -380,7 +413,7 @@
    ============================================ */
 @media (max-width: 768px) {
   .storm-canvas-container {
-    height: 400px;
+    height: 350px;
   }
 
   .tsunami-nav {

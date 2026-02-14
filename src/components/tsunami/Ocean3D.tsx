@@ -56,16 +56,18 @@ export function Ocean3D({ wavePercent }: Ocean3DProps) {
       positions[i + 1] = y;
       
       // Foam on wave crests (white where height > threshold)
-      const foamThreshold = 0.5 * stormIntensity;
-      const foamAmount = Math.max(0, (y - foamThreshold) / (stormIntensity * 0.8));
+      const foamThreshold = 0.4 * stormIntensity;
+      const foamAmount = Math.max(0, (y - foamThreshold) / (stormIntensity * 0.7));
       const clampedFoam = Math.min(1, foamAmount);
       
-      // Base water color: very dark blue-green
-      const baseR = 0.01, baseG = 0.04, baseB = 0.08;
-      // Foam: white
-      colors[i] = baseR + clampedFoam * 0.9;     // R
-      colors[i + 1] = baseG + clampedFoam * 0.9;  // G
-      colors[i + 2] = baseB + clampedFoam * 0.85;  // B
+      // Base water color: visible dark teal-blue (NOT black)
+      const baseR = 0.04, baseG = 0.12, baseB = 0.22;
+      // Depth variation based on y
+      const depthFactor = Math.max(0, y * 0.08);
+      // Foam: white with slight blue tint
+      colors[i] = baseR + depthFactor * 0.02 + clampedFoam * 0.85;     // R
+      colors[i + 1] = baseG + depthFactor * 0.04 + clampedFoam * 0.9;  // G
+      colors[i + 2] = baseB + depthFactor * 0.06 + clampedFoam * 0.85; // B
     }
     
     geometry.attributes.position.needsUpdate = true;
@@ -77,9 +79,9 @@ export function Ocean3D({ wavePercent }: Ocean3DProps) {
     <mesh ref={meshRef} geometry={geometry}>
       <meshStandardMaterial
         vertexColors
-        roughness={0.3}
-        metalness={0.1}
-        envMapIntensity={0.5}
+        roughness={0.25}
+        metalness={0.15}
+        envMapIntensity={0.8}
         side={THREE.DoubleSide}
       />
     </mesh>

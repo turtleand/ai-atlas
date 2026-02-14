@@ -46,15 +46,15 @@ export function Ship3D({ tier, stormIntensity }: Ship3DProps) {
     }
   });
   
-  // Color constants
-  const DARK_WOOD = '#1a0e05';
-  const MED_WOOD = '#3d2b1f';
-  const LIGHT_WOOD = '#5c3a1e';
-  const HULL_BLACK = '#0d0d0d';
-  const SAIL_WHITE = '#e8e0d4';
-  const SAIL_TORN = '#a09080';
+  // Color constants — bright enough to be visible against dark ocean
+  const DARK_WOOD = '#4a2a10';
+  const MED_WOOD = '#6b4530';
+  const LIGHT_WOOD = '#8b5e3c';
+  const HULL_DARK = '#2a1a0e';
+  const SAIL_WHITE = '#f0e8dc';
+  const SAIL_TORN = '#b8a890';
   const CYAN_GLOW = '#00ffdd';
-  const CHROME = '#a8a9ad';
+  const CHROME = '#c0c2c8';
   
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
@@ -68,7 +68,7 @@ export function Ship3D({ tier, stormIntensity }: Ship3DProps) {
               0.6,
               tier >= 4 ? 4 : tier >= 3 ? 3 : 2
             ]} />
-            <meshStandardMaterial color={tier >= 3 ? HULL_BLACK : LIGHT_WOOD} />
+            <meshStandardMaterial color={tier >= 3 ? HULL_DARK : LIGHT_WOOD} emissive={tier >= 3 ? '#0a0804' : '#1a0e05'} emissiveIntensity={0.3} />
           </mesh>
           
           {/* Hull deck */}
@@ -84,7 +84,7 @@ export function Ship3D({ tier, stormIntensity }: Ship3DProps) {
           {/* Bow (front point) — angled */}
           <mesh position={[0, 0.4, tier >= 4 ? 2.3 : tier >= 3 ? 1.7 : 1.2]} rotation={[0, 0, Math.PI / 4]}>
             <boxGeometry args={[0.3, 0.3, 0.5]} />
-            <meshStandardMaterial color={tier >= 3 ? HULL_BLACK : LIGHT_WOOD} />
+            <meshStandardMaterial color={tier >= 3 ? HULL_DARK : LIGHT_WOOD} />
           </mesh>
           
           {/* Keel line at bottom */}
@@ -225,9 +225,11 @@ export function Ship3D({ tier, stormIntensity }: Ship3DProps) {
             ]} />
             <meshStandardMaterial
               color={tier >= 3 ? SAIL_WHITE : SAIL_TORN}
+              emissive={tier >= 3 ? '#302820' : '#1a1510'}
+              emissiveIntensity={0.3}
               side={THREE.DoubleSide}
               transparent
-              opacity={tier === 2 ? 0.6 : 0.9}
+              opacity={tier === 2 ? 0.7 : 0.95}
             />
           </mesh>
           

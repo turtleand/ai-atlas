@@ -125,13 +125,13 @@ export function Storm3D(_props: Storm3DProps) {
   
   return (
     <>
-      {/* Rain particles */}
+      {/* Rain particles — visible streaks */}
       <points ref={rainRef} geometry={rainGeometry}>
         <pointsMaterial
-          color="#8899bb"
-          size={0.08}
+          color="#99aacc"
+          size={0.1}
           transparent
-          opacity={0.6}
+          opacity={0.7}
           sizeAttenuation
         />
       </points>
@@ -139,10 +139,10 @@ export function Storm3D(_props: Storm3DProps) {
       {/* Wind/spray particles */}
       <points ref={sprayRef} geometry={sprayGeometry}>
         <pointsMaterial
-          color="#aabbcc"
-          size={0.04}
+          color="#bbccdd"
+          size={0.06}
           transparent
-          opacity={0.3}
+          opacity={0.4}
           sizeAttenuation
         />
       </points>
@@ -170,10 +170,10 @@ export function Storm3D(_props: Storm3DProps) {
         distance={90}
       />
       
-      {/* Dark stormy sky sphere */}
+      {/* Dark stormy sky sphere — visible dark blue, not black */}
       <mesh>
         <sphereGeometry args={[80, 32, 32]} />
-        <meshBasicMaterial color="#030508" side={THREE.BackSide} />
+        <meshBasicMaterial color="#0c1e35" side={THREE.BackSide} />
       </mesh>
     </>
   );
