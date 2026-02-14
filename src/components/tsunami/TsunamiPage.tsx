@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { TsunamiNav } from './TsunamiNav';
-import { WaveVisualization } from './WaveVisualization';
+import { StormScene } from './StormScene';
 import { ScoreDisplay } from './ScoreDisplay';
 import { SkillSliders } from './SkillSliders';
 import { TsunamiTimeline } from './TsunamiTimeline';
@@ -51,7 +51,7 @@ export const TsunamiPage: React.FC = () => {
     >
       <TsunamiNav />
 
-      <WaveVisualization
+      <StormScene
         score={compositeScore}
         wavePercent={wavePercent}
         daysSinceStart={daysSinceStart}
