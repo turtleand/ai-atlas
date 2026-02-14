@@ -57,7 +57,7 @@ export function Ship3D({ tier, stormIntensity }: Ship3DProps) {
   const CHROME = '#c0c2c8';
   
   return (
-    <group ref={groupRef} position={[0, 0, 0]}>
+    <group ref={groupRef} position={[0, 0, 0]} scale={[1.8, 1.8, 1.8]}>
       {/* ===== ALL TIERS: HULL ===== */}
       {tier >= 2 && (
         <group>

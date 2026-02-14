@@ -19,7 +19,7 @@ export default function App() {
         <Route
           path="/tsunami"
           element={
-            <Suspense fallback={<div style={{ background: '#040810', width: '100%', height: '100vh' }} />}>
+            <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
               <TsunamiPage />
             </Suspense>
           }

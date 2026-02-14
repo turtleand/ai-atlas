@@ -1,31 +1,28 @@
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { useEffect } from 'react';
-import { getVerdict, getSurferState } from '../../data/tsunami-data';
+import { getVerdict, getSurferState, TIER_INFO } from '../../data/tsunami-data';
 
 interface ScoreDisplayProps {
   score: number;
   wavePercent: number;
+  tier: number;
 }
 
-export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, wavePercent }) => {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, wavePercent, tier }) => {
   const motionScore = useMotionValue(score);
   const rounded = useTransform(motionScore, (latest) => Math.round(latest));
   
   const verdict = getVerdict(score);
   const surferState = getSurferState(score, wavePercent);
   const difference = score - wavePercent;
+  const tierInfo = TIER_INFO.find((t) => t.tier === tier);
   
-  // Determine border color based on surfer state
   const getBorderColor = () => {
     switch (surferState) {
-      case 'surfing':
-        return '#4CAF50'; // Green
-      case 'riding':
-        return '#D4A03A'; // Amber/Gold
-      case 'struggling':
-        return '#FF9800'; // Amber-Red
-      case 'drowning':
-        return '#f44336'; // Red
+      case 'surfing': return '#4CAF50';
+      case 'riding': return '#D4A03A';
+      case 'struggling': return '#FF9800';
+      case 'drowning': return '#f44336';
     }
   };
 
@@ -55,6 +52,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, wavePercent }
           ? `${Math.round(difference)} points above the waterline`
           : `${Math.abs(Math.round(difference))} points below the waterline`
         }
+        {tierInfo && <span className="score-tier-badge"> · Tier {tier}</span>}
       </div>
       <div className="score-description">{verdict.description}</div>
     </div>

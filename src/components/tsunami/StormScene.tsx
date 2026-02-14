@@ -9,57 +9,49 @@ interface StormSceneProps {
   score: number;
   wavePercent: number;
   daysSinceStart: number;
+  tier: number;
 }
 
-export function StormScene({ score, wavePercent, daysSinceStart }: StormSceneProps) {
-  const tier = score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 45 ? 2 : 1;
-  
+export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSceneProps) {
   // Storm intensity scales with wavePercent
   const stormIntensity = 0.5 + (wavePercent / 100) * 1.5;
 
   return (
     <div className="storm-canvas-container">
       <Canvas
-        camera={{ position: [-4, 3, 9], fov: 60, near: 0.1, far: 1000 }}
+        camera={{ position: [-3, 2.5, 6], fov: 55, near: 0.1, far: 1000 }}
         gl={{ antialias: true }}
       >
         <color attach="background" args={['#0c1e35']} />
-        <fog attach="fog" args={['#0c1e35', 20, 80]} />
+        <fog attach="fog" args={['#0c1e35', 18, 65]} />
         
-        {/* Ambient light — enough to see shapes */}
+        {/* Ambient — enough to see all shapes */}
         <ambientLight intensity={0.4} />
         
-        {/* Hemisphere: stormy sky above, dark water reflection below */}
+        {/* Hemisphere: stormy sky above, dark ocean reflection below */}
         <hemisphereLight args={['#2a3a5e', '#0a1525', 0.5]} />
         
-        {/* Main directional (moonlight breaking through clouds) */}
+        {/* Moonlight breaking through clouds */}
         <directionalLight position={[5, 12, 5]} intensity={0.6} color="#8899bb" />
         
-        {/* Ship spotlight — key light for visibility */}
-        <spotLight
-          position={[3, 8, 3]}
-          intensity={1.2}
-          angle={0.4}
-          penumbra={0.8}
-          color="#aabbdd"
-          castShadow={false}
-        />
+        {/* Ship area key light — ensures ship is always visible */}
+        <pointLight position={[0, 5, 0]} intensity={1.2} color="#8899bb" distance={18} />
         
         {/* Fill light from opposite side */}
-        <pointLight position={[-5, 4, -3]} intensity={0.4} color="#667799" distance={25} />
+        <pointLight position={[-4, 3, -3]} intensity={0.5} color="#667799" distance={20} />
         
         <Suspense fallback={null}>
           <Ocean3D wavePercent={wavePercent} />
-          <Ship3D tier={tier} score={score} wavePercent={wavePercent} stormIntensity={stormIntensity} />
+          <Ship3D tier={tier as 1 | 2 | 3 | 4 | 5} score={score} wavePercent={wavePercent} stormIntensity={stormIntensity} />
           <Storm3D daysSinceStart={daysSinceStart} />
         </Suspense>
         
         <OrbitControls
           autoRotate
-          autoRotateSpeed={0.2}
+          autoRotateSpeed={0.3}
           enableZoom={true}
-          minDistance={4}
-          maxDistance={20}
+          minDistance={3}
+          maxDistance={15}
           enablePan={false}
           maxPolarAngle={Math.PI / 2.05}
           minPolarAngle={Math.PI / 6}

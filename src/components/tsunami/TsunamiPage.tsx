@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { TsunamiNav } from './TsunamiNav';
 import { StormScene } from './StormScene';
 import { ScoreDisplay } from './ScoreDisplay';
+import { TierPreview } from './TierPreview';
 import { SkillSliders } from './SkillSliders';
 import { TsunamiTimeline } from './TsunamiTimeline';
 import {
@@ -10,25 +11,24 @@ import {
   calculateDaysSinceStart,
   calculateWavePercent,
   calculateCompositeScore,
+  calculateTier,
+  getTierMidpoint,
 } from '../../data/tsunami-data';
 import '../../styles/tsunami.css';
 
 const STORAGE_KEY = 'tsunami-tracker-scores';
 
 function getInitialScores(): Record<string, number> {
-  // Try localStorage first
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Validate it has all keys
       const valid = SKILL_DIMENSIONS.every((dim) => typeof parsed[dim.id] === 'number');
       if (valid) return parsed;
     }
   } catch {
     // ignore
   }
-  // Fall back to Turtleand's defaults
   return SKILL_DIMENSIONS.reduce((acc, dim) => {
     acc[dim.id] = dim.defaultValue;
     return acc;
@@ -37,10 +37,21 @@ function getInitialScores(): Record<string, number> {
 
 export const TsunamiPage: React.FC = () => {
   const [scores, setScores] = useState(getInitialScores);
+  const [previewTier, setPreviewTier] = useState<number | null>(null);
 
   const daysSinceStart = calculateDaysSinceStart();
   const wavePercent = calculateWavePercent();
   const compositeScore = calculateCompositeScore(scores);
+  const actualTier = calculateTier(compositeScore);
+
+  // When previewing a tier, override the displayed tier and score
+  const displayTier = previewTier ?? actualTier;
+  const displayScore = previewTier ? getTierMidpoint(previewTier) : compositeScore;
+
+  const handleScoresChange = useCallback((newScores: Record<string, number>) => {
+    setScores(newScores);
+    setPreviewTier(null); // Clear preview when user adjusts sliders
+  }, []);
 
   return (
     <motion.div
@@ -51,16 +62,28 @@ export const TsunamiPage: React.FC = () => {
     >
       <TsunamiNav />
 
-      <StormScene
-        score={compositeScore}
-        wavePercent={wavePercent}
-        daysSinceStart={daysSinceStart}
-      />
+      <div className="tsunami-layout">
+        {/* Left/Top: 3D Storm Scene */}
+        <div className="tsunami-scene-panel">
+          <StormScene
+            score={displayScore}
+            wavePercent={wavePercent}
+            daysSinceStart={daysSinceStart}
+            tier={displayTier}
+          />
+        </div>
 
-      <div className="tsunami-content">
-        <ScoreDisplay score={compositeScore} wavePercent={wavePercent} />
-        <SkillSliders scores={scores} onScoresChange={setScores} />
-        <TsunamiTimeline />
+        {/* Right/Bottom: Controls Panel */}
+        <div className="tsunami-controls-panel">
+          <ScoreDisplay score={compositeScore} wavePercent={wavePercent} tier={actualTier} />
+          <TierPreview
+            currentTier={actualTier}
+            previewTier={previewTier}
+            onPreview={setPreviewTier}
+          />
+          <SkillSliders scores={scores} onScoresChange={handleScoresChange} />
+          <TsunamiTimeline />
+        </div>
       </div>
     </motion.div>
   );

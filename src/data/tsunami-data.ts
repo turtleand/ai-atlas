@@ -143,3 +143,39 @@ export function getSurferState(score: number, wavePercent: number): SurferState 
   if (score > wavePercent - 5) return 'struggling';
   return 'drowning';
 }
+
+// Tier system
+export function calculateTier(score: number): number {
+  if (score >= 90) return 5;
+  if (score >= 75) return 4;
+  if (score >= 60) return 3;
+  if (score >= 45) return 2;
+  return 1;
+}
+
+export interface TierInfo {
+  tier: number;
+  name: string;
+  emoji: string;
+  description: string;
+  scoreRange: string;
+}
+
+export const TIER_INFO: TierInfo[] = [
+  { tier: 5, name: 'Full-Rigged Ship', emoji: '⛵', description: 'Tech-augmented tall ship with AI navigation', scoreRange: '90–100' },
+  { tier: 4, name: 'Barque', emoji: '🚢', description: 'Strong vessel with early tech integration', scoreRange: '75–89' },
+  { tier: 3, name: 'Brigantine', emoji: '🛥️', description: 'Capable ship weathering the storm', scoreRange: '60–74' },
+  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked', scoreRange: '45–59' },
+  { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Broken planks — the tsunami won', scoreRange: '0–44' },
+];
+
+export function getTierMidpoint(tier: number): number {
+  switch (tier) {
+    case 5: return 95;
+    case 4: return 82;
+    case 3: return 67;
+    case 2: return 52;
+    case 1: return 30;
+    default: return 50;
+  }
+}
