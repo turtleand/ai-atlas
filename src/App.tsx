@@ -9,6 +9,10 @@ const TsunamiPage = lazy(() =>
   import('./components/tsunami/TsunamiPage.tsx').then((m) => ({ default: m.TsunamiPage }))
 );
 
+const ImpactMapPage = lazy(() =>
+  import('./components/impact-map/ImpactMapPage.tsx').then((m) => ({ default: m.ImpactMapPage }))
+);
+
 export default function App() {
   const categories = useMemo(() => parseToolsYaml(toolsYaml), []);
 
@@ -21,6 +25,14 @@ export default function App() {
           element={
             <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
               <TsunamiPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/ai-impact-map"
+          element={
+            <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
+              <ImpactMapPage />
             </Suspense>
           }
         />
