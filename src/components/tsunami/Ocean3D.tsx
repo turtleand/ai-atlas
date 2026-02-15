@@ -4,6 +4,7 @@ import * as THREE from 'three';
 
 interface Ocean3DProps {
   wavePercent: number;
+  calmRadius?: number;
 }
 
 // Gerstner wave parameters — 4 waves summed together
@@ -24,7 +25,7 @@ export function getWaveHeight(x: number, z: number, time: number, stormIntensity
   return y;
 }
 
-export function Ocean3D({ wavePercent }: Ocean3DProps) {
+export function Ocean3D({ wavePercent, calmRadius }: Ocean3DProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   
   // Storm intensity scales with wavePercent (daily tsunami progress)
@@ -51,8 +52,15 @@ export function Ocean3D({ wavePercent }: Ocean3DProps) {
       const x = originalPositions[i];
       const z = originalPositions[i + 2];
       
-      // Calculate wave height
-      const y = getWaveHeight(x, z, time, stormIntensity);
+      // Calculate wave height with optional calm zone
+      let y = getWaveHeight(x, z, time, stormIntensity);
+      if (calmRadius) {
+        const dist = Math.sqrt(x * x + z * z);
+        if (dist < calmRadius) {
+          const dampening = (dist / calmRadius);
+          y *= dampening * dampening; // smooth quadratic falloff
+        }
+      }
       positions[i + 1] = y;
       
       // Foam on wave crests (white where height > threshold)
@@ -68,6 +76,17 @@ export function Ocean3D({ wavePercent }: Ocean3DProps) {
       colors[i] = baseR + depthFactor * 0.02 + clampedFoam * 0.85;     // R
       colors[i + 1] = baseG + depthFactor * 0.04 + clampedFoam * 0.9;  // G
       colors[i + 2] = baseB + depthFactor * 0.06 + clampedFoam * 0.85; // B
+      
+      // Calm zone glow (cyan emanation from the entity)
+      if (calmRadius) {
+        const dist = Math.sqrt(x * x + z * z);
+        if (dist < calmRadius) {
+          const calmGlow = (1 - dist / calmRadius) * 0.3;
+          colors[i] += calmGlow * 0.1;      // slight R
+          colors[i + 1] += calmGlow * 0.6;  // G (cyan)
+          colors[i + 2] += calmGlow * 0.7;  // B (cyan)
+        }
+      }
     }
     
     geometry.attributes.position.needsUpdate = true;
