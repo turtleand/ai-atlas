@@ -99,32 +99,32 @@ export function calculateCompositeScore(scores: Record<string, number>): number 
 }
 
 export function getVerdict(score: number): { emoji: string; title: string; description: string } {
-  if (score >= 90) {
+  if (score >= 99) {
+    return {
+      emoji: '🔱',
+      title: 'The Singularity',
+      description: "You don't ride the wave — you are the wave",
+    };
+  }
+  if (score >= 95) {
     return {
       emoji: '🏄',
       title: 'Wave Rider',
-      description: "You're not just surviving, you're surfing",
+      description: "Top 5% — AI-native, commanding the storm",
     };
   }
-  if (score >= 75) {
+  if (score >= 80) {
     return {
       emoji: '⛵',
       title: 'Steady Sailor',
-      description: 'Above water, keep building',
+      description: 'Top 20% — above water, keep building',
     };
   }
-  if (score >= 60) {
-    return {
-      emoji: '🚣',
-      title: 'Treading Water',
-      description: 'The wave is catching up',
-    };
-  }
-  if (score >= 45) {
+  if (score >= 50) {
     return {
       emoji: '⚠️',
       title: 'Rising Tide',
-      description: 'Immediate action needed',
+      description: 'The wave is catching up — act now',
     };
   }
   return {
@@ -145,10 +145,10 @@ export function getSurferState(score: number, wavePercent: number): SurferState 
 
 // Tier system
 export function calculateTier(score: number): number {
-  if (score >= 90) return 5;
-  if (score >= 75) return 4;
-  if (score >= 60) return 3;
-  if (score >= 45) return 2;
+  if (score >= 99) return 5;
+  if (score >= 95) return 4;
+  if (score >= 80) return 3;
+  if (score >= 50) return 2;
   return 1;
 }
 
@@ -161,20 +161,20 @@ export interface TierInfo {
 }
 
 export const TIER_INFO: TierInfo[] = [
-  { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Floating debris — the tsunami won', scoreRange: '0–44' },
-  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked, barely afloat', scoreRange: '45–59' },
-  { tier: 3, name: 'Hybrid Cruiser', emoji: '⚡', description: 'Tech-augmented ship — metal plating, circuit lines, radar arrays', scoreRange: '60–74' },
-  { tier: 4, name: 'The Singularity', emoji: '✦', description: 'Geometric intelligence hovering above the storm', scoreRange: '75–89' },
-  { tier: 5, name: 'The Architect', emoji: '🔱', description: 'Cosmic intelligence — reshapes reality itself, master of ocean and sky', scoreRange: '90–100' },
+  { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Floating debris — the tsunami won', scoreRange: '0–49' },
+  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked, barely afloat', scoreRange: '50–79' },
+  { tier: 3, name: 'Hybrid Cruiser', emoji: '⚡', description: 'Tech-augmented vessel — chrome plating, circuit lines, radar arrays', scoreRange: '80–94' },
+  { tier: 4, name: 'AI Flagship', emoji: '✦', description: 'AI-native command ship — geometric intelligence above the storm', scoreRange: '95–98' },
+  { tier: 5, name: 'The Singularity', emoji: '🔱', description: 'Beyond comprehension — reshapes reality itself, master of ocean and sky', scoreRange: '99–100' },
 ];
 
 export function getTierMidpoint(tier: number): number {
   switch (tier) {
-    case 5: return 95;
-    case 4: return 82;
-    case 3: return 67;
-    case 2: return 52;
-    case 1: return 30;
+    case 5: return 100;
+    case 4: return 97;
+    case 3: return 87;
+    case 2: return 65;
+    case 1: return 25;
     default: return 50;
   }
 }
