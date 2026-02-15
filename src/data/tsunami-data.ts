@@ -161,11 +161,11 @@ export interface TierInfo {
 }
 
 export const TIER_INFO: TierInfo[] = [
-  { tier: 5, name: 'Quantum Ark', emoji: '🚀', description: 'Full sci-fi AI vessel — energy sails, shield dome, autonomous navigation', scoreRange: '90–100' },
-  { tier: 4, name: 'Hybrid Cruiser', emoji: '⚡', description: 'Tech-augmented ship — metal plating, circuit lines, radar arrays', scoreRange: '75–89' },
-  { tier: 3, name: 'Brigantine', emoji: '⛵', description: 'Solid traditional ship handling the storm', scoreRange: '60–74' },
-  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked, barely afloat', scoreRange: '45–59' },
   { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Floating debris — the tsunami won', scoreRange: '0–44' },
+  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked, barely afloat', scoreRange: '45–59' },
+  { tier: 3, name: 'Brigantine', emoji: '⛵', description: 'Solid traditional ship handling the storm', scoreRange: '60–74' },
+  { tier: 4, name: 'Hybrid Cruiser', emoji: '⚡', description: 'Tech-augmented ship — metal plating, circuit lines, radar arrays', scoreRange: '75–89' },
+  { tier: 5, name: 'Quantum Ark', emoji: '🚀', description: 'Full sci-fi AI vessel — energy sails, shield dome, autonomous navigation', scoreRange: '90–100' },
 ];
 
 export function getTierMidpoint(tier: number): number {
