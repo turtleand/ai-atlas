@@ -89,6 +89,20 @@ export const TsunamiPage: React.FC = () => {
             onPreview={setPreviewTier}
           />
           <SkillSliders scores={scores} onScoresChange={handleScoresChange} />
+
+          <div className="tsunami-context-footer">
+            <p className="tsunami-context-text">
+              AI is reshaping industries faster than most realize. The ones who thrive won't resist the wave — they'll learn to ride it.
+            </p>
+            <a
+              href="https://blog.turtleand.com/posts/built-to-adapt-ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tsunami-context-link"
+            >
+              Read: Built to Adapt →
+            </a>
+          </div>
         </div>
       </div>
     </motion.div>
