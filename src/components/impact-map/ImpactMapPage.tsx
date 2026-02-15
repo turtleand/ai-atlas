@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { TOUCH } from 'three';
 import { Link } from 'react-router-dom';
 import { Continent3D } from './Continent3D';
 import { WaterPlane } from './WaterPlane';
@@ -83,8 +84,7 @@ export function ImpactMapPage() {
           minDistance={6}
           maxDistance={25}
           maxPolarAngle={Math.PI / 2.2}
-          enableRotate={!isMobile || true}
-          touches={{ ONE: 1, TWO: 2 }}
+          touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_ROTATE }}
         />
 
         {/* Fog for depth */}
