@@ -1,9 +1,12 @@
+import { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Link } from 'react-router-dom';
 import { Continent3D } from './Continent3D';
 import { WaterPlane } from './WaterPlane';
 import { TerrainLabels } from './TerrainLabels';
+import { NotesPanel } from './NotesPanel';
+import type { Role } from '../../data/impact-map-data';
 import '../../styles/impact-map.css';
 
 function useIsMobile() {
@@ -13,6 +16,9 @@ function useIsMobile() {
 
 export function ImpactMapPage() {
   const isMobile = useIsMobile();
+  const [activeRole, setActiveRole] = useState<Role | null>(null);
+  const handleRoleClick = useCallback((role: Role) => setActiveRole(role), []);
+  const handleClosePanel = useCallback(() => setActiveRole(null), []);
 
   return (
     <div className="impact-map-page">
@@ -70,7 +76,7 @@ export function ImpactMapPage() {
 
         <Continent3D />
         <WaterPlane />
-        <TerrainLabels />
+        <TerrainLabels onRoleClick={handleRoleClick} />
 
         <OrbitControls
           enablePan={false}
@@ -84,6 +90,8 @@ export function ImpactMapPage() {
         {/* Fog for depth */}
         <fog attach="fog" args={['#0a1628', 20, 40]} />
       </Canvas>
+
+      <NotesPanel role={activeRole} onClose={handleClosePanel} />
 
       {/* Footer */}
       <div className="impact-map-footer">

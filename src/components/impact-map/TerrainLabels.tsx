@@ -1,8 +1,13 @@
 import { Html } from '@react-three/drei';
 import { industryRegions, WATER_LEVEL } from '../../data/impact-map-data';
+import type { Role } from '../../data/impact-map-data';
 import { getWorldPos } from './Continent3D';
 
-export function TerrainLabels() {
+interface TerrainLabelsProps {
+  onRoleClick?: (role: Role) => void;
+}
+
+export function TerrainLabels({ onRoleClick }: TerrainLabelsProps) {
   return (
     <group>
       {industryRegions.map((region) => {
@@ -48,14 +53,16 @@ export function TerrainLabels() {
                     distanceFactor={12}
                     style={{ pointerEvents: 'auto' }}
                   >
-                    <a
-                      href={`/impact-notes/${role.notesFile}.md`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
                       className="impact-label-link"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRoleClick?.(role);
+                      }}
                     >
                       {label}
-                    </a>
+                    </button>
                   </Html>
                 );
               }
