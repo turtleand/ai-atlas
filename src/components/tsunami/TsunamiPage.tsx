@@ -92,7 +92,7 @@ export const TsunamiPage: React.FC = () => {
 
           <div className="tsunami-context-footer">
             <p className="tsunami-context-text">
-              AI is reshaping industries faster than most realize. The ones who thrive won't resist the wave — they'll learn to ride it.
+              AI is reshaping industries faster than most realize. The ones who thrive won't resist the wave. They'll learn to ride it.
             </p>
             <a
               href="https://blog.turtleand.com/posts/built-to-adapt-ai/"
