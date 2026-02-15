@@ -1,0 +1,58 @@
+.lightning-headline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+  font-size: clamp(1.1rem, 3.5vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 20px rgba(180, 200, 255, 0.8),
+    0 0 40px rgba(140, 170, 255, 0.5),
+    0 0 80px rgba(100, 140, 255, 0.3);
+  padding: 1rem;
+  user-select: none;
+}
+
+.lightning-headline--visible {
+  opacity: 0.9;
+  animation: lightning-flash-in 0.1s ease-out;
+}
+
+.lightning-headline--fading {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.lightning-headline-link {
+  pointer-events: auto;
+  text-decoration: none;
+  cursor: pointer;
+  text-shadow:
+    0 0 20px rgba(212, 160, 58, 0.8),
+    0 0 40px rgba(212, 160, 58, 0.5),
+    0 0 80px rgba(212, 160, 58, 0.3);
+}
+
+.lightning-headline-link:hover {
+  text-decoration: underline;
+}
+
+@keyframes lightning-flash-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}

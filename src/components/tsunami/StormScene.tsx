@@ -4,6 +4,7 @@ import { OrbitControls } from '@react-three/drei';
 import { Ocean3D } from './Ocean3D';
 import { Ship3D } from './Ship3D';
 import { Storm3D } from './Storm3D';
+import { LightningHeadlines } from './LightningHeadlines';
 
 interface StormSceneProps {
   score: number;
@@ -60,7 +61,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           target={[0, tier >= 4 ? 1.5 : 0.5, 0]}
         />
       </Canvas>
-
+      <LightningHeadlines />
     </div>
   );
 }
