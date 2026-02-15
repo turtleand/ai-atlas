@@ -93,6 +93,12 @@
   background: #4ade80;
 }
 
+.impact-map-legend-hint {
+  margin-top: 8px;
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
 .impact-map-info {
   position: absolute;
   bottom: 24px;
@@ -103,23 +109,45 @@
   text-align: right;
 }
 
+.impact-map-footer {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  color: rgba(192, 208, 224, 0.35);
+  font-size: 0.7rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.impact-map-footer a {
+  color: rgba(126, 184, 218, 0.5);
+  text-decoration: none;
+}
+
+.impact-map-footer a:hover {
+  color: rgba(126, 184, 218, 0.8);
+  text-decoration: underline;
+}
+
 .impact-map-mobile-hint {
   display: none;
 }
 
 /* Labels */
 .impact-label {
-  pointer-events: none;
   white-space: nowrap;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
   font-family: inherit;
 }
 
 .impact-label-industry {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #e0e8f0;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  pointer-events: none;
 }
 
 .impact-label-role {
@@ -128,57 +156,42 @@
 }
 
 .impact-label-role.submerged {
-  color: rgba(100, 160, 220, 0.6);
+  color: rgba(100, 160, 220, 0.55);
 }
 
 .impact-label-role.frontier {
   color: #e8943a;
+  animation: pulse-frontier 3s ease-in-out infinite;
 }
 
 .impact-label-role.safe {
   color: #4ade80;
 }
 
-/* News markers */
-.news-marker {
+.impact-label-role.clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.impact-label-role.clickable:hover {
+  filter: brightness(1.3);
+}
+
+.notes-icon {
+  font-size: 9px;
+}
+
+.impact-label-link {
+  text-decoration: none;
   pointer-events: auto;
   cursor: pointer;
-  position: relative;
 }
 
-.news-marker-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #f59e0b;
-  border: 2px solid #fff;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
-  transition: transform 0.2s;
-}
-
-.news-marker:hover .news-marker-dot {
-  transform: scale(1.4);
-}
-
-.news-marker-tooltip {
-  display: none;
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10, 22, 40, 0.95);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: #e0e8f0;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  max-width: 280px;
-  white-space: normal;
-}
-
-.news-marker:hover .news-marker-tooltip {
-  display: block;
+@keyframes pulse-frontier {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 @media (max-width: 768px) {
@@ -189,6 +202,10 @@
   .impact-map-legend {
     padding: 8px 12px;
     font-size: 0.7rem;
+  }
+
+  .impact-map-footer {
+    font-size: 0.6rem;
   }
 
   .impact-map-mobile-hint {

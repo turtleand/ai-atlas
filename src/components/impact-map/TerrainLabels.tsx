@@ -16,7 +16,7 @@ export function TerrainLabels() {
           <group key={region.id}>
             {/* Industry name label */}
             <Html
-              position={[ix, iy + 0.6, iz]}
+              position={[ix, iy + 0.8, iz]}
               center
               distanceFactor={12}
               style={{ pointerEvents: 'none' }}
@@ -30,15 +30,45 @@ export function TerrainLabels() {
               const rnz = region.position[1] + role.offset[1];
               const [rx, ry, rz] = getWorldPos(rnx, rnz, Math.max(role.elevation, WATER_LEVEL * 0.8));
 
+              const isClickable = !!role.notesFile;
+
+              const label = (
+                <div className={`impact-label impact-label-role ${role.status}${isClickable ? ' clickable' : ''}`}>
+                  {role.name}
+                  {isClickable && <span className="notes-icon"> &#128196;</span>}
+                </div>
+              );
+
+              if (isClickable) {
+                return (
+                  <Html
+                    key={role.id}
+                    position={[rx, ry + 0.25, rz]}
+                    center
+                    distanceFactor={12}
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <a
+                      href={`/impact-notes/${role.notesFile}.md`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="impact-label-link"
+                    >
+                      {label}
+                    </a>
+                  </Html>
+                );
+              }
+
               return (
                 <Html
-                  key={role.name}
+                  key={role.id}
                   position={[rx, ry + 0.25, rz]}
                   center
                   distanceFactor={12}
                   style={{ pointerEvents: 'none' }}
                 >
-                  <div className={`impact-label impact-label-role ${role.status}`}>{role.name}</div>
+                  {label}
                 </Html>
               );
             })}

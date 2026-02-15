@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Continent3D } from './Continent3D';
 import { WaterPlane } from './WaterPlane';
 import { TerrainLabels } from './TerrainLabels';
-import { NewsMarkers } from './NewsMarkers';
 import '../../styles/impact-map.css';
 
 function useIsMobile() {
@@ -43,11 +42,12 @@ export function ImpactMapPage() {
           <div className="impact-map-legend-dot safe" />
           <span>Safe (for now)</span>
         </div>
+        <div className="impact-map-legend-hint">Click labeled roles with 📄 to read more</div>
       </div>
 
       {/* Info */}
       <div className="impact-map-info">
-        {isMobile ? 'Pinch to zoom. Drag to rotate.' : 'Rotate to explore. Click markers for sources.'}
+        {isMobile ? 'Pinch to zoom. Drag to rotate.' : 'Rotate to explore. Click roles for notes.'}
       </div>
 
       {/* Mobile hint */}
@@ -71,7 +71,6 @@ export function ImpactMapPage() {
         <Continent3D />
         <WaterPlane />
         <TerrainLabels />
-        <NewsMarkers />
 
         <OrbitControls
           enablePan={false}
@@ -85,6 +84,11 @@ export function ImpactMapPage() {
         {/* Fog for depth */}
         <fog attach="fog" args={['#0a1628', 20, 40]} />
       </Canvas>
+
+      {/* Footer */}
+      <div className="impact-map-footer">
+        This map shows one perspective. <a href="https://github.com/turtleand/ai-atlas" target="_blank" rel="noopener noreferrer">Fork it and map your world.</a>
+      </div>
     </div>
   );
 }
