@@ -69,13 +69,6 @@ export const TsunamiPage: React.FC = () => {
     >
       <TsunamiNav />
 
-      <p className="tsunami-tagline-compact">
-        AI is reshaping industries faster than most realize. The ones who thrive won't resist the wave.{' '}
-        <a href="https://blog.turtleand.com/posts/built-to-adapt-ai/" target="_blank" rel="noopener noreferrer">
-          They'll learn to ride it.
-        </a>
-      </p>
-
       <div className="tsunami-layout">
         {/* Left/Top: 3D Storm Scene */}
         <div className="tsunami-scene-panel">

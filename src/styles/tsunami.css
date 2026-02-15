@@ -610,32 +610,6 @@
 }
 
 /* ============================================
-   TAGLINE — Below title, above content
-   ============================================ */
-.tsunami-tagline-compact {
-  text-align: center;
-  padding: 0 1.5rem 0.5rem;
-  max-width: 680px;
-  margin: -0.5rem auto 0.5rem;
-  font-size: 0.88rem;
-  color: rgba(224, 216, 200, 0.55);
-  line-height: 1.5;
-  font-style: italic;
-}
-
-.tsunami-tagline-compact a {
-  color: #D4A03A;
-  text-decoration: none;
-  font-weight: 600;
-  transition: opacity 0.2s;
-}
-
-.tsunami-tagline-compact a:hover {
-  opacity: 0.8;
-  text-decoration: underline;
-}
-
-/* ============================================
    ATLAS LINK (on main map page)
    ============================================ */
 /* .tsunami-link styles moved to tsunami-link.css (loaded globally) */
