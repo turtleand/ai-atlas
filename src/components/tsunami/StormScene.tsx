@@ -41,7 +41,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
         <pointLight position={[-4, 3, -3]} intensity={0.5} color="#667799" distance={20} />
         
         <Suspense fallback={null}>
-          <Ocean3D wavePercent={wavePercent} calmRadius={tier === 5 ? 5 : undefined} />
+          <Ocean3D wavePercent={wavePercent} calmRadius={tier === 5 ? 7 : tier === 4 ? 5 : undefined} />
           <Ship3D tier={tier as 1 | 2 | 3 | 4 | 5} score={score} wavePercent={wavePercent} stormIntensity={stormIntensity} />
           <Storm3D daysSinceStart={daysSinceStart} />
         </Suspense>
@@ -57,7 +57,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           minPolarAngle={Math.PI / 6}
           enableDamping
           dampingFactor={0.05}
-          target={[0, 0.5, 0]}
+          target={[0, tier >= 4 ? 1.5 : 0.5, 0]}
         />
       </Canvas>
       
