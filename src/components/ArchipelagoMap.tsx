@@ -149,7 +149,11 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
 
       {/* Tsunami Tracker Link */}
       <Link to="/tsunami" className="tsunami-link">
-        🌊 Tsunami Tracker
+        <span className="tsunami-link-icon">🌊</span>
+        <span className="tsunami-link-text">
+          <span className="tsunami-link-title">AI Tsunami Tracker</span>
+          <span className="tsunami-link-sub">Are you ready?</span>
+        </span>
       </Link>
     </>
   );
