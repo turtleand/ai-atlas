@@ -612,32 +612,25 @@
 /* ============================================
    TAGLINE — Below title, above content
    ============================================ */
-.tsunami-tagline {
+.tsunami-tagline-compact {
   text-align: center;
-  padding: 0 1.5rem 1rem;
-  max-width: 640px;
+  padding: 0 1.5rem 0.5rem;
+  max-width: 680px;
   margin: -0.5rem auto 0.5rem;
-}
-
-.tsunami-tagline-text {
-  font-size: 0.92rem;
-  color: rgba(224, 216, 200, 0.6);
-  line-height: 1.55;
-  margin: 0 0 0.5rem 0;
+  font-size: 0.88rem;
+  color: rgba(224, 216, 200, 0.55);
+  line-height: 1.5;
   font-style: italic;
 }
 
-.tsunami-tagline-link {
-  display: inline-block;
-  font-size: 0.85rem;
+.tsunami-tagline-compact a {
   color: #D4A03A;
   text-decoration: none;
   font-weight: 600;
-  letter-spacing: 0.02em;
   transition: opacity 0.2s;
 }
 
-.tsunami-tagline-link:hover {
+.tsunami-tagline-compact a:hover {
   opacity: 0.8;
   text-decoration: underline;
 }
