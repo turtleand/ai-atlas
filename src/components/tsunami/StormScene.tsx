@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Ocean3D } from './Ocean3D';
@@ -15,6 +15,7 @@ interface StormSceneProps {
 export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSceneProps) {
   // Storm intensity scales with wavePercent
   const stormIntensity = 0.5 + (wavePercent / 100) * 1.5;
+  const isMobile = useMemo(() => typeof window !== 'undefined' && window.innerWidth < 900, []);
 
   return (
     <div className="storm-canvas-container">
@@ -49,7 +50,8 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
         <OrbitControls
           autoRotate
           autoRotateSpeed={0.3}
-          enableZoom={true}
+          enableZoom={!isMobile}
+          enableRotate={!isMobile}
           minDistance={3}
           maxDistance={15}
           enablePan={false}

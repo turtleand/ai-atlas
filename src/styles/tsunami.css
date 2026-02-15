@@ -5,10 +5,13 @@
 /* === Page Layout === */
 .tsunami-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: #0a1628;
   color: #e0d8c8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* === Navigation === */
@@ -577,10 +580,15 @@
   .storm-canvas-container {
     height: 40vh;
     max-height: 350px;
+    touch-action: pan-y; /* allow vertical scroll through the 3D scene */
+  }
+
+  .storm-canvas-container canvas {
+    touch-action: pan-y !important; /* override Three.js touch capture */
   }
 
   .tsunami-controls-panel {
-    padding: 1rem 0.75rem 3rem;
+    padding: 1rem 0.75rem 6rem; /* extra bottom for mobile browser chrome */
   }
 
   .score-card {
