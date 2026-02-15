@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './LightningHeadlines.css';
 
 const HEADLINES = [
@@ -9,44 +9,52 @@ const HEADLINES = [
   { text: 'Learn to ride it.', color: '#D4A03A', link: 'https://blog.turtleand.com/posts/built-to-adapt-ai/' },
 ];
 
-const FLASH_DURATION = 1800; // ms visible
-const FADE_DURATION = 400; // ms fade out
-const INTERVAL_MIN = 3000; // min ms between flashes
-const INTERVAL_MAX = 6000; // max ms between flashes
+const FLASH_DURATION = 1800;
+const FADE_DURATION = 400;
+const INTERVAL_MIN = 3000;
+const INTERVAL_MAX = 6000;
 
 export function LightningHeadlines() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [fading, setFading] = useState(false);
-
-  const triggerFlash = useCallback(() => {
-    setActiveIndex((prev) => {
-      const next = prev === null ? 0 : (prev + 1) % HEADLINES.length;
-      return next;
-    });
-    setFading(false);
-
-    // Start fade out
-    setTimeout(() => setFading(true), FLASH_DURATION - FADE_DURATION);
-    // Hide completely
-    setTimeout(() => setActiveIndex(null), FLASH_DURATION);
-  }, []);
+  const nextIndexRef = useRef(0);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
+    let scheduleTimeout: ReturnType<typeof setTimeout>;
+    let fadeTimeout: ReturnType<typeof setTimeout>;
+    let hideTimeout: ReturnType<typeof setTimeout>;
+
+    const triggerFlash = () => {
+      const idx = nextIndexRef.current;
+      nextIndexRef.current = (idx + 1) % HEADLINES.length;
+
+      setActiveIndex(idx);
+      setFading(false);
+
+      fadeTimeout = setTimeout(() => setFading(true), FLASH_DURATION - FADE_DURATION);
+      hideTimeout = setTimeout(() => setActiveIndex(null), FLASH_DURATION);
+    };
+
     const schedule = () => {
       const delay = INTERVAL_MIN + Math.random() * (INTERVAL_MAX - INTERVAL_MIN);
-      timeout = setTimeout(() => {
+      scheduleTimeout = setTimeout(() => {
         triggerFlash();
         schedule();
       }, delay);
     };
+
     // First flash after a short delay
-    timeout = setTimeout(() => {
+    scheduleTimeout = setTimeout(() => {
       triggerFlash();
       schedule();
     }, 1500);
-    return () => clearTimeout(timeout);
-  }, [triggerFlash]);
+
+    return () => {
+      clearTimeout(scheduleTimeout);
+      clearTimeout(fadeTimeout);
+      clearTimeout(hideTimeout);
+    };
+  }, []);
 
   if (activeIndex === null) return null;
 
