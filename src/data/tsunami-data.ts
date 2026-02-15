@@ -38,12 +38,11 @@ export const SKILL_DIMENSIONS: SkillDimension[] = [
     weight: 0.20,
   },
   {
-    id: 'traditionalDependence',
-    name: 'Traditional Dependence',
-    description: 'Reliance on manual/soon-to-be-automated work (INVERSE — higher = more risk)',
-    defaultValue: 25,
+    id: 'aiIndependence',
+    name: 'AI Independence',
+    description: 'Freedom from manual/soon-to-be-automated work — higher means more future-proof',
+    defaultValue: 75,
     weight: 0.15,
-    inverse: true,
   },
   {
     id: 'strategicThinking',
@@ -162,11 +161,11 @@ export interface TierInfo {
 }
 
 export const TIER_INFO: TierInfo[] = [
-  { tier: 5, name: 'Full-Rigged Ship', emoji: '⛵', description: 'Tech-augmented tall ship with AI navigation', scoreRange: '90–100' },
-  { tier: 4, name: 'Barque', emoji: '🚢', description: 'Strong vessel with early tech integration', scoreRange: '75–89' },
-  { tier: 3, name: 'Brigantine', emoji: '🛥️', description: 'Capable ship weathering the storm', scoreRange: '60–74' },
-  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked', scoreRange: '45–59' },
-  { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Broken planks — the tsunami won', scoreRange: '0–44' },
+  { tier: 5, name: 'Quantum Ark', emoji: '🚀', description: 'Full sci-fi AI vessel — energy sails, shield dome, autonomous navigation', scoreRange: '90–100' },
+  { tier: 4, name: 'Hybrid Cruiser', emoji: '⚡', description: 'Tech-augmented ship — metal plating, circuit lines, radar arrays', scoreRange: '75–89' },
+  { tier: 3, name: 'Brigantine', emoji: '⛵', description: 'Solid traditional ship handling the storm', scoreRange: '60–74' },
+  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked, barely afloat', scoreRange: '45–59' },
+  { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Floating debris — the tsunami won', scoreRange: '0–44' },
 ];
 
 export function getTierMidpoint(tier: number): number {

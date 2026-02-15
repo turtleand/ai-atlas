@@ -114,7 +114,6 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
               
               <p className="slider-description">
                 {dimension.description}
-                {dimension.inverse && ' (lower is better)'}
               </p>
             </div>
           );

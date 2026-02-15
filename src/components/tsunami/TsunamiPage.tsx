@@ -23,6 +23,12 @@ function getInitialScores(): Record<string, number> {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Migrate old "traditionalDependence" → "aiIndependence" (inverted)
+      if ('traditionalDependence' in parsed && !('aiIndependence' in parsed)) {
+        parsed.aiIndependence = 100 - parsed.traditionalDependence;
+        delete parsed.traditionalDependence;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
       const valid = SKILL_DIMENSIONS.every((dim) => typeof parsed[dim.id] === 'number');
       if (valid) return parsed;
     }
