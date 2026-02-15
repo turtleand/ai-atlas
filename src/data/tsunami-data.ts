@@ -178,3 +178,14 @@ export function getTierMidpoint(tier: number): number {
     default: return 50;
   }
 }
+
+export function getTierFloor(tier: number): number {
+  switch (tier) {
+    case 5: return 99;
+    case 4: return 95;
+    case 3: return 80;
+    case 2: return 50;
+    case 1: return 0;
+    default: return 0;
+  }
+}

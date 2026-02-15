@@ -12,6 +12,7 @@ import {
   calculateCompositeScore,
   calculateTier,
   getTierMidpoint,
+  getTierFloor,
 } from '../../data/tsunami-data';
 import '../../styles/tsunami.css';
 
@@ -52,6 +53,7 @@ export const TsunamiPage: React.FC = () => {
   // When previewing a tier, override the displayed tier and score
   const displayTier = previewTier ?? actualTier;
   const displayScore = previewTier ? getTierMidpoint(previewTier) : compositeScore;
+  const displayScoreCard = previewTier ? getTierFloor(previewTier) : compositeScore;
 
   const handleScoresChange = useCallback((newScores: Record<string, number>) => {
     setScores(newScores);
@@ -80,7 +82,7 @@ export const TsunamiPage: React.FC = () => {
 
         {/* Right/Bottom: Controls Panel */}
         <div className="tsunami-controls-panel">
-          <ScoreDisplay score={compositeScore} wavePercent={wavePercent} tier={actualTier} />
+          <ScoreDisplay score={displayScoreCard} wavePercent={wavePercent} tier={displayTier} />
           <TierPreview
             currentTier={actualTier}
             previewTier={previewTier}
