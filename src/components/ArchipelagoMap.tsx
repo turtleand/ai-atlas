@@ -157,7 +157,7 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       </Link>
 
       {/* AI Impact Map Link */}
-      <Link to="/ai-impact-map" className="tsunami-link" style={{ top: 'auto', bottom: '20px', right: '20px' }}>
+      <Link to="/ai-impact-map" className="impact-map-link">
         <span className="tsunami-link-icon">🗺️</span>
         <span className="tsunami-link-text">
           <span className="tsunami-link-title">AI Impact Map</span>

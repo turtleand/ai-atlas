@@ -67,6 +67,51 @@
   50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 28px rgba(212, 160, 58, 0.25); }
 }
 
+/* Impact Map button — sits above the Tsunami button */
+
+.impact-map-link {
+  position: fixed;
+  bottom: 6.5rem;
+  right: 1.5rem;
+  padding: 0.8rem 1.4rem;
+  background: linear-gradient(135deg, rgba(15, 45, 65, 0.95), rgba(8, 25, 45, 0.95));
+  color: #b8d4e8;
+  border: 2px solid rgba(0, 180, 220, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  transition: all 0.3s ease;
+  z-index: 199;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 12px rgba(0, 180, 220, 0.1);
+}
+
+.impact-map-link .tsunami-link-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.impact-map-link .tsunami-link-sub {
+  font-size: 0.65rem;
+  color: rgba(0, 200, 240, 0.7);
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.impact-map-link:hover {
+  background: linear-gradient(135deg, rgba(15, 50, 70, 1), rgba(10, 30, 50, 1));
+  border-color: rgba(0, 200, 240, 0.7);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 24px rgba(0, 180, 220, 0.2);
+}
+
+.impact-map-link:hover .tsunami-link-sub {
+  color: rgba(0, 220, 255, 0.9);
+}
+
 @media (max-width: 768px) {
   .tsunami-link {
     bottom: 4.5rem;
@@ -84,5 +129,19 @@
 
   .tsunami-link-sub {
     font-size: 0.65rem;
+  }
+
+  .impact-map-link {
+    bottom: 8.5rem;
+    right: 12px;
+    padding: 0.6rem 1rem;
+  }
+
+  .impact-map-link .tsunami-link-title {
+    font-size: 0.8rem;
+  }
+
+  .impact-map-link .tsunami-link-sub {
+    font-size: 0.6rem;
   }
 }
