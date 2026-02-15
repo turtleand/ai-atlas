@@ -2,7 +2,7 @@
 
 .tsunami-link {
   position: fixed;
-  bottom: 7rem;
+  bottom: 1.5rem;
   right: 1.5rem;
   padding: 1rem 1.6rem;
   background: linear-gradient(135deg, rgba(26, 58, 92, 0.97), rgba(10, 30, 55, 0.97));
@@ -65,4 +65,24 @@
 @keyframes tsunami-glow {
   0%, 100% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 15px rgba(212, 160, 58, 0.1); }
   50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 28px rgba(212, 160, 58, 0.25); }
+}
+
+@media (max-width: 768px) {
+  .tsunami-link {
+    bottom: 4.5rem;
+    right: 12px;
+    padding: 0.7rem 1.2rem;
+  }
+
+  .tsunami-link-icon {
+    font-size: 1.3rem;
+  }
+
+  .tsunami-link-title {
+    font-size: 0.85rem;
+  }
+
+  .tsunami-link-sub {
+    font-size: 0.65rem;
+  }
 }
