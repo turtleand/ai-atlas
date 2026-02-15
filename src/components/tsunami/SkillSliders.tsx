@@ -79,7 +79,7 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
               </button>
             </>
           ) : (
-            <span>Turtleand's Profile (96th percentile)</span>
+            <span>Turtleand's Profile</span>
           )}
         </div>
       </div>
