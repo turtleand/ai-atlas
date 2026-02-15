@@ -1,0 +1,108 @@
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+
+interface Ocean3DProps {
+  wavePercent: number;
+  calmRadius?: number;
+}
+
+// Gerstner wave parameters — 4 waves summed together
+const WAVES = [
+  { amp: 1.2, freq: 0.15, speed: 0.8, dir: [1, 0.3] },
+  { amp: 0.8, freq: 0.25, speed: 1.2, dir: [-0.7, 1] },
+  { amp: 0.5, freq: 0.4, speed: 1.5, dir: [0.3, -0.8] },
+  { amp: 0.3, freq: 0.6, speed: 2.0, dir: [-0.5, -0.6] },
+];
+
+// Calculate wave height at any (x, z) position and time
+export function getWaveHeight(x: number, z: number, time: number, stormIntensity: number = 1): number {
+  let y = 0;
+  for (const wave of WAVES) {
+    const dot = wave.dir[0] * x + wave.dir[1] * z;
+    y += wave.amp * stormIntensity * Math.sin(dot * wave.freq + time * wave.speed);
+  }
+  return y;
+}
+
+export function Ocean3D({ wavePercent, calmRadius }: Ocean3DProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  // Storm intensity scales with wavePercent (daily tsunami progress)
+  const stormIntensity = 0.5 + (wavePercent / 100) * 1.5; // 0.5 to 2.0
+  
+  const { geometry, originalPositions } = useMemo(() => {
+    const geom = new THREE.PlaneGeometry(120, 120, 80, 80);
+    geom.rotateX(-Math.PI / 2);
+    // Store original flat positions for reference
+    const origPos = new Float32Array(geom.attributes.position.array);
+    // Add color attribute for foam
+    const colors = new Float32Array(geom.attributes.position.count * 3);
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return { geometry: geom, originalPositions: origPos };
+  }, []);
+  
+  useFrame(({ clock }) => {
+    if (!meshRef.current) return;
+    const time = clock.getElapsedTime();
+    const positions = geometry.attributes.position.array as Float32Array;
+    const colors = geometry.attributes.color.array as Float32Array;
+    
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = originalPositions[i];
+      const z = originalPositions[i + 2];
+      
+      // Calculate wave height with optional calm zone
+      let y = getWaveHeight(x, z, time, stormIntensity);
+      if (calmRadius) {
+        const dist = Math.sqrt(x * x + z * z);
+        if (dist < calmRadius) {
+          const dampening = (dist / calmRadius);
+          y *= dampening * dampening; // smooth quadratic falloff
+        }
+      }
+      positions[i + 1] = y;
+      
+      // Foam on wave crests (white where height > threshold)
+      const foamThreshold = 0.4 * stormIntensity;
+      const foamAmount = Math.max(0, (y - foamThreshold) / (stormIntensity * 0.7));
+      const clampedFoam = Math.min(1, foamAmount);
+      
+      // Base water color: visible dark teal-blue (NOT black)
+      const baseR = 0.04, baseG = 0.12, baseB = 0.22;
+      // Depth variation based on y
+      const depthFactor = Math.max(0, y * 0.08);
+      // Foam: white with slight blue tint
+      colors[i] = baseR + depthFactor * 0.02 + clampedFoam * 0.85;     // R
+      colors[i + 1] = baseG + depthFactor * 0.04 + clampedFoam * 0.9;  // G
+      colors[i + 2] = baseB + depthFactor * 0.06 + clampedFoam * 0.85; // B
+      
+      // Calm zone glow (cyan emanation from the entity)
+      if (calmRadius) {
+        const dist = Math.sqrt(x * x + z * z);
+        if (dist < calmRadius) {
+          const calmGlow = (1 - dist / calmRadius) * 0.3;
+          colors[i] += calmGlow * 0.1;      // slight R
+          colors[i + 1] += calmGlow * 0.6;  // G (cyan)
+          colors[i + 2] += calmGlow * 0.7;  // B (cyan)
+        }
+      }
+    }
+    
+    geometry.attributes.position.needsUpdate = true;
+    geometry.attributes.color.needsUpdate = true;
+    geometry.computeVertexNormals();
+  });
+  
+  return (
+    <mesh ref={meshRef} geometry={geometry}>
+      <meshStandardMaterial
+        vertexColors
+        roughness={0.25}
+        metalness={0.15}
+        envMapIntensity={0.8}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
