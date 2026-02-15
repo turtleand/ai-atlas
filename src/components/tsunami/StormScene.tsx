@@ -60,13 +60,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           target={[0, tier >= 4 ? 1.5 : 0.5, 0]}
         />
       </Canvas>
-      
-      {/* Overlay info */}
-      <div className="wave-overlay-text">
-        <span className="wave-day">Day {daysSinceStart}</span>
-        <span className="wave-separator">·</span>
-        <span className="wave-waterline">Waterline: {wavePercent.toFixed(1)}%</span>
-      </div>
+
     </div>
   );
 }
