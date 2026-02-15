@@ -610,23 +610,24 @@
 }
 
 /* ============================================
-   CONTEXT FOOTER — Article link
+   TAGLINE — Below title, above content
    ============================================ */
-.tsunami-context-footer {
-  margin-top: 1.5rem;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid rgba(212, 160, 58, 0.15);
+.tsunami-tagline {
   text-align: center;
+  padding: 0 1.5rem 1rem;
+  max-width: 640px;
+  margin: -0.5rem auto 0.5rem;
 }
 
-.tsunami-context-text {
-  font-size: 0.82rem;
-  color: rgba(224, 216, 200, 0.5);
-  line-height: 1.5;
-  margin: 0 0 0.6rem 0;
+.tsunami-tagline-text {
+  font-size: 0.92rem;
+  color: rgba(224, 216, 200, 0.6);
+  line-height: 1.55;
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
 }
 
-.tsunami-context-link {
+.tsunami-tagline-link {
   display: inline-block;
   font-size: 0.85rem;
   color: #D4A03A;
@@ -636,7 +637,7 @@
   transition: opacity 0.2s;
 }
 
-.tsunami-context-link:hover {
+.tsunami-tagline-link:hover {
   opacity: 0.8;
   text-decoration: underline;
 }
