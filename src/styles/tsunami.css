@@ -304,20 +304,34 @@
   color: rgba(224, 216, 200, 0.7);
 }
 
+.your-profile-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #D4A03A;
+  letter-spacing: 0.02em;
+}
+
+.turtleand-profile-label {
+  font-style: italic;
+  opacity: 0.8;
+}
+
 .reset-link {
   background: none;
   border: none;
-  color: #D4A03A;
-  font-size: 0.82rem;
+  color: rgba(224, 216, 200, 0.4);
+  font-size: 0.72rem;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
+  text-decoration: none;
+  padding: 0.1rem 0.4rem;
   font-family: inherit;
-  transition: opacity 0.2s;
+  transition: color 0.2s, opacity 0.2s;
+  border-radius: 3px;
 }
 
 .reset-link:hover {
-  opacity: 0.8;
+  color: rgba(224, 216, 200, 0.7);
+  text-decoration: underline;
 }
 
 .sliders-list {

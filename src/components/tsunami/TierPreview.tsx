@@ -40,7 +40,7 @@ export function TierPreview({ currentTier, previewTier, onPreview }: TierPreview
 
       {previewTier && (
         <button className="tier-reset-btn" onClick={() => onPreview(null)}>
-          ← Back to your score
+          ← Back to Turtleand's score
         </button>
       )}
     </div>

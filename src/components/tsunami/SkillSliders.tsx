@@ -73,13 +73,13 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
         <div className="sliders-subtitle">
           {hasCustomized ? (
             <>
-              <span>Your Profile</span>
+              <span className="your-profile-label">Your Profile</span>
               <button className="reset-link" onClick={handleReset}>
-                ↩ Reset to Turtleand
+                reset
               </button>
             </>
           ) : (
-            <span>Turtleand's Profile</span>
+            <span className="turtleand-profile-label">Turtleand's Profile</span>
           )}
         </div>
       </div>
