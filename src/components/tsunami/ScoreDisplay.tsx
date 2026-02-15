@@ -14,7 +14,6 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, wavePercent, 
   
   const verdict = getVerdict(score);
   const surferState = getSurferState(score, wavePercent);
-  const difference = score - wavePercent;
   const tierInfo = TIER_INFO.find((t) => t.tier === tier);
   
   const getBorderColor = () => {
@@ -48,11 +47,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, wavePercent, 
         <span className="score-verdict-title">{verdict.title}</span>
       </div>
       <div className="score-subtitle">
-        {difference > 0 
-          ? `${Math.round(difference)} points above the waterline`
-          : `${Math.abs(Math.round(difference))} points below the waterline`
-        }
-        {tierInfo && <span className="score-tier-badge"> · Tier {tier}</span>}
+        {tierInfo && <span className="score-tier-badge">{tierInfo.emoji} Tier {tier}: {tierInfo.name}</span>}
       </div>
       <div className="score-description">{verdict.description}</div>
     </div>

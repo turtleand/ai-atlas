@@ -5,7 +5,6 @@ import { StormScene } from './StormScene';
 import { ScoreDisplay } from './ScoreDisplay';
 import { TierPreview } from './TierPreview';
 import { SkillSliders } from './SkillSliders';
-import { TsunamiTimeline } from './TsunamiTimeline';
 import {
   SKILL_DIMENSIONS,
   calculateDaysSinceStart,
@@ -88,7 +87,6 @@ export const TsunamiPage: React.FC = () => {
             onPreview={setPreviewTier}
           />
           <SkillSliders scores={scores} onScoresChange={handleScoresChange} />
-          <TsunamiTimeline />
         </div>
       </div>
     </motion.div>
