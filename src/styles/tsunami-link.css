@@ -1,0 +1,68 @@
+/* Tsunami Tracker button — loaded globally (not lazy-loaded with TsunamiPage) */
+
+.tsunami-link {
+  position: fixed;
+  bottom: 7rem;
+  right: 1.5rem;
+  padding: 1rem 1.6rem;
+  background: linear-gradient(135deg, rgba(26, 58, 92, 0.97), rgba(10, 30, 55, 0.97));
+  color: #e0d8c8;
+  border: 2px solid rgba(212, 160, 58, 0.6);
+  border-radius: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 160, 58, 0.15);
+  animation: tsunami-glow 3s ease-in-out infinite;
+}
+
+.tsunami-link-icon {
+  font-size: 1.6rem;
+  animation: tsunami-wave 2.5s ease-in-out infinite;
+}
+
+.tsunami-link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.tsunami-link-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tsunami-link-sub {
+  font-size: 0.72rem;
+  color: rgba(212, 160, 58, 0.8);
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.tsunami-link:hover {
+  background: linear-gradient(135deg, rgba(26, 58, 92, 1), rgba(15, 35, 60, 1));
+  border-color: #D4A03A;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 160, 58, 0.3);
+}
+
+.tsunami-link:hover .tsunami-link-sub {
+  color: #D4A03A;
+}
+
+@keyframes tsunami-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg) scale(1.1); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(8deg) scale(1.1); }
+}
+
+@keyframes tsunami-glow {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 15px rgba(212, 160, 58, 0.1); }
+  50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 28px rgba(212, 160, 58, 0.25); }
+}
