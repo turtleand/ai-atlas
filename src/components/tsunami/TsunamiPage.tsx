@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { TsunamiNav } from './TsunamiNav';
 import { StormScene } from './StormScene';
@@ -42,6 +42,21 @@ function getInitialScores(): Record<string, number> {
 }
 
 export const TsunamiPage: React.FC = () => {
+  // Override global overflow:hidden so page can scroll on mobile
+  useEffect(() => {
+    const els = [document.documentElement, document.body, document.getElementById('root')].filter(Boolean) as HTMLElement[];
+    els.forEach(el => {
+      el.style.overflow = 'visible';
+      el.style.height = 'auto';
+    });
+    return () => {
+      els.forEach(el => {
+        el.style.overflow = '';
+        el.style.height = '';
+      });
+    };
+  }, []);
+
   const [scores, setScores] = useState(getInitialScores);
   const [previewTier, setPreviewTier] = useState<number | null>(null);
 

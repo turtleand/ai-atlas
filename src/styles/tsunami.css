@@ -63,6 +63,7 @@
   min-height: 250px;
   background: #0c1e35;
   cursor: grab;
+  touch-action: pan-y;
 }
 
 .storm-canvas-container:active {
@@ -71,6 +72,7 @@
 
 .storm-canvas-container canvas {
   display: block;
+  touch-action: pan-y !important;
 }
 
 /* ============================================
