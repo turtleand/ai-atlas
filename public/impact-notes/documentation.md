@@ -4,6 +4,7 @@
 AI is excellent at generating documentation from code: API references, README files, inline comments, and tutorials. The gap is closing fast for technical docs. However, documentation that explains "why" decisions were made and guides users through complex workflows still benefits from human authorship.
 
 ## Latest
+- **2026-02** -- Anthropic launches industry-specific AI plugins for finance, legal, consulting, and insurance that automate complex professional tasks previously handled by enterprise software. Desktop automation (file management, document processing) now production-ready. Source: [Philstar](https://www.philstar.com/business/2026/02/16/2508193/ai-scare-trade)
 - **2026-01** -- Reference documentation is largely automated; narrative docs remain human-driven. Source: Industry consensus
 - **2025-09** -- Technical writing roles shift toward editing AI drafts rather than writing from scratch. Source: Write the Docs
 

@@ -4,6 +4,7 @@
 AI tools can catch common code review issues: style violations, potential bugs, security vulnerabilities, and performance problems. They work faster than humans for surface-level review. But nuanced feedback about architecture, readability, and team conventions still requires human judgment.
 
 ## Latest
+- **2026-02** -- Software sector stocks enter bear market (down 30%) as investors react to autonomous AI agents handling complex professional tasks. Wealth management, legal services, and logistics also hit by AI displacement fears. Source: [The Guardian](https://www.theguardian.com/technology/2026/feb/13/ai-effects-on-business-industry-evidence-to-allay-investor-fears)
 - **2026-01** -- Standard code review for style and bugs is largely automated; human review focuses on design. Source: Industry reports
 - **2025-08** -- Teams adopt AI as "first pass" reviewer, with humans doing architectural review. Source: Industry reports
 
