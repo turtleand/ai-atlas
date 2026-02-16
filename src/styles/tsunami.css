@@ -2,6 +2,25 @@
    AI Tsunami Tracker — Split Layout
    =================================== */
 
+/* === Global overrides when tsunami page is active === */
+body.tsunami-active,
+body.tsunami-active html,
+body.tsunami-active #root {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* === Scroll Wrapper — guarantees scrolling regardless of global overflow:hidden === */
+.tsunami-scroll-wrapper {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  z-index: 1;
+}
+
 /* === Page Layout === */
 .tsunami-page {
   min-height: 100vh;
@@ -63,6 +82,7 @@
   min-height: 250px;
   background: #0c1e35;
   cursor: grab;
+  touch-action: pan-y;
 }
 
 .storm-canvas-container:active {
@@ -71,6 +91,29 @@
 
 .storm-canvas-container canvas {
   display: block;
+  touch-action: pan-y !important;
+}
+
+/* Touch hint overlay */
+.storm-touch-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #e0e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  pointer-events: none;
+  z-index: 10;
+  animation: fadeHint 2s ease-out forwards;
+}
+
+@keyframes fadeHint {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* ============================================
@@ -606,6 +649,58 @@
   .sliders-title,
   .timeline-title {
     font-size: 1.15rem;
+  }
+}
+
+/* ============================================
+   MOBILE LANDSCAPE — keep canvas small so
+   controls are reachable by scrolling
+   ============================================ */
+/* On mobile, prevent canvas from intercepting touch scroll */
+@media (max-width: 900px) {
+  .storm-canvas-container canvas {
+    touch-action: pan-y !important;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .storm-canvas-container {
+    height: 35vh;
+    max-height: 220px;
+    min-height: 160px;
+  }
+
+  .tsunami-controls-panel {
+    padding-top: 0.75rem;
+    padding-bottom: 2rem;
+  }
+
+  .score-card {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .score-number {
+    font-size: 1.6rem;
+  }
+
+  .tier-preview {
+    margin-bottom: 1.25rem;
+    padding: 0.6rem 0.85rem;
+  }
+
+  .sliders-title,
+  .timeline-title {
+    font-size: 1.05rem;
+  }
+
+  .slider-item {
+    gap: 0.2rem;
+  }
+
+  .sliders-list {
+    gap: 1rem;
   }
 }
 
