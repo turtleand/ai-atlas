@@ -18,10 +18,25 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
   // Storm intensity scales with wavePercent
   const stormIntensity = 0.5 + (wavePercent / 100) * 1.5;
 
+  // Camera must zoom out for larger ships, especially on mobile (shorter canvas)
+  const cameraConfig = useMemo(() => {
+    const mobileExtra = isMobile ? 1.4 : 1.0;
+    if (tier === 5) {
+      return { position: [-5 * mobileExtra, 5 * mobileExtra, 12 * mobileExtra] as [number, number, number], fov: isMobile ? 65 : 58 };
+    }
+    if (tier === 4) {
+      return { position: [-4 * mobileExtra, 4 * mobileExtra, 9 * mobileExtra] as [number, number, number], fov: isMobile ? 60 : 56 };
+    }
+    if (tier === 3) {
+      return { position: [-3 * mobileExtra, 3 * mobileExtra, 7 * mobileExtra] as [number, number, number], fov: isMobile ? 58 : 55 };
+    }
+    return { position: [-3, 2.5, 6] as [number, number, number], fov: 55 };
+  }, [tier, isMobile]);
+
   return (
     <div className="storm-canvas-container">
       <Canvas
-        camera={{ position: [-3, 2.5, 6], fov: 55, near: 0.1, far: 1000 }}
+        camera={{ position: cameraConfig.position, fov: cameraConfig.fov, near: 0.1, far: 1000 }}
         gl={{ antialias: true }}
         style={{ touchAction: 'pan-y' }}
       >
@@ -61,7 +76,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           minPolarAngle={Math.PI / 6}
           enableDamping
           dampingFactor={0.05}
-          target={[0, tier >= 4 ? 1.5 : 0.5, 0]}
+          target={[0, tier === 5 ? 3 : tier === 4 ? 1.5 : 0.5, 0]}
         />
       </Canvas>
       <LightningHeadlines />
