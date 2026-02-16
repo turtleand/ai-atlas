@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { TsunamiNav } from './TsunamiNav';
 import { StormScene } from './StormScene';
@@ -44,6 +44,12 @@ function getInitialScores(): Record<string, number> {
 export const TsunamiPage: React.FC = () => {
   const [scores, setScores] = useState(getInitialScores);
   const [previewTier, setPreviewTier] = useState<number | null>(null);
+
+  // Enable scrolling on body (global.css sets overflow:hidden for atlas map)
+  useEffect(() => {
+    document.body.classList.add('scrollable');
+    return () => { document.body.classList.remove('scrollable'); };
+  }, []);
 
   const daysSinceStart = calculateDaysSinceStart();
   const wavePercent = calculateWavePercent();
