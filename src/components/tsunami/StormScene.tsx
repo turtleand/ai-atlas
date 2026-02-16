@@ -1,7 +1,8 @@
-import { Suspense, useMemo, useRef, useEffect } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { Suspense, useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+import { TOUCH } from 'three';
 import { Ocean3D } from './Ocean3D';
 import { Ship3D } from './Ship3D';
 import { Storm3D } from './Storm3D';
@@ -82,31 +83,19 @@ function CameraController({
     targetPos.current.copy(position);
     targetLookAt.current.copy(lookAt);
 
-    if (!isMobile) {
-      // Desktop: snap camera and update OrbitControls target immediately
-      camera.position.copy(position);
-      currentLookAt.current.copy(lookAt);
-      camera.lookAt(lookAt);
+    // Snap camera and update OrbitControls target
+    camera.position.copy(position);
+    currentLookAt.current.copy(lookAt);
+    camera.lookAt(lookAt);
 
-      // Update OrbitControls target so it orbits around the ship center
-      if (controlsRef.current) {
-        controlsRef.current.target.copy(lookAt);
-        controlsRef.current.object.position.copy(position);
-        controlsRef.current.update();
-      }
+    if (controlsRef.current) {
+      controlsRef.current.target.copy(lookAt);
+      controlsRef.current.object.position.copy(position);
+      controlsRef.current.update();
     }
 
     prevTier.current = tier;
   }, [tier, size.width, size.height, camera, isMobile, controlsRef]);
-
-  // On mobile: continuously lerp camera to target (smooth tier transitions)
-  useFrame(() => {
-    if (!isMobile) return;
-
-    camera.position.lerp(targetPos.current, 0.06);
-    currentLookAt.current.lerp(targetLookAt.current, 0.06);
-    camera.lookAt(currentLookAt.current);
-  });
 
   return null;
 }
@@ -122,13 +111,26 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
   const isMobile = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0, []);
   const controlsRef = useRef<any>(null);
   const stormIntensity = 0.5 + (wavePercent / 100) * 1.5;
+  const [showHint, setShowHint] = useState(false);
+  const hintTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Show "use two fingers" hint on single-finger touch on canvas
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (isMobile && e.touches.length === 1) {
+      setShowHint(true);
+      clearTimeout(hintTimeout.current);
+      hintTimeout.current = setTimeout(() => setShowHint(false), 2000);
+    } else {
+      setShowHint(false);
+    }
+  }, [isMobile]);
 
   return (
-    <div className="storm-canvas-container">
+    <div className="storm-canvas-container" onTouchStart={handleTouchStart}>
       <Canvas
         camera={{ position: [-3, 2.5, 8], fov: isMobile ? 60 : 55, near: 0.1, far: 1000 }}
         gl={{ antialias: true }}
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: isMobile ? 'pan-y' : 'none' }}
       >
         <color attach="background" args={['#0c1e35']} />
         <fog attach="fog" args={['#0c1e35', 18, 65]} />
@@ -148,23 +150,28 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           <Storm3D daysSinceStart={daysSinceStart} />
         </Suspense>
         
-        {/* Desktop: orbit controls for manual exploration */}
-        {!isMobile && (
-          <OrbitControls
-            ref={controlsRef}
-            autoRotate
-            autoRotateSpeed={0.3}
-            enableZoom
-            enableRotate
-            enablePan={false}
-            maxPolarAngle={Math.PI / 2.05}
-            minPolarAngle={Math.PI / 6}
-            enableDamping
-            dampingFactor={0.05}
-          />
-        )}
+        <OrbitControls
+          ref={controlsRef}
+          autoRotate
+          autoRotateSpeed={0.3}
+          enableZoom
+          enableRotate
+          enablePan={false}
+          maxPolarAngle={Math.PI / 2.05}
+          minPolarAngle={Math.PI / 6}
+          enableDamping
+          dampingFactor={0.05}
+          /* Mobile: two-finger rotate+zoom; single-finger scroll handled by CSS touch-action: pan-y */
+          touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_ROTATE }}
+        />
       </Canvas>
       <LightningHeadlines />
+      {/* Mobile hint overlay */}
+      {showHint && (
+        <div className="storm-touch-hint">
+          Use two fingers to rotate &amp; zoom
+        </div>
+      )}
     </div>
   );
 }
