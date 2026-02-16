@@ -23,6 +23,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
       <Canvas
         camera={{ position: [-3, 2.5, 6], fov: 55, near: 0.1, far: 1000 }}
         gl={{ antialias: true }}
+        style={{ touchAction: 'pan-y' }}
       >
         <color attach="background" args={['#0c1e35']} />
         <fog attach="fog" args={['#0c1e35', 18, 65]} />
@@ -54,6 +55,8 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           enableZoom={!isMobile}
           enableRotate={!isMobile}
           enablePan={false}
+          /* On mobile: fully disable OrbitControls to allow page scroll */
+          {...(isMobile ? { enabled: false } : {})}
           maxPolarAngle={Math.PI / 2.05}
           minPolarAngle={Math.PI / 6}
           enableDamping

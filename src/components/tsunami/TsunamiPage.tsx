@@ -44,16 +44,23 @@ function getInitialScores(): Record<string, number> {
 export const TsunamiPage: React.FC = () => {
   // Override global overflow:hidden so page can scroll on mobile
   useEffect(() => {
-    const els = [document.documentElement, document.body, document.getElementById('root')].filter(Boolean) as HTMLElement[];
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+    const els = [html, body, root].filter(Boolean) as HTMLElement[];
+    // Force override with !important via style attribute for maximum specificity
     els.forEach(el => {
-      el.style.overflow = 'visible';
-      el.style.height = 'auto';
+      el.style.setProperty('overflow', 'visible', 'important');
+      el.style.setProperty('height', 'auto', 'important');
     });
+    // Also add a class for CSS-based overrides
+    body.classList.add('tsunami-active');
     return () => {
       els.forEach(el => {
-        el.style.overflow = '';
-        el.style.height = '';
+        el.style.removeProperty('overflow');
+        el.style.removeProperty('height');
       });
+      body.classList.remove('tsunami-active');
     };
   }, []);
 
@@ -76,6 +83,7 @@ export const TsunamiPage: React.FC = () => {
   }, []);
 
   return (
+    <div className="tsunami-scroll-wrapper">
     <motion.div
       className="tsunami-page"
       initial={{ opacity: 0 }}
@@ -107,5 +115,6 @@ export const TsunamiPage: React.FC = () => {
         </div>
       </div>
     </motion.div>
+    </div>
   );
 };

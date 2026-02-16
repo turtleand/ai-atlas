@@ -2,6 +2,25 @@
    AI Tsunami Tracker — Split Layout
    =================================== */
 
+/* === Global overrides when tsunami page is active === */
+body.tsunami-active,
+body.tsunami-active html,
+body.tsunami-active #root {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* === Scroll Wrapper — guarantees scrolling regardless of global overflow:hidden === */
+.tsunami-scroll-wrapper {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  z-index: 1;
+}
+
 /* === Page Layout === */
 .tsunami-page {
   min-height: 100vh;
@@ -615,6 +634,14 @@
    MOBILE LANDSCAPE — keep canvas small so
    controls are reachable by scrolling
    ============================================ */
+/* On mobile, prevent canvas from intercepting touch scroll */
+@media (max-width: 900px) {
+  .storm-canvas-container canvas {
+    touch-action: pan-y !important;
+    pointer-events: none;
+  }
+}
+
 @media (max-width: 900px) and (orientation: landscape) {
   .storm-canvas-container {
     height: 35vh;
