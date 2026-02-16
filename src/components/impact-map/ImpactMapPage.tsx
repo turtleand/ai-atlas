@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Link } from 'react-router-dom';
+import * as THREE from 'three';
 import { Continent3D } from './Continent3D';
 import { WaterPlane } from './WaterPlane';
 import { TerrainLabels } from './TerrainLabels';
@@ -17,6 +18,7 @@ function useIsMobile() {
 export function ImpactMapPage() {
   const isMobile = useIsMobile();
   const [activeRole, setActiveRole] = useState<Role | null>(null);
+  const [legendOpen, setLegendOpen] = useState(!isMobile);
   const handleRoleClick = useCallback((role: Role) => setActiveRole(role), []);
   const handleClosePanel = useCallback(() => setActiveRole(null), []);
 
@@ -33,39 +35,60 @@ export function ImpactMapPage() {
         Back to Atlas
       </Link>
 
-      {/* Legend */}
-      <div className="impact-map-legend">
-        <h3>Elevation Key</h3>
-        <div className="impact-map-legend-item">
-          <div className="impact-map-legend-dot submerged" />
-          <span>Submerged (automated)</span>
-        </div>
-        <div className="impact-map-legend-item">
-          <div className="impact-map-legend-dot frontier" />
-          <span>Frontier (2025-2026)</span>
-        </div>
-        <div className="impact-map-legend-item">
-          <div className="impact-map-legend-dot safe" />
-          <span>Safe (for now)</span>
-        </div>
-        <div className="impact-map-legend-hint">Click labeled roles with 📄 to read more</div>
+      {/* Legend - collapsible on mobile */}
+      <div className={`impact-map-legend ${legendOpen ? 'open' : 'collapsed'}`}>
+        {isMobile && (
+          <button
+            className="impact-map-legend-toggle"
+            onClick={() => setLegendOpen(!legendOpen)}
+            aria-label={legendOpen ? 'Collapse legend' : 'Expand legend'}
+          >
+            {legendOpen ? '▼ Legend' : '▲ Legend'}
+          </button>
+        )}
+        {(legendOpen || !isMobile) && (
+          <>
+            {!isMobile && <h3>Elevation Key</h3>}
+            <div className="impact-map-legend-item">
+              <div className="impact-map-legend-dot submerged" />
+              <span>Submerged (automated)</span>
+            </div>
+            <div className="impact-map-legend-item">
+              <div className="impact-map-legend-dot frontier" />
+              <span>Frontier (2025-2026)</span>
+            </div>
+            <div className="impact-map-legend-item">
+              <div className="impact-map-legend-dot safe" />
+              <span>Safe (for now)</span>
+            </div>
+            <div className="impact-map-legend-hint">Tap labeled roles with 📄 to read more</div>
+          </>
+        )}
       </div>
 
       {/* Info */}
       <div className="impact-map-info">
-        {isMobile ? 'Pinch to zoom. Drag to rotate.' : 'Rotate to explore. Click roles for notes.'}
+        {isMobile ? 'One finger: rotate · Two fingers: zoom · Swipe: pan' : 'Rotate to explore. Click roles for notes.'}
       </div>
 
       {/* Mobile hint */}
       {isMobile && (
-        <div className="impact-map-mobile-hint">Pinch to rotate</div>
+        <div className="impact-map-mobile-hint">Drag to explore the continent</div>
       )}
 
       {/* 3D Scene */}
       <Canvas
-        camera={{ position: [0, 12, 14], fov: 50 }}
-        style={{ width: '100%', height: '100%' }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{
+          position: isMobile ? [0, 16, 16] : [0, 12, 14],
+          fov: isMobile ? 55 : 50,
+        }}
+        style={{ width: '100%', height: '100%', touchAction: 'none' }}
+        gl={{
+          antialias: !isMobile,
+          alpha: false,
+          powerPreference: isMobile ? 'low-power' : 'high-performance',
+        }}
+        dpr={isMobile ? [1, 1.5] : [1, 2]}
         onCreated={({ gl }) => {
           gl.setClearColor('#0a1628');
         }}
@@ -79,12 +102,17 @@ export function ImpactMapPage() {
         <TerrainLabels onRoleClick={handleRoleClick} />
 
         <OrbitControls
-          enablePan={false}
-          minDistance={6}
-          maxDistance={25}
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={isMobile ? 8 : 6}
+          maxDistance={isMobile ? 30 : 25}
           maxPolarAngle={Math.PI / 2.2}
-          enableRotate={!isMobile || true}
-          touches={{ ONE: 1, TWO: 2 }}
+          panSpeed={isMobile ? 1.2 : 0.8}
+          touches={{
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN,
+          }}
         />
 
         {/* Fog for depth */}

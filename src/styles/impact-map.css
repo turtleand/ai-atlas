@@ -131,8 +131,26 @@
   text-decoration: underline;
 }
 
+/* Ensure canvas captures all touch events */
+.impact-map-page canvas {
+  touch-action: none;
+}
+
 .impact-map-mobile-hint {
   display: none;
+}
+
+/* Legend toggle button (mobile) */
+.impact-map-legend-toggle {
+  background: none;
+  border: none;
+  color: #c0d0e0;
+  font-size: 0.75rem;
+  padding: 4px 0;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
 }
 
 /* Labels */
@@ -204,13 +222,43 @@
     font-size: 1.2rem;
   }
 
+  .impact-map-title {
+    top: 12px;
+    left: 16px;
+  }
+
+  .impact-map-back {
+    top: 12px;
+    right: 16px;
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+
   .impact-map-legend {
+    bottom: auto;
+    top: 60px;
+    left: 16px;
     padding: 8px 12px;
     font-size: 0.7rem;
+    pointer-events: auto;
+    max-width: 180px;
+  }
+
+  .impact-map-legend.collapsed {
+    padding: 6px 12px;
+  }
+
+  .impact-map-info {
+    bottom: 12px;
+    right: 16px;
+    font-size: 0.65rem;
+    pointer-events: none;
   }
 
   .impact-map-footer {
     font-size: 0.6rem;
+    bottom: 4px;
+    pointer-events: none;
   }
 
   .impact-map-mobile-hint {
