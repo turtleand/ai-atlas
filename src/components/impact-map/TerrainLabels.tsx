@@ -24,6 +24,7 @@ export function TerrainLabels({ onRoleClick }: TerrainLabelsProps) {
               position={[ix, iy + 0.8, iz]}
               center
               distanceFactor={12}
+              zIndexRange={[1, 0]}
               style={{ pointerEvents: 'none' }}
             >
               <div className="impact-label impact-label-industry">{region.name}</div>
@@ -51,6 +52,7 @@ export function TerrainLabels({ onRoleClick }: TerrainLabelsProps) {
                     position={[rx, ry + 0.25, rz]}
                     center
                     distanceFactor={12}
+                    zIndexRange={[1, 0]}
                     style={{ pointerEvents: 'auto' }}
                   >
                     <button
@@ -73,6 +75,7 @@ export function TerrainLabels({ onRoleClick }: TerrainLabelsProps) {
                   position={[rx, ry + 0.25, rz]}
                   center
                   distanceFactor={12}
+                  zIndexRange={[1, 0]}
                   style={{ pointerEvents: 'none' }}
                 >
                   {label}
