@@ -4,6 +4,7 @@
 AI can generate test cases, write assertions from specs, and identify flaky tests. Manual QA for straightforward user flows is being automated. But edge cases, exploratory testing, and understanding user intent still need humans.
 
 ## Latest
+- **2026-02-17** -- At India's Global AI Impact Summit 2026, former HCLTech CEO Vineet Nayar warns that "sub-skills" (specialized, routine jobs) will disappear due to AI automation, replaced by "macro skills." He predicts 50% of current jobs will go, but 50% more new jobs will emerge requiring different skills. Source: [The Hindu Business Line](https://www.thehindubusinessline.com/incoming/future-of-work-in-the-age-of-ai-skill-or-perish/article70640306.ece)
 - **2026-01** -- QA role shifts toward test strategy, edge case discovery, and AI test review. Source: Industry reports
 - **2025-10** -- Visual regression testing with AI reaches production quality. Source: Tech press
 
