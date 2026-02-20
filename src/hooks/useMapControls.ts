@@ -41,13 +41,12 @@ export function useMapControls(): MapControls {
   const startPos = useRef({ x: 0, y: 0 });
   const lastPos = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const activeTouches = useRef(0);
+  const isPinching = useRef(false);
 
   const onPointerDown = useCallback((e: PointerEvent) => {
     if (e.button !== 0) return;
-    if (e.pointerType === 'touch') {
-      activeTouches.current++;
-    }
+    // Don't start drag if pinch is active
+    if (isPinching.current) return;
     isDragging.current = true;
     hasDragged.current = false;
     startPos.current = { x: e.clientX, y: e.clientY };
@@ -56,7 +55,7 @@ export function useMapControls(): MapControls {
   }, []);
 
   const onPointerMove = useCallback((e: PointerEvent) => {
-    if (!isDragging.current) return;
+    if (!isDragging.current || isPinching.current) return;
     if (!hasDragged.current) {
       const dist = Math.hypot(e.clientX - startPos.current.x, e.clientY - startPos.current.y);
       if (dist < 3) return;
@@ -68,10 +67,7 @@ export function useMapControls(): MapControls {
     setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
   }, []);
 
-  const onPointerUp = useCallback((e: PointerEvent) => {
-    if (e.pointerType === 'touch') {
-      activeTouches.current = Math.max(0, activeTouches.current - 1);
-    }
+  const onPointerUp = useCallback((_e: PointerEvent) => {
     isDragging.current = false;
   }, []);
 
@@ -111,8 +107,70 @@ export function useMapControls(): MapControls {
     };
 
     el.addEventListener('wheel', handleWheel, { passive: false });
+
+    // --- Pinch-to-zoom via touch events ---
+    let lastPinchDist = 0;
+    let lastPinchMid = { x: 0, y: 0 };
+
+    const getTouchDist = (t: TouchList) =>
+      Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+
+    const getTouchMid = (t: TouchList) => ({
+      x: (t[0].clientX + t[1].clientX) / 2,
+      y: (t[0].clientY + t[1].clientY) / 2,
+    });
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        isPinching.current = true;
+        isDragging.current = false; // cancel any ongoing drag
+        lastPinchDist = getTouchDist(e.touches);
+        lastPinchMid = getTouchMid(e.touches);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && isPinching.current) {
+        e.preventDefault();
+        const newDist = getTouchDist(e.touches);
+        const newMid = getTouchMid(e.touches);
+        const scaleFactor = newDist / lastPinchDist;
+
+        setTransform(prev => {
+          const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, prev.scale * scaleFactor));
+          const rect = el.getBoundingClientRect();
+          const mx = newMid.x - rect.left;
+          const my = newMid.y - rect.top;
+          const scaleRatio = newScale / prev.scale;
+          // Zoom toward pinch midpoint + pan with midpoint movement
+          const newX = mx - (mx - prev.x) * scaleRatio + (newMid.x - lastPinchMid.x);
+          const newY = my - (my - prev.y) * scaleRatio + (newMid.y - lastPinchMid.y);
+          return { x: newX, y: newY, scale: newScale };
+        });
+
+        lastPinchDist = newDist;
+        lastPinchMid = newMid;
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        isPinching.current = false;
+      }
+    };
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: false });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd);
+    el.addEventListener('touchcancel', handleTouchEnd);
+
     return () => {
       el.removeEventListener('wheel', handleWheel);
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+      el.removeEventListener('touchcancel', handleTouchEnd);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
