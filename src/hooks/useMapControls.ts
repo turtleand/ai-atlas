@@ -47,8 +47,6 @@ export function useMapControls(): MapControls {
     if (e.button !== 0) return;
     if (e.pointerType === 'touch') {
       activeTouches.current++;
-      // On touch devices, require two fingers to pan
-      if (activeTouches.current < 2) return;
     }
     isDragging.current = true;
     hasDragged.current = false;
@@ -59,8 +57,6 @@ export function useMapControls(): MapControls {
 
   const onPointerMove = useCallback((e: PointerEvent) => {
     if (!isDragging.current) return;
-    // On touch, only pan with 2+ fingers
-    if (e.pointerType === 'touch' && activeTouches.current < 2) return;
     if (!hasDragged.current) {
       const dist = Math.hypot(e.clientX - startPos.current.x, e.clientY - startPos.current.y);
       if (dist < 3) return;

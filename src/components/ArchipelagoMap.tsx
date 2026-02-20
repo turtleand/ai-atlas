@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { Category } from '../utils/parseTools.ts';
 import { computeLayout, type BeaconPosition, type IslandLayout } from '../utils/layoutEngine.ts';
@@ -26,30 +26,8 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
 
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [journal, setJournal] = useState<JournalState | null>(null);
-  const [showTouchHint, setShowTouchHint] = useState(false);
-  const touchHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Touch hint removed — single finger now pans correctly
 
-  // Show hint on single-finger touch attempt (mobile only)
-  useEffect(() => {
-    const el = containerRef;
-    if (!el.current) return;
-    const node = el.current;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        setShowTouchHint(true);
-        if (touchHintTimer.current) clearTimeout(touchHintTimer.current);
-        touchHintTimer.current = setTimeout(() => setShowTouchHint(false), 2000);
-      } else {
-        setShowTouchHint(false);
-      }
-    };
-
-    if ('ontouchstart' in window) {
-      node.addEventListener('touchstart', handleTouchStart, { passive: true });
-      return () => node.removeEventListener('touchstart', handleTouchStart);
-    }
-  }, [containerRef]);
 
   const handleBeaconHover = useCallback((beacon: BeaconPosition, e: React.PointerEvent) => {
     const el = tooltipRef.current;
@@ -145,12 +123,6 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       {/* Fog overlay */}
       <div className="fog-overlay" />
 
-      {/* Two-finger hint overlay */}
-      {showTouchHint && (
-        <div className="touch-hint">
-          <span>☝️☝️</span> Use two fingers to navigate the map
-        </div>
-      )}
 
       {/* UI overlays */}
       <MapTitle />
