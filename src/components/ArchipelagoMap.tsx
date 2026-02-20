@@ -10,6 +10,7 @@ import { CompassRose } from './CompassRose.tsx';
 import { MapTitle } from './MapTitle.tsx';
 import { AiTurtle } from './AiTurtle.tsx';
 import { MapDecorations } from './MapDecorations.tsx';
+import { LandscapeNav } from './LandscapeNav.tsx';
 
 interface ArchipelagoMapProps {
   categories: Category[];
@@ -128,6 +129,7 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       <MapTitle />
       <MapLegend islands={layout.islands} onIslandClick={handleLegendIslandClick} />
       <CompassRose onResetView={resetView} />
+      <LandscapeNav />
 
       {/* Tooltip (ref-driven, no re-renders) */}
       <div ref={tooltipRef} className="tooltip" style={{ display: 'none' }}>
