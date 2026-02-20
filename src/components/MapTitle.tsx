@@ -1,6 +1,11 @@
 export function MapTitle() {
   return (
-    <div className="map-title">
+    <>
+      <div className="map-title">
+        <h1>Turtleand's AI Atlas</h1>
+        <p className="map-subtitle">Tools I've charted on my journey</p>
+        <div className="map-title-border" />
+      </div>
       <nav className="map-nav">
         <a href="https://lab.turtleand.com/" className="nav-link" target="_blank" rel="noopener">
           <span className="nav-icon">🧪</span> Back to AI Lab
@@ -9,9 +14,6 @@ export function MapTitle() {
           <span className="nav-icon">⚓</span> Turtleand Hub
         </a>
       </nav>
-      <h1>Turtleand's AI Atlas</h1>
-      <p className="map-subtitle">Tools I've charted on my journey</p>
-      <div className="map-title-border" />
-    </div>
+    </>
   );
 }

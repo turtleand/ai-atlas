@@ -114,9 +114,10 @@
 
 @media (max-width: 768px) {
   .tsunami-link {
-    bottom: 4.5rem;
+    bottom: unset;
+    top: 50%;
     right: 12px;
-    padding: 0.7rem 1.2rem;
+    padding: 0.6rem 1rem;
   }
 
   .tsunami-link-icon {
@@ -124,24 +125,25 @@
   }
 
   .tsunami-link-title {
-    font-size: 0.85rem;
-  }
-
-  .tsunami-link-sub {
-    font-size: 0.65rem;
-  }
-
-  .impact-map-link {
-    bottom: 8.5rem;
-    right: 12px;
-    padding: 0.6rem 1rem;
-  }
-
-  .impact-map-link .tsunami-link-title {
     font-size: 0.8rem;
   }
 
-  .impact-map-link .tsunami-link-sub {
+  .tsunami-link-sub {
     font-size: 0.6rem;
+  }
+
+  .impact-map-link {
+    bottom: unset;
+    top: calc(50% - 4rem);
+    right: 12px;
+    padding: 0.55rem 0.9rem;
+  }
+
+  .impact-map-link .tsunami-link-title {
+    font-size: 0.75rem;
+  }
+
+  .impact-map-link .tsunami-link-sub {
+    font-size: 0.55rem;
   }
 }

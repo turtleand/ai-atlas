@@ -125,6 +125,7 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       <MapTitle />
       <MapLegend islands={layout.islands} onIslandClick={handleLegendIslandClick} />
       <CompassRose onResetView={resetView} />
+      <button className="reset-view-btn" onClick={resetView}>⟲ Reset View</button>
 
       {/* Tooltip (ref-driven, no re-renders) */}
       <div ref={tooltipRef} className="tooltip" style={{ display: 'none' }}>
