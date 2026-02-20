@@ -18,6 +18,8 @@ interface MapControls {
   panTo: (cx: number, cy: number) => void;
 }
 
+const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
 function getInitialTransform(): MapTransform {
   const viewW = window.innerWidth;
   if (viewW <= 768) {
@@ -42,9 +44,15 @@ export function useMapControls(): MapControls {
   const startPos = useRef({ x: 0, y: 0 });
   const lastPos = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const activeTouches = useRef(0);
 
   const onPointerDown = useCallback((e: PointerEvent) => {
     if (e.button !== 0) return;
+    if (e.pointerType === 'touch') {
+      activeTouches.current++;
+      // On touch devices, require two fingers to pan
+      if (activeTouches.current < 2) return;
+    }
     isDragging.current = true;
     hasDragged.current = false;
     startPos.current = { x: e.clientX, y: e.clientY };
@@ -54,6 +62,8 @@ export function useMapControls(): MapControls {
 
   const onPointerMove = useCallback((e: PointerEvent) => {
     if (!isDragging.current) return;
+    // On touch, only pan with 2+ fingers
+    if (e.pointerType === 'touch' && activeTouches.current < 2) return;
     if (!hasDragged.current) {
       const dist = Math.hypot(e.clientX - startPos.current.x, e.clientY - startPos.current.y);
       if (dist < 3) return;
@@ -65,7 +75,10 @@ export function useMapControls(): MapControls {
     setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
   }, []);
 
-  const onPointerUp = useCallback(() => {
+  const onPointerUp = useCallback((e: PointerEvent) => {
+    if (e.pointerType === 'touch') {
+      activeTouches.current = Math.max(0, activeTouches.current - 1);
+    }
     isDragging.current = false;
   }, []);
 

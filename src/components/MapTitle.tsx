@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export function MapTitle() {
   return (
     <>
@@ -8,10 +10,16 @@ export function MapTitle() {
       </div>
       <nav className="map-nav">
         <a href="https://lab.turtleand.com/" className="nav-link" target="_blank" rel="noopener">
-          <span className="nav-icon">🧪</span> Back to AI Lab
+          <span className="nav-icon">🧪</span> AI Lab
         </a>
+        <Link to="/tsunami" className="nav-link nav-link-feature">
+          <span className="nav-icon">🌊</span> Tsunami
+        </Link>
+        <Link to="/ai-impact-map" className="nav-link nav-link-feature">
+          <span className="nav-icon">🗺️</span> Impact
+        </Link>
         <a href="https://turtleand.com/" className="nav-link nav-link-hub" target="_blank" rel="noopener">
-          <span className="nav-icon">⚓</span> Turtleand Hub
+          <span className="nav-icon">⚓</span> Hub
         </a>
       </nav>
     </>

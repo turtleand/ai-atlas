@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { Category } from '../utils/parseTools.ts';
 import { computeLayout, type BeaconPosition, type IslandLayout } from '../utils/layoutEngine.ts';
@@ -26,6 +26,30 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
 
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [journal, setJournal] = useState<JournalState | null>(null);
+  const [showTouchHint, setShowTouchHint] = useState(false);
+  const touchHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Show hint on single-finger touch attempt (mobile only)
+  useEffect(() => {
+    const el = containerRef;
+    if (!el.current) return;
+    const node = el.current;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        setShowTouchHint(true);
+        if (touchHintTimer.current) clearTimeout(touchHintTimer.current);
+        touchHintTimer.current = setTimeout(() => setShowTouchHint(false), 2000);
+      } else {
+        setShowTouchHint(false);
+      }
+    };
+
+    if ('ontouchstart' in window) {
+      node.addEventListener('touchstart', handleTouchStart, { passive: true });
+      return () => node.removeEventListener('touchstart', handleTouchStart);
+    }
+  }, [containerRef]);
 
   const handleBeaconHover = useCallback((beacon: BeaconPosition, e: React.PointerEvent) => {
     const el = tooltipRef.current;
@@ -121,6 +145,13 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       {/* Fog overlay */}
       <div className="fog-overlay" />
 
+      {/* Two-finger hint overlay */}
+      {showTouchHint && (
+        <div className="touch-hint">
+          <span>☝️☝️</span> Use two fingers to navigate the map
+        </div>
+      )}
+
       {/* UI overlays */}
       <MapTitle />
       <MapLegend islands={layout.islands} onIslandClick={handleLegendIslandClick} />
@@ -148,23 +179,25 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
         />
       )}
 
-      {/* Tsunami Tracker Link */}
-      <Link to="/tsunami" className="tsunami-link">
-        <span className="tsunami-link-icon">🌊</span>
-        <span className="tsunami-link-text">
-          <span className="tsunami-link-title">AI Tsunami Tracker</span>
-          <span className="tsunami-link-sub">Are you ready?</span>
-        </span>
-      </Link>
-
-      {/* AI Impact Map Link */}
-      <Link to="/ai-impact-map" className="impact-map-link">
-        <span className="tsunami-link-icon">🗺️</span>
-        <span className="tsunami-link-text">
-          <span className="tsunami-link-title">AI Impact Map</span>
-          <span className="tsunami-link-sub">Which jobs are underwater?</span>
-        </span>
-      </Link>
+      {/* Feature links — hidden when journal is open */}
+      {!journal && (
+        <>
+          <Link to="/tsunami" className="tsunami-link feature-link-float">
+            <span className="tsunami-link-icon">🌊</span>
+            <span className="tsunami-link-text">
+              <span className="tsunami-link-title">AI Tsunami Tracker</span>
+              <span className="tsunami-link-sub">Are you ready?</span>
+            </span>
+          </Link>
+          <Link to="/ai-impact-map" className="impact-map-link feature-link-float">
+            <span className="tsunami-link-icon">🗺️</span>
+            <span className="tsunami-link-text">
+              <span className="tsunami-link-title">AI Impact Map</span>
+              <span className="tsunami-link-sub">Which jobs are underwater?</span>
+            </span>
+          </Link>
+        </>
+      )}
     </>
   );
 }
