@@ -4,6 +4,7 @@
 AI tools can catch common code review issues: style violations, potential bugs, security vulnerabilities, and performance problems. They work faster than humans for surface-level review. But nuanced feedback about architecture, readability, and team conventions still requires human judgment.
 
 ## Latest
+- **2026-02-20** -- Infosys Chairman Nandan Nilekani warns uncontrolled AI proliferation could alienate white-collar workers and trigger an "AI train wreck." Infosys shares have tumbled 17% in February 2026 as investors fear AI's immediate disruptive impact on traditional IT service models. The broader Nifty IT index is down 11-15% in early February, reflecting sector-wide concern about AI disruption. Source: [WhalesBook](https://www.whalesbook.com/news/English/tech/Infosys-Chief-Use-Cases-Not-Tech-Race-Key-for-Indias-AI-Lead/6997a81b057e346edab3773f)
 - **2026-02** -- Software sector stocks enter bear market (down 30%) as investors react to autonomous AI agents handling complex professional tasks. Wealth management, legal services, and logistics also hit by AI displacement fears. Source: [The Guardian](https://www.theguardian.com/technology/2026/feb/13/ai-effects-on-business-industry-evidence-to-allay-investor-fears)
 - **2026-01** -- Standard code review for style and bugs is largely automated; human review focuses on design. Source: Industry reports
 - **2025-08** -- Teams adopt AI as "first pass" reviewer, with humans doing architectural review. Source: Industry reports
