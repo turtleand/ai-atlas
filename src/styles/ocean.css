@@ -83,3 +83,31 @@
 .cloud {
   opacity: 0.06;
 }
+
+/* Two-finger touch hint */
+.touch-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10, 22, 40, 0.9);
+  color: #e0d8c8;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 160, 58, 0.4);
+  z-index: 300;
+  pointer-events: none;
+  animation: hintFade 2s ease-out forwards;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes hintFade {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}

@@ -26,6 +26,8 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
 
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [journal, setJournal] = useState<JournalState | null>(null);
+  // Touch hint removed — single finger now pans correctly
+
 
   const handleBeaconHover = useCallback((beacon: BeaconPosition, e: React.PointerEvent) => {
     const el = tooltipRef.current;
@@ -121,6 +123,7 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
       {/* Fog overlay */}
       <div className="fog-overlay" />
 
+
       {/* UI overlays */}
       <MapTitle />
       <MapLegend islands={layout.islands} onIslandClick={handleLegendIslandClick} />
@@ -147,23 +150,25 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
         />
       )}
 
-      {/* Tsunami Tracker Link */}
-      <Link to="/tsunami" className="tsunami-link">
-        <span className="tsunami-link-icon">🌊</span>
-        <span className="tsunami-link-text">
-          <span className="tsunami-link-title">AI Tsunami Tracker</span>
-          <span className="tsunami-link-sub">Are you ready?</span>
-        </span>
-      </Link>
-
-      {/* AI Impact Map Link */}
-      <Link to="/ai-impact-map" className="impact-map-link">
-        <span className="tsunami-link-icon">🗺️</span>
-        <span className="tsunami-link-text">
-          <span className="tsunami-link-title">AI Impact Map</span>
-          <span className="tsunami-link-sub">Which jobs are underwater?</span>
-        </span>
-      </Link>
+      {/* Feature links — hidden when journal is open */}
+      {!journal && (
+        <>
+          <Link to="/tsunami" className="tsunami-link feature-link-float">
+            <span className="tsunami-link-icon">🌊</span>
+            <span className="tsunami-link-text">
+              <span className="tsunami-link-title">AI Tsunami Tracker</span>
+              <span className="tsunami-link-sub">Are you ready?</span>
+            </span>
+          </Link>
+          <Link to="/ai-impact-map" className="impact-map-link feature-link-float">
+            <span className="tsunami-link-icon">🗺️</span>
+            <span className="tsunami-link-text">
+              <span className="tsunami-link-title">AI Impact Map</span>
+              <span className="tsunami-link-sub">Which jobs are underwater?</span>
+            </span>
+          </Link>
+        </>
+      )}
     </>
   );
 }

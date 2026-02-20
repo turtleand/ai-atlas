@@ -112,36 +112,20 @@
   color: rgba(0, 220, 255, 0.9);
 }
 
+/* On mobile, hide the floating feature buttons — they're in the nav bar instead */
 @media (max-width: 768px) {
-  .tsunami-link {
-    bottom: 4.5rem;
-    right: 12px;
-    padding: 0.7rem 1.2rem;
+  .feature-link-float {
+    display: none !important;
   }
+}
 
-  .tsunami-link-icon {
-    font-size: 1.3rem;
-  }
+/* Feature nav links — visible only on mobile (desktop uses floating buttons) */
+.nav-link-feature {
+  display: none;
+}
 
-  .tsunami-link-title {
-    font-size: 0.85rem;
-  }
-
-  .tsunami-link-sub {
-    font-size: 0.65rem;
-  }
-
-  .impact-map-link {
-    bottom: 8.5rem;
-    right: 12px;
-    padding: 0.6rem 1rem;
-  }
-
-  .impact-map-link .tsunami-link-title {
-    font-size: 0.8rem;
-  }
-
-  .impact-map-link .tsunami-link-sub {
-    font-size: 0.6rem;
+@media (max-width: 768px) {
+  .nav-link-feature {
+    display: inline-flex;
   }
 }
