@@ -403,6 +403,134 @@
   display: none;
 }
 
+/* ===== LANDSCAPE MODE (mobile landscape — very limited vertical space) ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Legend — smaller collapsed bar, tighter to corner */
+  .legend {
+    left: 8px;
+    right: auto;
+    bottom: 8px;
+    min-width: unset;
+    padding: 6px 10px;
+    max-height: 32px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    font-size: 11px;
+    max-width: 220px;
+  }
+
+  .legend--expanded {
+    max-height: 45vh;
+    overflow-y: auto;
+    padding-bottom: 8px;
+    max-width: 240px;
+  }
+
+  .legend-header {
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+
+  .legend-toggle-icon {
+    display: inline-block;
+    color: #D4A03A;
+    font-size: 12px;
+  }
+
+  .legend-item {
+    font-size: 11px;
+    gap: 6px;
+    padding: 2px 4px;
+  }
+
+  .legend-item:first-of-type {
+    margin-top: 6px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* Title — minimal, single line */
+  .map-title {
+    top: 4px;
+  }
+
+  .map-title h1 {
+    font-size: 14px;
+    letter-spacing: 1.5px;
+  }
+
+  .map-subtitle {
+    display: none;
+  }
+
+  .map-title-border {
+    display: none;
+  }
+
+  /* Nav — compact row, top-right to avoid blocking map center */
+  .map-nav {
+    position: fixed;
+    top: 4px;
+    bottom: unset;
+    left: unset;
+    right: 60px;
+    transform: none;
+    display: flex;
+    gap: 4px;
+    z-index: 25;
+  }
+
+  .nav-link {
+    font-size: 9px;
+    padding: 3px 6px;
+    letter-spacing: 0.5px;
+    gap: 3px;
+  }
+
+  .nav-icon {
+    font-size: 11px;
+  }
+
+  /* Compass — tiny */
+  .compass {
+    width: 32px;
+    height: 32px;
+    top: 4px;
+    right: 8px;
+    opacity: 0.35;
+  }
+
+  /* Journal — full height but narrower */
+  .journal-panel {
+    width: 320px;
+    max-width: 50vw;
+    padding: 16px 14px;
+    gap: 12px;
+  }
+
+  .journal-title {
+    font-size: 18px;
+  }
+
+  .journal-close {
+    top: 8px;
+    right: 8px;
+  }
+
+  /* Tooltip — compact */
+  .tooltip {
+    max-width: 180px;
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+}
 
 @media (max-width: 768px) {
   /* Legend — collapsed bottom bar, above nav buttons */
