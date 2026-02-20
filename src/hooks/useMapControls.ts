@@ -17,9 +17,6 @@ interface MapControls {
   resetView: () => void;
   panTo: (cx: number, cy: number) => void;
 }
-
-const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
 function getInitialTransform(): MapTransform {
   const viewW = window.innerWidth;
   if (viewW <= 768) {
