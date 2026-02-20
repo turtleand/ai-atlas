@@ -129,3 +129,14 @@
     display: inline-flex;
   }
 }
+
+/* Landscape: hide floating feature buttons (they're in compact nav) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .feature-link-float {
+    display: none !important;
+  }
+
+  .nav-link-feature {
+    display: inline-flex;
+  }
+}
