@@ -4,6 +4,7 @@
 Managed AI services (OpenAI API, Anthropic API, AWS Bedrock) abstract away much of the traditional MLOps stack. You no longer need to manage training infrastructure or GPU clusters for many use cases. But custom model training, fine-tuning pipelines, and production reliability engineering still require skilled practitioners.
 
 ## Latest
+- **2026-02-20** -- CIO.com analysis warns agentic AI systems don't fail suddenly but "drift over time" in ways traditional testing can't catch. Unlike stateless models, agents operate through decision sequences that evolve as prompts change, tools are added, and dependencies shift. A credit adjudication pilot showed income verification steps dropped from 100% to 70-80% reliability over time despite no obvious failures. Production agentic systems require continuous behavioral monitoring, not just point-in-time demos. Source: [CIO.com](https://www.cio.com/article/4134051/agentic-ai-systems-dont-fail-suddenly-they-drift-over-time.html)
 - **2025-12** -- Traditional MLOps (training pipelines, feature stores) commoditizes; focus shifts to evaluation and reliability. Source: Industry reports
 - **2025-07** -- Open-source model deployment becomes plug-and-play with tools like vLLM and Ollama. Source: Tech community
 
