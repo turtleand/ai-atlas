@@ -45,7 +45,7 @@ export const industryRegions: IndustryRegion[] = [
         name: 'Junior Dev Tasks',
         status: 'frontier',
         offset: [-0.15, 0.04],
-        elevation: 0.30,
+        elevation: 0.24,
         notesFile: 'junior-dev-tasks',
       },
       {
@@ -114,9 +114,9 @@ export const industryRegions: IndustryRegion[] = [
       {
         id: 'copywriting',
         name: 'Copywriting',
-        status: 'frontier',
+        status: 'submerged',
         offset: [-0.06, 0.04],
-        elevation: 0.28,
+        elevation: 0.15,
         notesFile: 'copywriting',
       },
       {
@@ -155,7 +155,7 @@ export const industryRegions: IndustryRegion[] = [
         name: 'Basic Prompt Engineering',
         status: 'frontier',
         offset: [-0.06, -0.04],
-        elevation: 0.35,
+        elevation: 0.28,
         notesFile: 'basic-prompt-engineering',
       },
       {
