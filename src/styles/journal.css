@@ -537,7 +537,7 @@
   .legend {
     left: 12px;
     right: 12px;
-    bottom: 56px;
+    bottom: 68px;
     min-width: unset;
     padding: 10px 14px;
     max-height: 44px;
@@ -591,7 +591,8 @@
   }
 
   .map-subtitle {
-    display: none;
+    font-size: 11px;
+    letter-spacing: 1px;
   }
 
   .map-title-border {

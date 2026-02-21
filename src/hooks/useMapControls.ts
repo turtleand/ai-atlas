@@ -19,19 +19,21 @@ interface MapControls {
 }
 function getInitialTransform(): MapTransform {
   const viewW = window.innerWidth;
+  const viewH = window.innerHeight;
   if (viewW <= 768) {
-    const scale = 0.45;
-    const viewH = window.innerHeight;
+    // Scale to fit entire 2400×1600 map into mobile viewport with margin
+    const scale = viewW / 2600;
+    // Center on the island cluster (map center 1200,800), shift up to reduce top dead space
     return {
       x: viewW / 2 - 1200 * scale,
-      y: viewH / 2 - 800 * scale,
+      y: viewH * 0.38 - 800 * scale,
       scale,
     };
   }
   return { x: 0, y: 0, scale: 0.7 };
 }
 
-const MIN_SCALE = 0.4;
+const MIN_SCALE = 0.15;
 const MAX_SCALE = 2.0;
 
 export function useMapControls(): MapControls {
