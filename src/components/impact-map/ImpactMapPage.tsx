@@ -68,19 +68,14 @@ export function ImpactMapPage() {
 
       {/* Info */}
       <div className="impact-map-info">
-        {isMobile ? 'One finger: rotate · Two fingers: zoom · Swipe: pan' : 'Rotate to explore. Click roles for notes.'}
+        {isMobile ? 'Drag to explore · Pinch to zoom' : 'Rotate to explore. Click roles for notes.'}
       </div>
-
-      {/* Mobile hint */}
-      {isMobile && (
-        <div className="impact-map-mobile-hint">Drag to explore the continent</div>
-      )}
 
       {/* 3D Scene */}
       <Canvas
         camera={{
-          position: isMobile ? [0, 16, 16] : [0, 12, 14],
-          fov: isMobile ? 55 : 50,
+          position: isMobile ? [-1, 18, 20] : [0, 12, 14],
+          fov: isMobile ? 60 : 50,
         }}
         style={{ width: '100%', height: '100%', touchAction: 'none' }}
         gl={{
@@ -106,7 +101,7 @@ export function ImpactMapPage() {
           enableZoom={true}
           enableRotate={true}
           minDistance={isMobile ? 8 : 6}
-          maxDistance={isMobile ? 30 : 25}
+          maxDistance={isMobile ? 40 : 25}
           maxPolarAngle={Math.PI / 2.2}
           panSpeed={isMobile ? 1.2 : 0.8}
           touches={{
