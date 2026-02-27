@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://ai-atlas.turtleand.com/sitemap.xml
+Sitemap: https://atlas.turtleand.com/sitemap.xml
 
 # AI Crawlers Welcome
 User-agent: GPTBot
