@@ -234,6 +234,16 @@ categories:
           The GitHub of AI models.
         tags: [infrastructure]
 
+      - name: Google AI Studio
+        url: https://aistudio.google.com/
+        description: API key management and model playground for Gemini
+        usage: |
+          Used to generate and manage API keys for Gemini models powering
+          OpenClaw's brain and sub-agents. Also useful for testing prompts
+          and exploring model capabilities before integrating them into
+          agent workflows.
+        tags: [infrastructure]
+
   - name: Agents
     tools:
       - name: OpenClaw
