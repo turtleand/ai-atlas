@@ -44,6 +44,7 @@
 - [Hugging Face](https://ai-atlas.turtleand.com/#hugging-face): Model repository & community hub
 
 ### Agents
+- [Hermes Agent](https://ai-atlas.turtleand.com/#hermes-agent): Open-source AI agent framework with memory, skills, tools, messaging, and scheduled tasks
 - [OpenClaw](https://ai-atlas.turtleand.com/#openclaw): Persistent AI agent platform
 
 ### Auxiliary Tools
