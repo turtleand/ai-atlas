@@ -236,6 +236,21 @@ categories:
 
   - name: Agents
     tools:
+      - name: Hermes Agent
+        url: https://github.com/NousResearch/hermes-agent
+        description: Open-source AI agent framework with memory, skills, tools, messaging, and scheduled tasks
+        usage: |
+          My active Turtleand operating companion. Useful for voice-first interaction,
+          persistent memory, reusable skills, repository work, scheduled briefs,
+          and turning private learning into public artifacts while keeping human
+          approval at the center.
+        related:
+          - title: Hermes Agent Documentation
+            url: https://hermes-agent.nousresearch.com/docs
+          - title: AI Lab
+            url: https://lab.turtleand.com/
+        tags: [daily-driver, agent-framework, infrastructure]
+
       - name: OpenClaw
         url: https://github.com/openclaw/openclaw
         description: Persistent AI agent platform
