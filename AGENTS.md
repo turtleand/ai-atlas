@@ -1,6 +1,6 @@
-# AGENTS.md — ai-atlas
+# AGENTS.md - ai-atlas
 
-See `CLAUDE.md` for tool-data publishing requirements.
+See `CLAUDE.md` for tool-data publishing requirements. This file gives repository-level guidance for Codex automatic PR reviews and other AI agents.
 
 ## Scope
 
@@ -9,8 +9,9 @@ Applies only to `ai-atlas/`.
 ## Ecosystem role
 
 - AI Atlas is the tool cartography and orientation layer of Turtleand.
-- Its primary function is to reduce tool confusion by mapping categories, options, and the surrounding AI landscape.
-- It should stay focused on navigational clarity and curation rather than becoming a general essay or curriculum surface.
+- Its job is to reduce tool confusion by mapping categories, options, trade-offs, and source confidence.
+- Keep AI Atlas as a map, not a hype feed, ranking farm, or generic product blog.
+- Route curriculum to `ai-lab/`, engineering craft to `build/`, operating principles to `handbook/`, ecosystem routing to `portal/`, and agent operations to `openclaw-lab/` or `hermes-lab/`.
 
 ## Project summary
 
@@ -25,18 +26,39 @@ Applies only to `ai-atlas/`.
 3. Keep generated output in `dist/` out of scope unless explicitly requested.
 4. Preserve the map, navigation, and orientation model unless the task explicitly changes product direction.
 
-## Content and data guidance
+## Public-safety review
 
-- Prioritize curation, categorization, and wayfinding.
-- Tool entries should help readers understand what exists, where it fits, and when to explore it.
-- Keep metadata complete and consistent so the atlas remains both human-readable and machine-readable.
+Reject changes that expose secrets, credentials, private infrastructure details, internal paths, specific vulnerabilities, or operational weaknesses. Safe public lessons are allowed when they describe general patterns, architecture trade-offs, defensive principles, or non-sensitive implementation choices.
 
-## Cross-project boundaries
+Keep private things private. Share learnings, not exposure.
 
-- Route step-by-step builder education to `ai-lab/`.
-- Route operational agent infrastructure and deployment practices to `openclaw/`.
-- Route identity, featured work, and ecosystem navigation to `portal/`.
-- Route compact principles and doctrine to `handbook/`.
+## Content and data quality review
+
+- Favor clarity over cleverness and usefulness over novelty.
+- Avoid overclaiming, vendor marketing language, stale claims, and ungrounded rankings.
+- Preserve Turtleand voice: calm, precise, direct, reflective when useful, practical when needed.
+- Do not introduce em dashes in public writing.
+- Keep humans responsible for direction, judgment, taste, ethics, and consequences.
+- Review category clarity, comparison usefulness, source confidence, and whether the tool entry helps orientation.
+
+## Repository integrity review
+
+- Keep changes focused to the branch purpose.
+- Review `src/data/ai-tools.yaml` and public `ai-tools.yaml` consistency when tool data changes.
+- Do not silently modify generated or build output unless the repo explicitly tracks it or the change requires regeneration.
+- Keep AI-readable artifacts, indexes, routes, sitemaps, and public data files in sync when the repo uses them.
+- Run local validation before PR creation.
+
+## PR review checklist
+
+Codex and other agents should check:
+
+- Does the change strengthen AI Atlas as a tool map and orientation surface?
+- Are tool claims grounded, current, and free from hype?
+- Are categories, tags, links, and public data files still consistent?
+- Is anything private, unsafe, or operationally sensitive exposed?
+- Are routes, builds, generated files, and data indexes still correct?
+- Is the diff small, coherent, and free from unrelated cleanup?
 
 ## Commands
 
