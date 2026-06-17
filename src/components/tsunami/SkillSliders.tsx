@@ -31,7 +31,7 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
           setIsInteracted(true);
           onScoresChange(parsed);
         }
-      } catch (e) {
+      } catch (_e) {
         // Invalid storage, ignore
       }
     }
