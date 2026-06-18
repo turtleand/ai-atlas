@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import type { Role } from '../../data/impact-map-data';
 import './NotesPanel.css';
 
@@ -62,11 +63,57 @@ function parseNoteMarkdown(md: string): ParsedNote {
   return result;
 }
 
-function inlineMarkdown(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+const markdownTokenPattern = /\[([^\]]+)]\(([^)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*/g;
+const safeLinkProtocols = new Set(['http:', 'https:', 'mailto:']);
+
+function isSafeLinkHref(href: string): boolean {
+  try {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://turtleand.com';
+    const url = new URL(href, baseUrl);
+
+    return safeLinkProtocols.has(url.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(markdownTokenPattern)) {
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      nodes.push(text.slice(lastIndex, index));
+    }
+
+    const [, label, href, boldText, italicText] = match;
+    const key = `${index}-${match[0]}`;
+
+    if (label && href) {
+      if (isSafeLinkHref(href)) {
+        nodes.push(
+          <a key={key} href={href} target="_blank" rel="noopener noreferrer">
+            {label}
+          </a>,
+        );
+      } else {
+        nodes.push(label);
+      }
+    } else if (boldText) {
+      nodes.push(<strong key={key}>{boldText}</strong>);
+    } else if (italicText) {
+      nodes.push(<em key={key}>{italicText}</em>);
+    }
+
+    lastIndex = index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes;
 }
 
 export function NotesPanel({ role, onClose }: NotesPanelProps) {
@@ -157,7 +204,7 @@ export function NotesPanel({ role, onClose }: NotesPanelProps) {
                       </h3>
                       <ul>
                         {parsed.latest.map((item, i) => (
-                          <li key={i} dangerouslySetInnerHTML={{ __html: inlineMarkdown(item) }} />
+                          <li key={i}>{renderInlineMarkdown(item)}</li>
                         ))}
                       </ul>
                     </div>
@@ -175,7 +222,7 @@ export function NotesPanel({ role, onClose }: NotesPanelProps) {
                       {historyOpen && (
                         <ul className="notes-history-list">
                           {parsed.history.map((item, i) => (
-                            <li key={i} dangerouslySetInnerHTML={{ __html: inlineMarkdown(item) }} />
+                            <li key={i}>{renderInlineMarkdown(item)}</li>
                           ))}
                         </ul>
                       )}
@@ -194,7 +241,7 @@ export function NotesPanel({ role, onClose }: NotesPanelProps) {
                       {sourcesOpen && (
                         <ul className="notes-sources-list">
                           {parsed.sources.map((item, i) => (
-                            <li key={i} dangerouslySetInnerHTML={{ __html: inlineMarkdown(item) }} />
+                            <li key={i}>{renderInlineMarkdown(item)}</li>
                           ))}
                         </ul>
                       )}
