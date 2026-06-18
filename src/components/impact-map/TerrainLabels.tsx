@@ -11,7 +11,7 @@ interface TerrainLabelsProps {
 
 // Zoom thresholds for progressive label reveal
 const ZOOM_HIDE_ALL_ROLES = 22; // distance > this: hide all role labels
-const ZOOM_SHOW_SURFACE = 18; // distance < this: show frontier + safe roles
+const ZOOM_SHOW_SURFACE = 20; // distance < this: show frontier + safe roles
 const ZOOM_SHOW_ALL = 12; // distance < this: show submerged roles too
 
 function shouldShowRole(status: string, cameraDistance: number): boolean {

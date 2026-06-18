@@ -43,9 +43,9 @@ export const industryRegions: IndustryRegion[] = [
       {
         id: 'junior-dev-tasks',
         name: 'Junior Dev Tasks',
-        status: 'frontier',
+        status: 'submerged',
         offset: [-0.15, 0.04],
-        elevation: 0.24,
+        elevation: 0.20,
         notesFile: 'junior-dev-tasks',
       },
       {
@@ -69,7 +69,7 @@ export const industryRegions: IndustryRegion[] = [
         name: 'Documentation',
         status: 'frontier',
         offset: [-0.08, 0.12],
-        elevation: 0.28,
+        elevation: 0.31,
         notesFile: 'documentation',
       },
       {
@@ -78,6 +78,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.04, 0.16],
         elevation: 0.70,
+        notesFile: 'system-architecture',
       },
       {
         id: 'complex-problem-solving',
@@ -85,6 +86,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.08, 0.15],
         elevation: 0.75,
+        notesFile: 'complex-problem-solving',
       },
     ],
   },
@@ -122,9 +124,9 @@ export const industryRegions: IndustryRegion[] = [
       {
         id: 'translation',
         name: 'Translation',
-        status: 'frontier',
+        status: 'submerged',
         offset: [0.06, 0.04],
-        elevation: 0.26,
+        elevation: 0.20,
         notesFile: 'translation',
       },
       {
@@ -133,6 +135,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.02, 0.10],
         elevation: 0.55,
+        notesFile: 'creative-direction',
       },
       {
         id: 'thought-leadership',
@@ -140,6 +143,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.04, 0.09],
         elevation: 0.52,
+        notesFile: 'thought-leadership',
       },
     ],
   },
@@ -153,9 +157,9 @@ export const industryRegions: IndustryRegion[] = [
       {
         id: 'basic-prompt-engineering',
         name: 'Basic Prompt Engineering',
-        status: 'frontier',
+        status: 'submerged',
         offset: [-0.06, -0.04],
-        elevation: 0.28,
+        elevation: 0.18,
         notesFile: 'basic-prompt-engineering',
       },
       {
@@ -163,7 +167,7 @@ export const industryRegions: IndustryRegion[] = [
         name: 'ML Ops',
         status: 'frontier',
         offset: [0.06, -0.02],
-        elevation: 0.38,
+        elevation: 0.42,
         notesFile: 'ml-ops',
       },
       {
@@ -172,6 +176,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.02, 0.07],
         elevation: 0.85,
+        notesFile: 'agent-architecture',
       },
       {
         id: 'evaluation-design',
@@ -179,6 +184,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.04, 0.09],
         elevation: 0.88,
+        notesFile: 'evaluation-design',
       },
     ],
   },
@@ -194,7 +200,7 @@ export const industryRegions: IndustryRegion[] = [
         name: 'Smart Contract Auditing',
         status: 'frontier',
         offset: [-0.04, -0.04],
-        elevation: 0.36,
+        elevation: 0.40,
         notesFile: 'smart-contract-auditing',
       },
       {
@@ -203,6 +209,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.04, 0.06],
         elevation: 0.78,
+        notesFile: 'protocol-design',
       },
       {
         id: 'mechanism-design',
@@ -210,10 +217,11 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.02, 0.07],
         elevation: 0.82,
+        notesFile: 'mechanism-design',
       },
     ],
   },
 ];
 
 // Water level in normalized elevation (0-1). Anything below this is "submerged".
-export const WATER_LEVEL = 0.22;
+export const WATER_LEVEL = 0.30;

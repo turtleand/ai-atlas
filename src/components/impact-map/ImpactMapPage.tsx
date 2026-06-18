@@ -27,7 +27,7 @@ export function ImpactMapPage() {
       {/* Title overlay */}
       <div className="impact-map-title">
         <h1>AI Impact Map</h1>
-        <p>Which jobs are already underwater?</p>
+        <p>A curated signal map of where automation pressure is rising.</p>
       </div>
 
       {/* Back link */}
@@ -118,7 +118,7 @@ export function ImpactMapPage() {
 
       {/* Footer */}
       <div className="impact-map-footer">
-        This map shows one perspective. <a href="https://github.com/turtleand/ai-atlas" target="_blank" rel="noopener noreferrer">Fork it and map your world.</a>
+        A Turtleand signal map based on observed news and interpretation, not an exhaustive global ranking. <a href="https://github.com/turtleand/ai-atlas" target="_blank" rel="noopener noreferrer">Fork it and map your world.</a>
       </div>
     </div>
   );

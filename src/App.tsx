@@ -28,14 +28,17 @@ export default function App() {
             </Suspense>
           }
         />
-        <Route
-          path="/ai-impact-map"
-          element={
-            <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
-              <ImpactMapPage />
-            </Suspense>
-          }
-        />
+        {['/ai-impact-map', '/impact-map'].map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
+                <ImpactMapPage />
+              </Suspense>
+            }
+          />
+        ))}
       </Routes>
     </BrowserRouter>
   );
