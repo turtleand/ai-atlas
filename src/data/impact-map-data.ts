@@ -203,6 +203,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.04, 0.06],
         elevation: 0.78,
+        notesFile: 'protocol-design',
       },
       {
         id: 'mechanism-design',
@@ -210,6 +211,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.02, 0.07],
         elevation: 0.82,
+        notesFile: 'mechanism-design',
       },
     ],
   },
