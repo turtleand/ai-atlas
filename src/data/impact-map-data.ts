@@ -172,6 +172,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.02, 0.07],
         elevation: 0.85,
+        notesFile: 'agent-architecture',
       },
       {
         id: 'evaluation-design',
@@ -179,6 +180,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.04, 0.09],
         elevation: 0.88,
+        notesFile: 'evaluation-design',
       },
     ],
   },
