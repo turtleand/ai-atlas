@@ -265,15 +265,6 @@ export function getStatusCount(industry: IndustryRegion, status: ImpactStatus): 
   return getRolesByStatus(industry, status).length;
 }
 
-export function getAllStatusCounts(): Record<ImpactStatus, number> {
-  return statusOrder.reduce(
-    (counts, status) => ({
-      ...counts,
-      [status]: industryRegions.reduce((total, industry) => total + getStatusCount(industry, status), 0),
-    }),
-    { safe: 0, frontier: 0, submerged: 0 } as Record<ImpactStatus, number>,
-  );
-}
 
 export function getRoleInsight(role: Role): RoleInsight {
   return roleInsights[role.id] ?? fallbackRoleInsight;

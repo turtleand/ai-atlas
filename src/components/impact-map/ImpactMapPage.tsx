@@ -4,7 +4,6 @@ import { industryRegions, type IndustryRegion, type Role } from '../../data/impa
 import { NotesPanel } from './NotesPanel';
 import {
   getAdjacentRoles,
-  getAllStatusCounts,
   getIndustryById,
   getRoleInsight,
   getRolesByStatus,
@@ -154,33 +153,11 @@ function RoleChip({ role, selected, onClick }: RoleChipProps) {
   );
 }
 
-interface MiniIcebergProps {
-  industry: IndustryRegion;
-  selectedStatus: ImpactStatus;
-}
-
-function MiniIceberg({ industry, selectedStatus }: MiniIcebergProps) {
-  return (
-    <div className="impact-mini-iceberg" aria-label={`Mini flood profile for ${industry.name}`}>
-      {statusOrder.map((status) => {
-        const selected = selectedStatus === status;
-        return (
-          <div key={status} className={`impact-mini-band ${status} ${selected ? 'selected' : ''}`}>
-            <span>{statusShortLabels[status]}</span>
-            <strong>{getStatusCount(industry, status)}</strong>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 interface CategorySummaryProps {
   industry: IndustryRegion;
-  selectedStatus: ImpactStatus;
 }
 
-function CategorySummary({ industry, selectedStatus }: CategorySummaryProps) {
+function CategorySummary({ industry }: CategorySummaryProps) {
   const insight = industryInsights[industry.id];
 
   return (
@@ -190,7 +167,6 @@ function CategorySummary({ industry, selectedStatus }: CategorySummaryProps) {
         <h2 id="impact-category-title">{industry.name}</h2>
         <p>{insight.summary}</p>
       </div>
-      <MiniIceberg industry={industry} selectedStatus={selectedStatus} />
     </section>
   );
 }
@@ -336,8 +312,6 @@ function RoleDetailPanel({
 }
 
 function ImpactHeader() {
-  const counts = getAllStatusCounts();
-
   return (
     <header className="impact-control-header">
       <div className="impact-title-block">
@@ -350,14 +324,6 @@ function ImpactHeader() {
       </div>
 
       <div className="impact-header-actions">
-        <div className="impact-status-totals" aria-label="Overall status totals">
-          {statusOrder.map((status) => (
-            <span key={status} className={status}>
-              <strong>{counts[status]}</strong>
-              {statusShortLabels[status]}
-            </span>
-          ))}
-        </div>
         <Link to="/" className="impact-map-back">
           Back to Atlas
         </Link>
@@ -424,7 +390,7 @@ export function ImpactMapPage() {
           />
 
           <div className="impact-main-canvas">
-            <CategorySummary industry={selectedIndustry} selectedStatus={selectedStatus} />
+            <CategorySummary industry={selectedIndustry} />
             <LayerDetail
               industry={selectedIndustry}
               selectedStatus={selectedStatus}
