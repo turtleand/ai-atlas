@@ -505,8 +505,7 @@
 
 .impact-detail-grid article,
 .impact-movement-signals,
-.impact-adjacent-block,
-.impact-no-note {
+.impact-adjacent-block {
   padding: 0.85rem;
   border: 1px solid rgba(126, 184, 218, 0.14);
   border-radius: 18px;
@@ -526,8 +525,7 @@
 }
 
 .impact-detail-grid p,
-.impact-movement-signals p,
-.impact-no-note {
+.impact-movement-signals p {
   color: #bdd0dc;
   line-height: 1.52;
   font-size: 0.9rem;

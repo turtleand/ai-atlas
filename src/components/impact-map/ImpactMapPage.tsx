@@ -262,7 +262,7 @@ function RoleDetailPanel({
 
       <div className="impact-detail-status-row">
         <span className={`impact-status-pill ${role.status}`}>{statusLabels[role.status]}</span>
-        <span>{role.notesFile ? 'Evidence note available' : 'Summary only'}</span>
+        {role.notesFile && <span>Evidence available</span>}
       </div>
 
       <div className="impact-detail-grid">
@@ -300,12 +300,10 @@ function RoleDetailPanel({
         </div>
       </div>
 
-      {role.notesFile ? (
+      {role.notesFile && (
         <button type="button" className="impact-evidence-button" onClick={() => onOpenEvidence(role)}>
-          Open full evidence note
+          Open evidence
         </button>
-      ) : (
-        <p className="impact-no-note">Full evidence note not attached yet. The topic summary still keeps this role inspectable.</p>
       )}
     </aside>
   );
