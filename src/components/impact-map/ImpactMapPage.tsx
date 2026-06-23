@@ -105,29 +105,35 @@ function FloodScale({
         </div>
       )}
 
-      <div className="impact-scale-rail" aria-hidden="true">
-        <span className="impact-scale-waterline" />
-      </div>
+      <div className="impact-flood-scale-body">
+        <div className="impact-scale-rail" aria-hidden="true">
+          {statusOrder.map((status) => (
+            <span key={status} className={`impact-scale-segment ${status}`}>
+              {status === 'frontier' && <span className="impact-scale-waterline" />}
+            </span>
+          ))}
+        </div>
 
-      <div className="impact-flood-layer-list">
-        {statusOrder.map((status) => {
-          const selected = selectedStatus === status;
-          const count = getStatusCount(industry, status);
+        <div className="impact-flood-layer-list">
+          {statusOrder.map((status) => {
+            const selected = selectedStatus === status;
+            const count = getStatusCount(industry, status);
 
-          return (
-            <button
-              key={status}
-              type="button"
-              className={`impact-flood-layer ${status} ${selected ? 'selected' : ''}`}
-              onClick={() => onSelectStatus(status)}
-              aria-pressed={selected}
-            >
-              <span className="impact-layer-eyebrow">{statusShortLabels[status]}</span>
-              <strong>{statusLabels[status]}</strong>
-              <span>{count} {count === 1 ? 'role' : 'roles'} in {industry.name}</span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={status}
+                type="button"
+                className={`impact-flood-layer ${status} ${selected ? 'selected' : ''}`}
+                onClick={() => onSelectStatus(status)}
+                aria-pressed={selected}
+              >
+                <span className="impact-layer-eyebrow">{statusShortLabels[status]}</span>
+                <strong>{statusLabels[status]}</strong>
+                <span>{count} {count === 1 ? 'role' : 'roles'} in {industry.name}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </aside>
   );
