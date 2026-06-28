@@ -154,14 +154,7 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
 
       {/* Feature links — hidden when journal is open */}
       {!journal && (
-        <>
-          <Link to="/tsunami" className="tsunami-link feature-link-float">
-            <span className="tsunami-link-icon">🌊</span>
-            <span className="tsunami-link-text">
-              <span className="tsunami-link-title">AI Tsunami Tracker</span>
-              <span className="tsunami-link-sub">Are you ready?</span>
-            </span>
-          </Link>
+        <div className="feature-link-stack">
           <Link to="/ai-impact-map" className="impact-map-link feature-link-float">
             <span className="tsunami-link-icon">🗺️</span>
             <span className="tsunami-link-text">
@@ -169,7 +162,21 @@ export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
               <span className="tsunami-link-sub">Which jobs are underwater?</span>
             </span>
           </Link>
-        </>
+          <Link to="/productivity-loop" className="loop-compass-link feature-link-float">
+            <span className="tsunami-link-icon">🧭</span>
+            <span className="tsunami-link-text">
+              <span className="tsunami-link-title">Productivity Compass</span>
+              <span className="tsunami-link-sub">Advance the loop first.</span>
+            </span>
+          </Link>
+          <Link to="/tsunami" className="tsunami-link feature-link-float">
+            <span className="tsunami-link-icon">🌊</span>
+            <span className="tsunami-link-text">
+              <span className="tsunami-link-title">AI Tsunami Tracker</span>
+              <span className="tsunami-link-sub">Are you ready?</span>
+            </span>
+          </Link>
+        </div>
       )}
     </>
   );
