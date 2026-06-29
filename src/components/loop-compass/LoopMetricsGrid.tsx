@@ -9,7 +9,7 @@ export function LoopMetricsGrid({ metrics, stagesById }: LoopMetricsGridProps) {
   return (
     <section className="loop-metrics">
       <h2 id="loop-metrics-title">Six metric checks</h2>
-      <p>Use these when the loop needs evidence, not pressure.</p>
+      <p>The loop is the strategy. The metrics show whether it is working.</p>
 
       <div className="loop-metric-grid" role="list" aria-labelledby="loop-metrics-title">
         {metrics.map((metric) => {

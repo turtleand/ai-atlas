@@ -19,25 +19,25 @@ export const LOOP_STAGES: LoopStage[] = [
   {
     id: 'learn',
     title: 'Learn',
-    purpose: 'Sharpen understanding.',
+    purpose: 'Understand the shift.',
     question: 'Did I learn something that changed, sharpened, or deepened my understanding?',
   },
   {
     id: 'apply',
     title: 'Apply',
-    purpose: 'Make something visible.',
+    purpose: 'Make it concrete.',
     question: 'Did I turn learning into something visible or usable?',
   },
   {
     id: 'position',
     title: 'Position',
-    purpose: 'Strengthen strategic identity.',
+    purpose: 'Build strategic identity.',
     question: 'Did today\'s work move us closer to clear strategic identity?',
   },
   {
     id: 'adapt',
     title: 'Adapt',
-    purpose: 'Update direction from signal.',
+    purpose: 'Steer from signal.',
     question: 'Did I adjust direction based on what changed outside or inside?',
   },
 ];
