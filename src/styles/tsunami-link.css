@@ -1,4 +1,21 @@
-/* Tsunami Tracker button — loaded globally (not lazy-loaded with TsunamiPage) */
+/* Floating feature buttons loaded globally for the Atlas map */
+
+.feature-link-stack {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.feature-link-stack .feature-link-float {
+  position: static;
+  right: auto;
+  bottom: auto;
+}
 
 .tsunami-link {
   position: fixed;
@@ -67,7 +84,7 @@
   50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 28px rgba(212, 160, 58, 0.25); }
 }
 
-/* Impact Map button — sits above the Tsunami button */
+/* Impact Map button */
 
 .impact-map-link {
   position: fixed;
@@ -110,6 +127,50 @@
 
 .impact-map-link:hover .tsunami-link-sub {
   color: rgba(0, 220, 255, 0.9);
+}
+
+/* Productivity Compass button */
+.loop-compass-link {
+  position: fixed;
+  bottom: 4.9rem;
+  right: 1.5rem;
+  padding: 0.8rem 1.4rem;
+  background: linear-gradient(135deg, rgba(24, 63, 105, 0.95), rgba(8, 29, 49, 0.95));
+  color: #dcefff;
+  border: 2px solid rgba(212, 160, 58, 0.35);
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  transition: all 0.3s ease;
+  z-index: 199;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 12px rgba(212, 160, 58, 0.08);
+}
+
+.loop-compass-link .tsunami-link-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.loop-compass-link .tsunami-link-sub {
+  font-size: 0.65rem;
+  color: rgba(212, 160, 58, 0.75);
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.loop-compass-link:hover {
+  background: linear-gradient(135deg, rgba(24, 70, 120, 1), rgba(10, 32, 55, 1));
+  border-color: rgba(212, 160, 58, 0.75);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 24px rgba(212, 160, 58, 0.18);
+}
+
+.loop-compass-link:hover .tsunami-link-sub {
+  color: rgba(212, 160, 58, 0.98);
 }
 
 /* On mobile, hide the floating feature buttons — they're in the nav bar instead */
