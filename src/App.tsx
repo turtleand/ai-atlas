@@ -13,6 +13,10 @@ const ImpactMapPage = lazy(() =>
   import('./components/impact-map/ImpactMapPage.tsx').then((m) => ({ default: m.ImpactMapPage }))
 );
 
+const LoopCompassPage = lazy(() =>
+  import('./components/loop-compass/LoopCompassPage.tsx').then((m) => ({ default: m.LoopCompassPage }))
+);
+
 export default function App() {
   const categories = useMemo(() => parseToolsYaml(toolsYaml), []);
 
@@ -20,6 +24,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<ArchipelagoMap categories={categories} />} />
+        <Route
+          path="/productivity-loop"
+          element={
+            <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
+              <LoopCompassPage />
+            </Suspense>
+          }
+        />
         <Route
           path="/tsunami"
           element={

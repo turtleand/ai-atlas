@@ -15,6 +15,9 @@ export function MapTitle() {
         <Link to="/tsunami" className="nav-link nav-link-feature">
           <span className="nav-icon">🌊</span> Tsunami
         </Link>
+        <Link to="/productivity-loop" className="nav-link nav-link-feature">
+          <span className="nav-icon">🧭</span> Compass
+        </Link>
         <Link to="/ai-impact-map" className="nav-link nav-link-feature">
           <span className="nav-icon">🗺️</span> Impact
         </Link>

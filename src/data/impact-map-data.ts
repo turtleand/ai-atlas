@@ -85,6 +85,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [0.08, 0.15],
         elevation: 0.75,
+        notesFile: 'complex-problem-solving',
       },
     ],
   },
