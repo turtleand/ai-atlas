@@ -18,8 +18,13 @@ export function LightningHeadlines() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [fading, setFading] = useState(false);
   const nextIndexRef = useRef(0);
+  const captureMode =
+    import.meta.env.DEV &&
+    new URLSearchParams(window.location.search).get('capture') === '1';
 
   useEffect(() => {
+    if (captureMode) return;
+
     let scheduleTimeout: ReturnType<typeof setTimeout>;
     let fadeTimeout: ReturnType<typeof setTimeout>;
     let hideTimeout: ReturnType<typeof setTimeout>;
@@ -54,7 +59,7 @@ export function LightningHeadlines() {
       clearTimeout(fadeTimeout);
       clearTimeout(hideTimeout);
     };
-  }, []);
+  }, [captureMode]);
 
   if (activeIndex === null) return null;
 
