@@ -1,5 +1,5 @@
 import { Suspense, useMemo, useRef, useEffect, useState, useCallback } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { TOUCH } from 'three';
@@ -7,17 +7,18 @@ import { Ocean3D } from './Ocean3D';
 import { Ship3D } from './Ship3D';
 import { Storm3D } from './Storm3D';
 import { LightningHeadlines } from './LightningHeadlines';
+import { getCaptureTime, usePageVisible, useReducedMotion } from './scene-utils';
 
 /*
  * Known ship extents per tier (at 1.8x group scale).
  * Used to auto-fit the camera so ships are never cropped.
  */
 const TIER_BOUNDS: Record<number, { yMin: number; yMax: number; radius: number }> = {
-  1: { yMin: -1.0, yMax: 1.0, radius: 2.5 },
-  2: { yMin: -0.5, yMax: 3.5, radius: 2.0 },
-  3: { yMin: -1.0, yMax: 6.5, radius: 4.0 },
-  4: { yMin: -3.5, yMax: 9.0, radius: 7.0 },
-  5: { yMin: -4.5, yMax: 12.0, radius: 9.0 },
+  1: { yMin: -1.2, yMax: 1.4, radius: 1.7 },
+  2: { yMin: -1.0, yMax: 4.2, radius: 1.8 },
+  3: { yMin: -1.5, yMax: 7.8, radius: 5.2 },
+  4: { yMin: -3.5, yMax: 8.5, radius: 6.5 },
+  5: { yMin: -4.5, yMax: 11.5, radius: 8.5 },
 };
 
 /** Compute the ideal camera position + lookAt target for a given tier */
@@ -100,6 +101,47 @@ function CameraController({
   return null;
 }
 
+function SceneTelemetry({
+  tier,
+  controlsRef,
+}: {
+  tier: number;
+  controlsRef: React.RefObject<any>;
+}) {
+  const sample = useRef({ elapsed: 0, frames: 0 });
+
+  useFrame(({ gl, camera }, delta) => {
+    if (!import.meta.env.DEV) return;
+
+    sample.current.elapsed += delta;
+    sample.current.frames += 1;
+    if (sample.current.elapsed < 0.5) return;
+
+    const frameMs = (sample.current.elapsed / sample.current.frames) * 1000;
+    const target = controlsRef.current?.target as THREE.Vector3 | undefined;
+    const metrics = {
+      tier,
+      fps: 1000 / frameMs,
+      frameMs,
+      calls: gl.info.render.calls,
+      triangles: gl.info.render.triangles,
+      points: gl.info.render.points,
+      lines: gl.info.render.lines,
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      programs: gl.info.programs?.length ?? 0,
+      camera: camera.position.toArray(),
+      target: target?.toArray() ?? null,
+    };
+
+    const container = document.querySelector<HTMLElement>('.storm-canvas-container');
+    if (container) container.dataset.sceneMetrics = JSON.stringify(metrics);
+    sample.current = { elapsed: 0, frames: 0 };
+  });
+
+  return null;
+}
+
 interface StormSceneProps {
   score: number;
   wavePercent: number;
@@ -111,6 +153,10 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
   const isMobile = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0, []);
   const controlsRef = useRef<any>(null);
   const stormIntensity = 0.5 + (wavePercent / 100) * 1.5;
+  const reducedMotion = useReducedMotion();
+  const isPageVisible = usePageVisible();
+  const captureTime = useMemo(() => getCaptureTime(), []);
+  const lightningUniform = useMemo<THREE.IUniform<number>>(() => ({ value: 0 }), []);
   const [showHint, setShowHint] = useState(false);
   const hintTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -126,33 +172,66 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
   }, [isMobile]);
 
   return (
-    <div className="storm-canvas-container" onTouchStart={handleTouchStart}>
+    <div
+      className="storm-canvas-container"
+      data-tier={tier}
+      data-reduced-motion={reducedMotion ? 'true' : 'false'}
+      onTouchStart={handleTouchStart}
+    >
       <Canvas
         camera={{ position: [-3, 2.5, 8], fov: isMobile ? 60 : 55, near: 0.1, far: 1000 }}
-        gl={{ antialias: true }}
+        dpr={[1, 1.75]}
+        frameloop={isPageVisible || captureTime !== undefined ? 'always' : 'demand'}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        onCreated={({ gl }) => {
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.05;
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+        }}
         style={{ touchAction: isMobile ? 'pan-y' : 'none' }}
       >
-        <color attach="background" args={['#0c1e35']} />
-        <fog attach="fog" args={['#0c1e35', 18, 65]} />
+        <color attach="background" args={['#071426']} />
+        <fog attach="fog" args={['#0a1b31', 24, 78]} />
         
         {/* Auto-fit camera to ship bounds on tier change */}
         <CameraController tier={tier} isMobile={isMobile} controlsRef={controlsRef} />
+        {import.meta.env.DEV && <SceneTelemetry tier={tier} controlsRef={controlsRef} />}
         
-        <ambientLight intensity={0.4} />
-        <hemisphereLight args={['#2a3a5e', '#0a1525', 0.5]} />
-        <directionalLight position={[5, 12, 5]} intensity={0.6} color="#8899bb" />
-        <pointLight position={[0, 5, 0]} intensity={1.2} color="#8899bb" distance={18} />
-        <pointLight position={[-4, 3, -3]} intensity={0.5} color="#667799" distance={20} />
+        <ambientLight intensity={0.22} />
+        <hemisphereLight args={['#637da3', '#020914', 0.72]} />
+        <directionalLight position={[8, 14, 6]} intensity={2.1} color="#b7c9e5" />
+        <directionalLight position={[-10, 7, -8]} intensity={0.45} color="#4c7fa5" />
+        <pointLight position={[0, 4, 5]} intensity={3.5} color="#84b7d8" distance={26} />
         
         <Suspense fallback={null}>
-          <Ocean3D wavePercent={wavePercent} calmRadius={tier === 5 ? 7 : tier === 4 ? 5 : undefined} />
-          <Ship3D tier={tier as 1 | 2 | 3 | 4 | 5} score={score} wavePercent={wavePercent} stormIntensity={stormIntensity} />
-          <Storm3D daysSinceStart={daysSinceStart} />
+          <Ocean3D
+            wavePercent={wavePercent}
+            tier={tier}
+            calmRadius={tier === 5 ? 7 : tier === 4 ? 5 : undefined}
+            lightningUniform={lightningUniform}
+            captureTime={captureTime}
+            reducedMotion={reducedMotion}
+          />
+          <Ship3D
+            tier={tier as 1 | 2 | 3 | 4 | 5}
+            score={score}
+            wavePercent={wavePercent}
+            stormIntensity={stormIntensity}
+            captureTime={captureTime}
+            reducedMotion={reducedMotion}
+          />
+          <Storm3D
+            daysSinceStart={daysSinceStart}
+            tier={tier}
+            lightningUniform={lightningUniform}
+            captureTime={captureTime}
+            reducedMotion={reducedMotion}
+          />
         </Suspense>
         
         <OrbitControls
           ref={controlsRef}
-          autoRotate
+          autoRotate={captureTime === undefined}
           autoRotateSpeed={0.3}
           enableZoom
           enableRotate
@@ -165,6 +244,8 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
           touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_ROTATE }}
         />
       </Canvas>
+      <div key={`vignette-${tier}`} className="storm-cinematic-vignette" aria-hidden="true" />
+      <div className="storm-horizon-haze" aria-hidden="true" />
       <LightningHeadlines />
       {/* Mobile hint overlay */}
       {showHint && (
