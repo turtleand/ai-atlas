@@ -68,9 +68,9 @@ function fallbackBlock(metadata) {
         <p>${escapeHtml(metadata.summary)}</p>
         <nav aria-label="AI Atlas entry points">
           <a href="/">AI tool map</a>
-          <a href="/ai-impact-map">AI Impact Map</a>
-          <a href="/tsunami">AI Tsunami Tracker</a>
-          <a href="/productivity-loop">The Turtleand Loop</a>
+          <a href="/ai-impact-map/">AI Impact Map</a>
+          <a href="/tsunami/">AI Tsunami Tracker</a>
+          <a href="/productivity-loop/">The Turtleand Loop</a>
           <a href="/llms.txt">AI-readable index</a>
         </nav>
       </main>

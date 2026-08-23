@@ -12,13 +12,13 @@ export function MapTitle() {
         <a href="https://lab.turtleand.com/" className="nav-link" target="_blank" rel="noopener">
           <span className="nav-icon">🧪</span> AI Lab
         </a>
-        <Link to="/tsunami" className="nav-link nav-link-feature">
+        <Link to="/tsunami/" className="nav-link nav-link-feature">
           <span className="nav-icon">🌊</span> Tsunami
         </Link>
-        <Link to="/productivity-loop" className="nav-link nav-link-feature">
+        <Link to="/productivity-loop/" className="nav-link nav-link-feature">
           <span className="nav-icon">🧭</span> Compass
         </Link>
-        <Link to="/ai-impact-map" className="nav-link nav-link-feature">
+        <Link to="/ai-impact-map/" className="nav-link nav-link-feature">
           <span className="nav-icon">🗺️</span> Impact
         </Link>
         <a href="https://turtleand.com/" className="nav-link nav-link-hub" target="_blank" rel="noopener">
