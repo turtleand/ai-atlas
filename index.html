@@ -6,11 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a1628" />
     <meta name="application-name" content="Turtleand AI Atlas" />
+    <!-- route-meta:start -->
     <title>Turtleand AI Atlas</title>
     <meta
       name="description"
       content="A public map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment."
     />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <link rel="canonical" href="https://atlas.turtleand.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Turtleand AI Atlas" />
     <meta property="og:title" content="Turtleand AI Atlas" />
@@ -18,7 +21,9 @@
       property="og:description"
       content="A public map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment."
     />
+    <meta property="og:url" content="https://atlas.turtleand.com/" />
     <meta property="og:image" content="https://atlas.turtleand.com/social-card.png" />
+    <meta property="og:image:alt" content="Turtleand AI Atlas" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Turtleand AI Atlas" />
     <meta
@@ -26,10 +31,8 @@
       content="A public map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment."
     />
     <meta name="twitter:image" content="https://atlas.turtleand.com/social-card.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
-    <script type="application/ld+json">
+    <meta name="twitter:image:alt" content="Turtleand AI Atlas" />
+    <script id="route-json-ld" type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
@@ -43,9 +46,14 @@
         }
       }
     </script>
+    <!-- route-meta:end -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root">
+      <!-- route-fallback:start -->
       <main>
         <h1>Turtleand AI Atlas</h1>
         <p>
@@ -56,8 +64,11 @@
           <a href="/">AI tool map</a>
           <a href="/ai-impact-map">AI Impact Map</a>
           <a href="/tsunami">AI Tsunami Tracker</a>
+          <a href="/productivity-loop">The Turtleand Loop</a>
+          <a href="/llms.txt">AI-readable index</a>
         </nav>
       </main>
+      <!-- route-fallback:end -->
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

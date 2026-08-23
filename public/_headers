@@ -5,6 +5,9 @@
 /llms.txt
   Content-Type: text/markdown; charset=utf-8
 
+/404.html
+  X-Robots-Tag: noindex, follow
+
 /ai-tools.yaml
   Content-Type: text/yaml; charset=utf-8
   Content-Signal: ai-train=yes, search=yes, ai-input=yes
