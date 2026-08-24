@@ -2,6 +2,8 @@ import { useMemo, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { parseToolsYaml } from './utils/parseTools.ts';
 import { ArchipelagoMap } from './components/ArchipelagoMap.tsx';
+import { NotFoundPage } from './components/NotFoundPage.tsx';
+import { RouteMetadata } from './components/RouteMetadata.tsx';
 import toolsYaml from './data/ai-tools.yaml?raw';
 
 // Lazy-load tsunami route — keeps Three.js out of the main atlas bundle
@@ -22,6 +24,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <RouteMetadata />
       <Routes>
         <Route path="/" element={<ArchipelagoMap categories={categories} />} />
         <Route
@@ -48,6 +51,7 @@ export default function App() {
             </Suspense>
           }
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

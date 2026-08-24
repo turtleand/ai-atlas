@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { icon: '🧪', label: 'AI Lab', href: 'https://lab.turtleand.com/', external: true },
-  { icon: '🌊', label: 'Tsunami', to: '/tsunami' },
-  { icon: '🧭', label: 'Compass', to: '/productivity-loop' },
-  { icon: '🗺️', label: 'Impact', to: '/ai-impact-map' },
+  { icon: '🌊', label: 'Tsunami', to: '/tsunami/' },
+  { icon: '🧭', label: 'Compass', to: '/productivity-loop/' },
+  { icon: '🗺️', label: 'Impact', to: '/ai-impact-map/' },
   { icon: '⚓', label: 'Hub', href: 'https://turtleand.com/', external: true },
 ];
 

@@ -1,0 +1,34 @@
+{
+  "/": {
+    "title": "Turtleand AI Atlas",
+    "description": "A public map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment.",
+    "canonical": "https://atlas.turtleand.com/",
+    "heading": "Turtleand AI Atlas",
+    "summary": "A map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment.",
+    "schemaType": "WebSite"
+  },
+  "/tsunami": {
+    "title": "AI Tsunami Tracker | Turtleand AI Atlas",
+    "description": "Assess your AI readiness across tools, automation, adaptability, independence, and systems thinking with Turtleand's interactive tracker.",
+    "canonical": "https://atlas.turtleand.com/tsunami/",
+    "heading": "AI Tsunami Tracker",
+    "summary": "Assess your readiness for accelerating AI change across five practical capability dimensions.",
+    "schemaType": "WebApplication"
+  },
+  "/ai-impact-map": {
+    "title": "AI Impact Map | Turtleand AI Atlas",
+    "description": "Explore how AI pressure reaches industries and roles unevenly, and where context, accountability, taste, and system ownership still matter.",
+    "canonical": "https://atlas.turtleand.com/ai-impact-map/",
+    "heading": "AI Impact Map",
+    "summary": "Explore where routine work is under pressure and where human judgment and accountability remain central.",
+    "schemaType": "WebApplication"
+  },
+  "/productivity-loop": {
+    "title": "The Turtleand Loop | Turtleand AI Atlas",
+    "description": "Use Turtleand's Learn, Apply, Position, Adapt loop to choose the next compounding action and keep your AI capability moving.",
+    "canonical": "https://atlas.turtleand.com/productivity-loop/",
+    "heading": "The Turtleand Loop",
+    "summary": "Move through Learn, Apply, Position, Adapt and choose the next action that keeps the loop compounding.",
+    "schemaType": "WebApplication"
+  }
+}
