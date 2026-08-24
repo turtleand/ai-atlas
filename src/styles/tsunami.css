@@ -94,6 +94,54 @@ body.tsunami-active #root {
   touch-action: pan-y !important;
 }
 
+.storm-cinematic-vignette,
+.storm-horizon-haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.storm-cinematic-vignette {
+  z-index: 2;
+  background:
+    radial-gradient(circle at 48% 44%, transparent 38%, rgba(2, 8, 18, 0.2) 72%, rgba(1, 5, 12, 0.5) 100%),
+    linear-gradient(to bottom, rgba(4, 13, 27, 0.08), transparent 34%, rgba(0, 5, 12, 0.12));
+  box-shadow: inset 0 0 90px rgba(0, 7, 17, 0.42);
+  animation: storm-tier-arrival 0.72s ease-out both;
+}
+
+.storm-canvas-container[data-tier='4'] .storm-cinematic-vignette {
+  box-shadow:
+    inset 0 0 90px rgba(0, 7, 17, 0.38),
+    inset 0 0 130px rgba(38, 214, 207, 0.08);
+}
+
+.storm-canvas-container[data-tier='5'] .storm-cinematic-vignette {
+  box-shadow:
+    inset 0 0 90px rgba(0, 7, 17, 0.34),
+    inset 0 0 150px rgba(255, 214, 107, 0.11);
+}
+
+@keyframes storm-tier-arrival {
+  0% {
+    opacity: 0.35;
+    filter: brightness(1.7) saturate(0.7);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1) saturate(1);
+  }
+}
+
+.storm-horizon-haze {
+  z-index: 3;
+  top: auto;
+  height: 32%;
+  background: linear-gradient(to top, rgba(4, 17, 31, 0.28), transparent);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
 /* Touch hint overlay */
 .storm-touch-hint {
   position: absolute;
@@ -114,6 +162,19 @@ body.tsunami-active #root {
   0% { opacity: 1; }
   70% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storm-touch-hint,
+  .storm-cinematic-vignette,
+  .timeline-event.current .timeline-marker {
+    animation: none;
+  }
+}
+
+.storm-canvas-container[data-reduced-motion='true'] .storm-touch-hint,
+.storm-canvas-container[data-reduced-motion='true'] .storm-cinematic-vignette {
+  animation: none;
 }
 
 /* ============================================
