@@ -189,3 +189,11 @@ export function getTierFloor(tier: number): number {
     default: return 0;
   }
 }
+
+export function getTierScorePreset(tier: number): Record<string, number> {
+  const score = getTierFloor(tier);
+  return SKILL_DIMENSIONS.reduce((preset, dimension) => {
+    preset[dimension.id] = score;
+    return preset;
+  }, {} as Record<string, number>);
+}

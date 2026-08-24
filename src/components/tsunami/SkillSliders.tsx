@@ -1,69 +1,27 @@
-import { useState, useEffect } from 'react';
 import { SKILL_DIMENSIONS } from '../../data/tsunami-data';
 
 interface SkillSlidersProps {
   scores: Record<string, number>;
+  previewTier: number | null;
   onScoresChange: (scores: Record<string, number>) => void;
+  onReset: () => void;
 }
 
-const STORAGE_KEY = 'tsunami-tracker-scores';
-
-export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChange }) => {
-  const [hasCustomized, setHasCustomized] = useState(false);
-  const [isInteracted, setIsInteracted] = useState(false);
-
-  // Check if current scores differ from defaults
-  const isCustom = () => {
-    return SKILL_DIMENSIONS.some((dim) => scores[dim.id] !== dim.defaultValue);
-  };
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const isDifferent = SKILL_DIMENSIONS.some(
-          (dim) => parsed[dim.id] !== dim.defaultValue
-        );
-        if (isDifferent) {
-          setHasCustomized(true);
-          setIsInteracted(true);
-          onScoresChange(parsed);
-        }
-      } catch (_e) {
-        // Invalid storage, ignore
-      }
-    }
-  }, []);
-
-  // Save to localStorage whenever scores change
-  useEffect(() => {
-    if (isInteracted) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
-      setHasCustomized(isCustom());
-    }
-  }, [scores, isInteracted]);
+export const SkillSliders: React.FC<SkillSlidersProps> = ({
+  scores,
+  previewTier,
+  onScoresChange,
+  onReset,
+}) => {
+  const hasCustomized = !previewTier && SKILL_DIMENSIONS.some(
+    (dimension) => scores[dimension.id] !== dimension.defaultValue
+  );
 
   const handleSliderChange = (dimensionId: string, value: number) => {
-    if (!isInteracted) {
-      setIsInteracted(true);
-    }
     onScoresChange({
       ...scores,
       [dimensionId]: value,
     });
-  };
-
-  const handleReset = () => {
-    const defaults = SKILL_DIMENSIONS.reduce((acc, dim) => {
-      acc[dim.id] = dim.defaultValue;
-      return acc;
-    }, {} as Record<string, number>);
-    onScoresChange(defaults);
-    setHasCustomized(false);
-    setIsInteracted(false);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
@@ -71,10 +29,12 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
       <div className="sliders-header">
         <h2 className="sliders-title">Where Do You Stand?</h2>
         <div className="sliders-subtitle">
-          {hasCustomized ? (
+          {previewTier ? (
+            <span className="your-profile-label">T{previewTier} reference profile</span>
+          ) : hasCustomized ? (
             <>
               <span className="your-profile-label">Your Profile</span>
-              <button className="reset-link" onClick={handleReset}>
+              <button className="reset-link" onClick={onReset}>
                 reset
               </button>
             </>
@@ -104,8 +64,12 @@ export const SkillSliders: React.FC<SkillSlidersProps> = ({ scores, onScoresChan
                 max="100"
                 step="1"
                 value={value}
-                onChange={(e) => handleSliderChange(dimension.id, parseInt(e.target.value))}
-                onInput={(e) => handleSliderChange(dimension.id, parseInt((e.target as HTMLInputElement).value))}
+                onInput={(event) => {
+                  handleSliderChange(
+                    dimension.id,
+                    parseInt(event.currentTarget.value, 10)
+                  );
+                }}
                 className="slider-input"
                 style={{
                   background: `linear-gradient(to right, #D4A03A 0%, #D4A03A ${value}%, #1a2a3a ${value}%, #1a2a3a 100%)`
