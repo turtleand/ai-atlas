@@ -24,7 +24,7 @@ export function TierPreview({ currentTier, previewTier, onPreview }: TierPreview
           <button
             key={info.tier}
             className={`tier-btn ${info.tier === activeTier ? 'active' : ''} ${info.tier === currentTier && !previewTier ? 'current' : ''}`}
-            onClick={() => onPreview(info.tier === currentTier ? null : info.tier)}
+            onClick={() => onPreview(previewTier === info.tier ? null : info.tier)}
             title={`${info.name} (${info.scoreRange})`}
           >
             <span className="tier-btn-emoji">{info.emoji}</span>
@@ -40,7 +40,7 @@ export function TierPreview({ currentTier, previewTier, onPreview }: TierPreview
 
       {previewTier && (
         <button className="tier-reset-btn" onClick={() => onPreview(null)}>
-          ← Back to Turtleand's score
+          ← Back to saved score
         </button>
       )}
     </div>

@@ -49,6 +49,13 @@ Keep private things private. Share learnings, not exposure.
 - Keep AI-readable artifacts, indexes, routes, sitemaps, and public data files in sync when the repo uses them.
 - Run local validation before PR creation.
 
+## Tsunami tracker interaction invariant
+
+- Selecting a ship is an ephemeral tier preview. The ship, score card, tier text, profile label, and all five sliders must update together to the selected tier floor.
+- Every tier must be previewable, including the tier that matches the saved score. Clicking the selected tier again or using "Back to saved score" restores the saved profile.
+- Previewing must not write to `tsunami-tracker-scores` in `localStorage`. Editing a preview slider exits preview mode and saves the displayed reference profile with that edit.
+- Changes to `src/components/tsunami/` or `src/data/tsunami-data.ts` must keep the ship profile regression tests passing.
+
 ## PR review checklist
 
 Codex and other agents should check:
@@ -66,4 +73,6 @@ Codex and other agents should check:
 - Dev: `npm run dev`
 - Build: `npm run build`
 - Lint: `npm run lint`
+- Test: `npm test`
+- Full validation: `npm run check`
 - Preview: `npm run preview`
