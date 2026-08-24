@@ -134,6 +134,7 @@ export const industryRegions: IndustryRegion[] = [
         status: 'safe',
         offset: [-0.02, 0.10],
         elevation: 0.55,
+        notesFile: 'creative-direction',
       },
       {
         id: 'thought-leadership',
