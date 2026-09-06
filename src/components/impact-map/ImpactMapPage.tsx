@@ -406,14 +406,16 @@ export function ImpactMapPage() {
           <RoleDetailPanel
             industry={selectedIndustry}
             role={selectedRole}
-            onClose={() => setSelectedRole(null)}
+            onClose={() => {
+              if (!noteRole) setSelectedRole(null);
+            }}
             onOpenEvidence={setNoteRole}
             onSelectAdjacent={handleSelectAdjacent}
           />
         </div>
       </main>
 
-      <footer className="impact-map-footer">
+      <footer className={`impact-map-footer${selectedRole ? ' role-detail-open' : ''}`}>
         This is a living orientation map, not a fixed prediction. <a href="https://github.com/turtleand/ai-atlas" target="_blank" rel="noopener noreferrer">Fork it and map your world.</a>
       </footer>
 

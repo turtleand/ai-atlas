@@ -11,7 +11,8 @@ Applies only to `ai-atlas/`.
 - AI Atlas is the tool cartography and orientation layer of Turtleand.
 - Its job is to reduce tool confusion by mapping categories, options, trade-offs, and source confidence.
 - Keep AI Atlas as a map, not a hype feed, ranking farm, or generic product blog.
-- Route curriculum to `ai-lab/`, engineering craft to `build/`, operating principles to `handbook/`, ecosystem routing to `portal/`, and agent operations to `openclaw-lab/` or `hermes-lab/`.
+- Route curriculum to `ai-lab/`, engineering craft to `build/`, operating principles to `handbook/`, ecosystem routing to `portal/`, and agent operations to `hermes-lab/`.
+- `turtleand/openclaw-lab` is archived and deprecated as of 2026-09-06. Preserve historical references, but exclude it from maintenance, audits, and new work unless explicitly reactivated.
 
 ## Project summary
 
