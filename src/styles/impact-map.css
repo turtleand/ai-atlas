@@ -742,6 +742,10 @@
     padding-inline: 1rem;
     text-align: left;
   }
+
+  .impact-map-footer.role-detail-open {
+    z-index: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
