@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/generate-route-html.mjs",
+    "build": "tsc -b && vite build && node scripts/generate-route-html.mjs && npm run verify:retained-assets",
     "lint": "eslint .",
     "test": "vitest run",
     "check": "npm run lint && npm test && npm run build",
     "preview": "vite preview",
-    "verify:seo": "node scripts/verify-route-output.mjs"
+    "verify:seo": "node scripts/verify-route-output.mjs",
+    "verify:retained-assets": "node --test scripts/verify-retained-assets.fixtures.mjs && node scripts/verify-retained-assets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
