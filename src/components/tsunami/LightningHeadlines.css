@@ -20,6 +20,7 @@
     0 0 80px rgba(100, 140, 255, 0.3);
   padding: 1rem;
   user-select: none;
+  mix-blend-mode: screen;
 }
 
 .lightning-headline--visible {
@@ -55,4 +56,22 @@
     opacity: 0.9;
     transform: scale(1);
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightning-headline--visible {
+    animation: none;
+  }
+
+  .lightning-headline--fading {
+    transition-duration: 0.1s;
+  }
+}
+
+.storm-canvas-container[data-reduced-motion='true'] .lightning-headline--visible {
+  animation: none;
+}
+
+.storm-canvas-container[data-reduced-motion='true'] .lightning-headline--fading {
+  transition-duration: 0.1s;
 }

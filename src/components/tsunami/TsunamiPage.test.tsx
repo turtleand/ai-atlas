@@ -104,7 +104,7 @@ describe('TsunamiPage ship profile preview', () => {
   it('turns an edited preview into the saved user profile and can reset it', () => {
     render(<TsunamiPage />);
 
-    fireEvent.click(screen.getByTitle('Damaged Sloop (50–79)'));
+    fireEvent.click(screen.getByTitle('Unprotected Sloop (50–79)'));
     fireEvent.input(screen.getByLabelText('AI Integration'), {
       target: { value: '63' },
     });
