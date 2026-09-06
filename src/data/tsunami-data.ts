@@ -162,7 +162,7 @@ export interface TierInfo {
 
 export const TIER_INFO: TierInfo[] = [
   { tier: 1, name: 'Wreckage', emoji: '💀', description: 'Floating debris — the tsunami won', scoreRange: '0–49' },
-  { tier: 2, name: 'Damaged Sloop', emoji: '🚣', description: 'Taking on water, hull cracked, barely afloat', scoreRange: '50–79' },
+  { tier: 2, name: 'Unprotected Sloop', emoji: '⛵', description: 'Small and exposed, afloat but vulnerable to the storm', scoreRange: '50–79' },
   { tier: 3, name: 'Hybrid Cruiser', emoji: '⚡', description: 'Tech-augmented vessel — chrome plating, circuit lines, radar arrays', scoreRange: '80–94' },
   { tier: 4, name: 'AI Flagship', emoji: '✦', description: 'AI-native command ship — geometric intelligence above the storm', scoreRange: '95–98' },
   { tier: 5, name: 'The Singularity', emoji: '🔱', description: 'Beyond comprehension — reshapes reality itself, master of ocean and sky', scoreRange: '99–100' },

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './LightningHeadlines.css';
+import { useSceneCaptureOptions } from './scene-utils';
 
 const HEADLINES = [
   { text: 'AI is replacing entire industries', color: '#ffffff' },
@@ -14,7 +15,7 @@ const FADE_DURATION = 400;
 const INTERVAL_MIN = 3000;
 const INTERVAL_MAX = 6000;
 
-export function LightningHeadlines() {
+function LiveLightningHeadlines() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [fading, setFading] = useState(false);
   const nextIndexRef = useRef(0);
@@ -81,4 +82,9 @@ export function LightningHeadlines() {
       {content}
     </div>
   );
+}
+
+export function LightningHeadlines() {
+  const captureMode = useSceneCaptureOptions().time !== undefined;
+  return captureMode ? null : <LiveLightningHeadlines />;
 }
