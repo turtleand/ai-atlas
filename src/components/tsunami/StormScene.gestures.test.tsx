@@ -15,6 +15,7 @@ const canvasState = vi.hoisted(() => ({
   children: null as unknown,
   frameloop: undefined as 'always' | 'demand' | 'never' | undefined,
 }));
+const scenePreferences = vi.hoisted(() => ({ reducedMotion: false }));
 const originalTouchPoints = Object.getOwnPropertyDescriptor(navigator, 'maxTouchPoints');
 const originalVisibility = Object.getOwnPropertyDescriptor(document, 'visibilityState');
 let pageVisibility: DocumentVisibilityState = 'visible';
@@ -38,10 +39,11 @@ vi.mock('./LightningHeadlines', () => ({ LightningHeadlines: () => <a href="http
 vi.mock('./scene-utils', async (importOriginal) => ({
   ...await importOriginal<typeof import('./scene-utils')>(),
   getSceneCaptureOptions: () => ({}),
-  useReducedMotion: () => false,
+  useReducedMotion: () => scenePreferences.reducedMotion,
 }));
 
 beforeEach(() => {
+  scenePreferences.reducedMotion = false;
   pageVisibility = 'visible';
   Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => pageVisibility });
   vi.mocked(useFrame).mockClear();
@@ -60,6 +62,29 @@ afterEach(() => {
 // These tests exercise the real visibility hook and SceneTime component at the
 // Canvas boundary. They do not claim native background-tab or GPU scheduling proof.
 describe('scene visibility and resume contract', () => {
+  it('responds to reduced-motion changes without disabling manual camera controls', () => {
+    const { rerender } = renderTouchScene();
+    const orbitProps = () => {
+      const marker = Children.toArray(canvasState.children as ReactNode)
+        .find((child) => isValidElement(child) && child.type === OrbitMarker);
+      expect(isValidElement(marker)).toBe(true);
+      return (marker as ReactElement<{
+        autoRotate: boolean; enableRotate: boolean; enableZoom: boolean; enablePan: boolean;
+      }>).props;
+    };
+    expect(orbitProps().autoRotate).toBe(true);
+
+    scenePreferences.reducedMotion = true;
+    rerender(<StormScene score={50} tier={2} wavePercent={80} daysSinceStart={120} />);
+    expect(orbitProps()).toMatchObject({
+      autoRotate: false, enableRotate: true, enableZoom: true, enablePan: false,
+    });
+
+    scenePreferences.reducedMotion = false;
+    rerender(<StormScene score={50} tier={2} wavePercent={80} daysSinceStart={120} />);
+    expect(orbitProps().autoRotate).toBe(true);
+  });
+
   it('stops declared rendering and auto-rotation while hidden, resumes both, and removes its listener', () => {
     const addListener = vi.spyOn(document, 'addEventListener');
     const removeListener = vi.spyOn(document, 'removeEventListener');
@@ -164,7 +189,8 @@ describe('scene touch interaction contract', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('uses real OrbitControls to ignore one finger and rotate/zoom with two while keeping the target fixed', () => {
+  it.each([false, true])('keeps real one-/two-finger camera controls with reducedMotion=%s', (reducedMotion) => {
+    scenePreferences.reducedMotion = reducedMotion;
     const { viewport } = renderTouchScene();
     const marker = Children.toArray(canvasState.children as ReactNode).find((child) => isValidElement(child) && child.type === OrbitMarker);
     expect(isValidElement(marker)).toBe(true);
@@ -176,7 +202,7 @@ describe('scene touch interaction contract', () => {
     expect(props.touches).toEqual({ ONE: undefined, TWO: TOUCH.DOLLY_ROTATE });
     expect(props.enableDamping).toBe(true);
     expect(props.dampingFactor).toBe(0.05);
-    expect(props.autoRotate).toBe(true);
+    expect(props.autoRotate).toBe(!reducedMotion);
     expect(props.autoRotateSpeed).toBe(0.3);
     Object.defineProperties(viewport, {
       clientWidth: { value: 390 }, clientHeight: { value: 338 },

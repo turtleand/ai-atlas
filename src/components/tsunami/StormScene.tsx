@@ -374,7 +374,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
         
         <OrbitControls
           ref={controlsRef}
-          autoRotate={captureTime === undefined && isPageVisible}
+          autoRotate={captureTime === undefined && isPageVisible && !reducedMotion}
           autoRotateSpeed={0.3}
           enableZoom
           enableRotate
