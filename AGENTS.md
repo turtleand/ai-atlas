@@ -68,6 +68,10 @@ Codex and other agents should check:
 - Are routes, builds, generated files, and data indexes still correct?
 - Is the diff small, coherent, and free from unrelated cleanup?
 
+## Compatibility assets
+
+`scripts/retained-assets.json` records an immutable asset snapshot for browser sessions that remain open across releases. Five files in `public/assets/` are intentional generated compatibility assets; preserve their exact names, bytes and license notices. Four shared assets are also verified in the build output. Do not reformat these files or remove them as unused code. The build runs `verify:retained-assets` and rejects missing, changed or conflicting assets. Any retention change requires an explicit review of the complete dependency graph and existing-session compatibility; elapsed time alone is not a removal criterion.
+
 ## Commands
 
 - Install: `npm install`
