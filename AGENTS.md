@@ -49,6 +49,16 @@ Keep private things private. Share learnings, not exposure.
 - Keep AI-readable artifacts, indexes, routes, sitemaps, and public data files in sync when the repo uses them.
 - Run local validation before PR creation.
 
+## Home archipelago interaction invariants
+
+- SVG is the default. Load the 3D renderer only after explicit selection; preserve category/tool selection, geographic framing, and turtle pose across renderer switches.
+- Keep WebGL initialization and rendering in the optional worker so navigation stays responsive. Bound queued pose updates, retain the latest pending selection, and terminate cancelled workers.
+- Category and tool navigation responds immediately. Turtle travel never delays navigation, opens details, steals focus, or drives the camera.
+- Keep journeys in navigable water and redirect from the current pose. SVG and 3D share one scene model and journey controller.
+- Keep complete keyboard-accessible tool navigation independent of either renderer. Preserve readable overview labels, mobile sheet scrolling, and detail-dialog focus restoration.
+- Pause hidden, reduced-motion, and user-paused animation. Recover from cancelled loading or WebGL failure in 2D without losing navigation state.
+- Run the focused atlas tests and `npm run verify:atlas` after home rendering or bundle changes. Preserve the existing tsunami regressions.
+
 ## Tsunami tracker interaction invariant
 
 - Selecting a ship is an ephemeral tier preview. The ship, score card, tier text, profile label, and all five sliders must update together to the selected tier floor.

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "check": "npm run lint && npm test && npm run build",
     "preview": "vite preview",
-    "verify:seo": "node scripts/verify-route-output.mjs"
+    "verify:seo": "node scripts/verify-route-output.mjs",
+    "verify:atlas": "node scripts/verify-atlas-budgets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
