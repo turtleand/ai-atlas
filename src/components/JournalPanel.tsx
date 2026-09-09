@@ -1,4 +1,5 @@
-import type { RelatedLink } from '../utils/parseTools';
+import { useEffect, useRef } from "react";
+import type { RelatedLink } from "../utils/parseTools";
 
 interface JournalPanelProps {
   toolName: string;
@@ -23,9 +24,22 @@ export function JournalPanel({
   categoryColor,
   onClose,
 }: JournalPanelProps) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const el = dialog.current;
+    el?.showModal();
+    return () => el?.close();
+  }, []);
   return (
-    <div className="journal-overlay">
-      <div className="journal-backdrop" onClick={onClose} />
+    <dialog
+      ref={dialog}
+      className="journal-overlay"
+      aria-label={toolName}
+      onCancel={onClose}
+      onClick={(event) => {
+        if (event.target === dialog.current) onClose();
+      }}
+    >
       <div className="journal-panel">
         <button className="journal-close" onClick={onClose} aria-label="Close">
           &times;
@@ -34,14 +48,19 @@ export function JournalPanel({
         <h2 className="journal-title">{toolName}</h2>
 
         <div className="journal-badge">
-          <span className="journal-badge-dot" style={{ background: categoryColor }} />
+          <span
+            className="journal-badge-dot"
+            style={{ background: categoryColor }}
+          />
           {categoryName}
         </div>
 
         {toolTags && toolTags.length > 0 && (
           <div className="journal-tags">
-            {toolTags.map(tag => (
-              <span key={tag} className="journal-tag">{tag}</span>
+            {toolTags.map((tag) => (
+              <span key={tag} className="journal-tag">
+                {tag}
+              </span>
             ))}
           </div>
         )}
@@ -90,6 +109,6 @@ export function JournalPanel({
           Visit Tool &rarr;
         </a>
       </div>
-    </div>
+    </dialog>
   );
 }

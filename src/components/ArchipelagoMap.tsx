@@ -1,183 +1,640 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import type { Category } from '../utils/parseTools.ts';
-import { computeLayout, type BeaconPosition, type IslandLayout } from '../utils/layoutEngine.ts';
-import { useMapControls } from '../hooks/useMapControls.ts';
-import { Island } from './Island.tsx';
-import { JournalPanel } from './JournalPanel.tsx';
-import { MapLegend } from './MapLegend.tsx';
-import { CompassRose } from './CompassRose.tsx';
-import { MapTitle } from './MapTitle.tsx';
-import { AiTurtle } from './AiTurtle.tsx';
-import { MapDecorations } from './MapDecorations.tsx';
-import { LandscapeNav } from './LandscapeNav.tsx';
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+  type CSSProperties,
+} from "react";
+import { Link } from "react-router-dom";
+import type { Category, Tool } from "../utils/parseTools";
+import { atlasCapture } from "./atlas/capture";
+import { createScene, inside } from "./atlas/atlas-model";
+import { AtlasSvg } from "./atlas/AtlasSvg";
+import { AtlasNavigation } from "./atlas/AtlasNavigation";
+import { AtlasDiscovery, type ToolPreview } from "./atlas/AtlasDiscovery";
+import "../styles/atlas-guided.css";
+import { useAtlasView, useJourney, useMotionPolicy } from "./atlas/useAtlas";
+import type { AtlasThreeProps } from "./atlas/AtlasThree";
+import { JournalPanel } from "./JournalPanel";
 
-interface ArchipelagoMapProps {
-  categories: Category[];
+class SceneBoundary extends Component<
+  { children: ReactNode; onFail: (error?: unknown) => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    this.props.onFail(error);
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }
-
-interface JournalState {
-  beacon: BeaconPosition;
-  island: IslandLayout;
-}
-
-export function ArchipelagoMap({ categories }: ArchipelagoMapProps) {
-  const layout = useMemo(() => computeLayout(categories), [categories]);
-  const { transform, containerRef, handlers, resetView, panTo } = useMapControls();
-
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  const [journal, setJournal] = useState<JournalState | null>(null);
-  // Touch hint removed — single finger now pans correctly
-
-
-  const handleBeaconHover = useCallback((beacon: BeaconPosition, e: React.PointerEvent) => {
-    const el = tooltipRef.current;
-    if (!el) return;
-    el.style.display = 'block';
-    el.style.left = `${e.clientX + 16}px`;
-    el.style.top = `${e.clientY - 10}px`;
-    el.querySelector('.tooltip-name')!.textContent = beacon.tool.name;
-    el.querySelector('.tooltip-desc')!.textContent = beacon.tool.description;
+export function ArchipelagoMap({ categories }: { categories: Category[] }) {
+  const scene = useMemo(() => createScene(categories), [categories]);
+  const [preview, setPreview] = useState<ToolPreview>(null);
+  const [selected, setSelected] = useState<string | null>(
+    () =>
+      scene.islands.find((i) => i.id === atlasCapture()?.selection)?.id ?? null,
+  );
+  const [journal, setJournal] = useState<{
+    tool: Tool;
+    categoryId: string;
+  } | null>(() => {
+    const capture = atlasCapture();
+    const island = scene.islands.find((i) => i.id === capture?.selection);
+    const tool = island?.category.tools.find((t) => t.id === capture?.tool);
+    return island && tool ? { tool, categoryId: island.id } : null;
+  });
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [focused, setFocused] = useState<string | null>(null);
+  const activeId = hovered ?? focused ?? selected;
+  const tap = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    moved: boolean;
+  } | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [mode, setMode] = useState<"2d" | "3d">("2d");
+  const [ready, setReady] = useState(false);
+  const [Three, setThree] = useState<ComponentType<AtlasThreeProps> | null>(
+    null,
+  );
+  const [notice, setNotice] = useState("");
+  const [staticQuality, setStaticQuality] = useState(false);
+  const { reduced, visible } = useMotionPolicy();
+  const {
+    ref: containerRef,
+    view,
+    focus,
+    reset: resetView,
+    zoom,
+    handlers,
+    depthRef,
+    reveal,
+  } = useAtlasView(scene, selected, reduced);
+  const journey = useJourney(
+    scene,
+    paused || !!journal || !visible || staticQuality,
+    reduced,
+  );
+  const driver = useMemo(
+    () => ({ ref: journey.ref, subscribe: journey.subscribe }),
+    [journey.ref, journey.subscribe],
+  );
+  const island = scene.islands.find((i) => i.id === activeId);
+  const journalIsland = scene.islands.find((i) => i.id === journal?.categoryId);
+  const origin = useRef<HTMLElement | null>(null);
+  const depth = mode === "3d" && ready;
+  useEffect(() => {
+    depthRef.current = depth;
+  }, [depth, depthRef]);
+  const onFail = useCallback((error?: unknown) => {
+    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+      document.documentElement.dataset.atlasError = String(error);
+    setMode("2d");
+    setReady(false);
+    setStaticQuality(false);
+    setNotice("3D is unavailable. You can keep exploring in 2D.");
   }, []);
-
-  const handleBeaconHoverEnd = useCallback(() => {
-    const el = tooltipRef.current;
-    if (el) el.style.display = 'none';
+  const activationStart = useRef(0);
+  const onReady = useCallback(() => {
+    setReady(true);
+    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+      document.documentElement.dataset.atlas3dActivationMs = String(
+        performance.now() - activationStart.current,
+      );
   }, []);
-
-  const handleBeaconClick = useCallback((beacon: BeaconPosition, island: IslandLayout) => {
-    const el = tooltipRef.current;
-    if (el) el.style.display = 'none';
-    setJournal({ beacon, island });
+  const onSlow = useCallback(() => {
+    setStaticQuality(true);
+    setNotice("Motion paused to keep the map responsive.");
   }, []);
+  useEffect(() => {
+    if (mode !== "3d" || Three) return;
+    let cancelled = false;
+    import("./atlas/AtlasThree")
+      .then((module) => {
+        if (!cancelled) setThree(() => module.AtlasThree);
+      })
+      .catch((error) => {
+        if (!cancelled) onFail(error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, Three, onFail]);
+  useEffect(() => {
+    if (!(import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")) return;
+    let last = -1;
+    let lastState = "";
+    const update = () => {
+      const j = driver.ref.current;
+      const state = `${j.destination}:${j.phase}`;
+      if (j.time - last < 0.25 && state === lastState) return;
+      last = j.time;
+      lastState = state;
+      document.documentElement.dataset.atlasJourney = JSON.stringify({
+        position: j.position,
+        heading: j.heading,
+        phase: j.phase,
+        destination: j.destination,
+        time: j.time,
+      });
+    };
+    update();
+    return driver.subscribe(update);
+  }, [driver]);
+  const select = (id: string) => {
+    const start = performance.now();
 
-  const handleJournalClose = useCallback(() => {
+    setSelected(id);
+    focus(id);
+    journey.select(id);
+    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+      requestAnimationFrame(() => {
+        document.documentElement.dataset.atlasSelectionMs = String(
+          performance.now() - start,
+        );
+      });
+  };
+  const openTool = (tool: Tool, categoryId: string) => {
+    const start = performance.now();
+    origin.current = document.activeElement as HTMLElement;
+    setPreview(null);
+    setSelected(categoryId);
+    journey.select(categoryId);
+    setJournal({ tool, categoryId });
+    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+      requestAnimationFrame(() => {
+        document.documentElement.dataset.atlasToolMs = String(
+          performance.now() - start,
+        );
+      });
+  };
+  const closeTool = useCallback(() => {
     setJournal(null);
+    requestAnimationFrame(() => origin.current?.focus());
   }, []);
-
-  const handleLegendIslandClick = useCallback((island: IslandLayout) => {
-    panTo(island.cx, island.cy);
-  }, [panTo]);
-
+  const reset = () => {
+    setSelected(null);
+    setHovered(null);
+    setFocused(null);
+    resetView();
+  };
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !journal) {
+        setExpanded(false);
+        setSelected(null);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [journal]);
+  const islandAt = (clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    const p = {
+      x: view.center.x + (clientX - rect.left - view.width / 2) / view.zoom,
+      y:
+        view.center.y +
+        (clientY - rect.top - view.height / 2) / view.zoom / (depth ? 0.72 : 1),
+    };
+    return (
+      scene.islands.find((i) =>
+        inside(
+          {
+            x: i.center.x + (p.x - i.center.x) / 1.12,
+            y: i.center.y + (p.y - i.center.y) / 1.12,
+          },
+          i.coast,
+        ),
+      )?.id ?? null
+    );
+  };
   return (
-    <>
-      {/* Ocean background */}
-      <div className="ocean">
-        <div className="ocean-wave-3" />
-      </div>
-
-      {/* Map container with pan/zoom */}
-      <div
-        ref={containerRef}
-        className="map-container"
-        onPointerDown={handlers.onPointerDown}
-        onPointerMove={handlers.onPointerMove}
-        onPointerUp={handlers.onPointerUp}
-        onPointerCancel={handlers.onPointerUp}
-        onClick={() => { if (journal) handleJournalClose(); }}
+    <main
+      onPointerMove={(event) => {
+        if (event.pointerType === "touch" || event.buttons) return;
+        const el = event.target as Element;
+        setHovered(
+          el.closest<HTMLElement>("[data-island]")?.dataset.island ??
+            (el.closest(".atlas-viewport")
+              ? islandAt(event.clientX, event.clientY)
+              : null),
+        );
+      }}
+      onPointerLeave={() => setHovered(null)}
+      onPointerDownCapture={() => {
+        setFocused(null);
+        setHovered(null);
+      }}
+      onFocusCapture={(event) => {
+        if (event.target.matches(":focus-visible")) {
+          setHovered(null);
+          setFocused(
+            event.target.closest<HTMLElement>("[data-island]")?.dataset
+              .island ?? null,
+          );
+        }
+      }}
+      onBlurCapture={() => setFocused(null)}
+      className="living-atlas"
+      data-variant="rail"
+      data-mode={depth ? "3d" : "2d"}
+      data-reduced-motion={reduced || undefined}
+      data-motion={
+        paused ||
+        reduced ||
+        !visible ||
+        journal ||
+        staticQuality ||
+        atlasCapture()
+          ? "paused"
+          : "running"
+      }
+    >
+      <a
+        className="atlas-skip"
+        href="#atlas-directory"
+        onClick={() => setExpanded(true)}
       >
-        <svg
-          className="map-svg"
-          width={layout.width}
-          height={layout.height}
-          viewBox={`0 0 ${layout.width} ${layout.height}`}
-          style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+        Explore the tool directory
+      </a>
+      <header className="atlas-header">
+        <Link
+          className="atlas-brand"
+          to="/"
+          onClick={(event) => {
+            event.preventDefault();
+            reset();
           }}
+          aria-label="AI Atlas overview"
         >
-          {/* Ambient clouds */}
-          <ellipse className="cloud" cx="530" cy="260" rx="120" ry="30" fill="#ffffff" />
-          <ellipse className="cloud" cx="1870" cy="470" rx="160" ry="25" fill="#ffffff" />
-
-          {/* Sailing routes */}
-          {layout.routes.map((route, i) => (
-            <line
-              key={i}
-              x1={route.from.cx}
-              y1={route.from.cy}
-              x2={route.to.cx}
-              y2={route.to.cy}
-              className="sailing-route"
+          <svg viewBox="0 0 48 40" aria-hidden="true">
+            <path
+              d="M9 11 3 5M9 28 3 34M34 11 41 5M34 28 41 34"
+              stroke="currentColor"
+              strokeWidth="5"
+              strokeLinecap="round"
             />
-          ))}
-
-          {/* Map decorations (ships, dragon, waves, text labels, etc.) */}
-          <MapDecorations />
-
-          {/* AI turtle sailing between islands */}
-          <AiTurtle routes={layout.routes} />
-
-          {/* Islands */}
-          {layout.islands.map((island, index) => (
-            <Island
-              key={island.category.id}
-              island={island}
-              index={index}
-              onBeaconHover={handleBeaconHover}
-              onBeaconHoverEnd={handleBeaconHoverEnd}
-              onBeaconClick={handleBeaconClick}
+            <ellipse
+              cx="23"
+              cy="20"
+              rx="16"
+              ry="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
             />
-          ))}
-        </svg>
+            <path
+              d="m23 9 9 6v10l-9 6-9-6V15Z"
+              fill="none"
+              stroke="currentColor"
+            />
+            <ellipse cx="43" cy="20" rx="4" ry="5" fill="currentColor" />
+          </svg>
+          <span>
+            Turtleand’s <strong>AI Atlas</strong>
+          </span>
+        </Link>
+        <p className="atlas-header-note">A field guide to the AI landscape</p>
+        <a className="atlas-hub" href="https://turtleand.com/">
+          Turtleand ↗
+        </a>
+      </header>
+      <div className="atlas-workspace">
+        <aside
+          id="atlas-directory"
+          className={`atlas-directory ${expanded ? "is-expanded" : ""}`}
+          tabIndex={-1}
+        >
+          <button
+            className="atlas-directory-toggle"
+            aria-expanded={expanded}
+            aria-controls="atlas-directory-content"
+            onClick={() => setExpanded((v) => !v)}
+          >
+            <span>All tools · directory</span>
+            <span aria-hidden="true">{expanded ? "−" : "+"}</span>
+          </button>
+          <div id="atlas-directory-content" className="atlas-directory-content">
+            <div className="atlas-intro">
+              <span className="atlas-eyebrow">THE ARCHIPELAGO</span>
+              <h1>Explore the shores</h1>
+            </div>
+            <div className="atlas-directory-heading">
+              <span>AI SPACES</span>
+              <span>
+                {categories.reduce((n, c) => n + c.tools.length, 0)} tools
+              </span>
+            </div>
+            <nav aria-label="AI categories">
+              {scene.islands.map((i, n) => (
+                <button
+                  key={i.id}
+                  data-island={i.id}
+                  className="atlas-category"
+                  style={{ "--island-accent": i.accent } as CSSProperties}
+                  aria-pressed={selected === i.id}
+                  onClick={() => select(i.id)}
+                >
+                  <span className="atlas-category-number">
+                    {String(n + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    className="atlas-category-dot"
+                    style={{ background: i.accent }}
+                  />
+                  <span>{i.category.name}</span>
+                  <small>{i.category.tools.length}</small>
+                </button>
+              ))}
+            </nav>
+            <button
+              className="atlas-all-tools"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? "Categories" : "Browse every tool"}{" "}
+              <span aria-hidden="true">↗</span>
+            </button>
+            {(expanded ? scene.islands : []).map((island) => (
+              <section
+                key={island.id}
+                className="atlas-tools"
+                data-island={island.id}
+                aria-label={`${island.category.name} tools`}
+              >
+                <div className="atlas-directory-heading">
+                  <button
+                    className="atlas-section-title"
+                    onClick={() => select(island.id)}
+                  >
+                    {island.category.name} · {island.category.tools.length}
+                  </button>
+                </div>
+                {island.category.tools.map((tool) => (
+                  <button
+                    className="atlas-tool-row"
+                    key={tool.id}
+                    onClick={() => openTool(tool, island.id)}
+                  >
+                    <span>
+                      {tool.name}
+                      <small>{tool.description}</small>
+                    </span>
+                    <span aria-hidden="true">↗</span>
+                  </button>
+                ))}
+              </section>
+            ))}
+          </div>
+        </aside>
+        <section className="atlas-map-area" aria-label="Interactive island map">
+          <div className="atlas-map-heading">
+            <span className="atlas-eyebrow">
+              {island ? island.category.name : "CHOOSE A SHORE"}
+            </span>
+            <span>Hover or tap a shore · drag to roam</span>
+          </div>
+          <div className="atlas-controls" aria-label="Map controls">
+            <div
+              className="atlas-mode-switch"
+              role="group"
+              aria-label="Map view"
+            >
+              <button
+                aria-pressed={mode === "2d"}
+                onClick={() => {
+                  setMode("2d");
+                  setReady(false);
+                  setStaticQuality(false);
+                  setNotice("");
+                }}
+              >
+                2D
+              </button>
+              <button
+                aria-pressed={mode === "3d"}
+                onClick={() => {
+                  activationStart.current = performance.now();
+                  setMode("3d");
+                  setNotice("");
+                }}
+              >
+                3D
+              </button>
+            </div>
+            <button
+              className="atlas-motion-button"
+              aria-pressed={paused || reduced || staticQuality}
+              disabled={reduced}
+              onClick={() => {
+                setPaused((v) => (staticQuality ? false : !v));
+                setStaticQuality(false);
+                setNotice("");
+              }}
+              aria-label={
+                paused || staticQuality ? "Resume motion" : "Pause motion"
+              }
+            >
+              {paused || reduced || staticQuality ? "▷" : "Ⅱ"}
+              <span>
+                {reduced
+                  ? "Reduced motion"
+                  : paused || staticQuality
+                    ? "Resume"
+                    : "Pause"}
+              </span>
+            </button>
+            <button
+              onClick={reset}
+              className="atlas-reset"
+              aria-label="Reset map view"
+            >
+              <svg viewBox="0 0 40 40" aria-hidden="true">
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="15"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <path
+                  d="m20 6 5 14-5 14-5-14Z"
+                  fill="none"
+                  stroke="currentColor"
+                />
+                <path d="m20 6 5 14h-5Z" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
+          <div
+            ref={containerRef}
+            className="atlas-viewport"
+            {...handlers}
+            onPointerDown={(event) => {
+              handlers.onPointerDown(event);
+              if (
+                event.button !== 0 ||
+                (event.target as Element).closest("button,a")
+              )
+                return;
+              if (tap.current) tap.current.moved = true;
+              else
+                tap.current = {
+                  id: event.pointerId,
+                  x: event.clientX,
+                  y: event.clientY,
+                  moved: false,
+                };
+            }}
+            onPointerMove={(event) => {
+              handlers.onPointerMove(event);
+              if (
+                tap.current &&
+                Math.hypot(
+                  event.clientX - tap.current.x,
+                  event.clientY - tap.current.y,
+                ) > 8
+              )
+                tap.current.moved = true;
+            }}
+            onPointerUp={(event) => {
+              handlers.onPointerUp(event);
+              const touch = tap.current;
+              tap.current = null;
+              if (!touch || touch.moved || touch.id !== event.pointerId) return;
+              const id = islandAt(event.clientX, event.clientY);
+              if (id) select(id);
+              else {
+                setSelected(null);
+                setHovered(null);
+                setFocused(null);
+              }
+            }}
+            onPointerCancel={(event) => {
+              handlers.onPointerCancel(event);
+              tap.current = null;
+            }}
+          >
+            {!depth && (
+              <AtlasSvg
+                scene={scene}
+                view={view}
+                selected={activeId}
+                driver={driver}
+              />
+            )}
+            {mode === "3d" && Three && (
+              <SceneBoundary onFail={onFail}>
+                <div className={`atlas-three ${ready ? "is-ready" : ""}`}>
+                  <Three
+                    scene={scene}
+                    view={view}
+                    driver={driver}
+                    active={
+                      ready &&
+                      visible &&
+                      !paused &&
+                      !reduced &&
+                      !journal &&
+                      !staticQuality &&
+                      !atlasCapture()
+                    }
+                    selected={activeId}
+                    onReady={onReady}
+                    onFail={onFail}
+                    onSlow={onSlow}
+                  />
+                </div>
+              </SceneBoundary>
+            )}
+            {view.width > 1 && (
+              <AtlasDiscovery
+                scene={scene}
+                view={view}
+                selected={selected}
+                depth={depth}
+                activeId={activeId}
+                names
+                onSelect={select}
+                onTool={openTool}
+                onReveal={reveal}
+                preview={preview}
+                onPreview={setPreview}
+              />
+            )}
+            {!scene.islands.length && (
+              <p className="atlas-empty">New shores are being charted.</p>
+            )}
+          </div>
+          <div className="atlas-map-footer">
+            <button className="atlas-overview" onClick={reset}>
+              Show all islands
+            </button>
+            <div>
+              <button aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>
+                −
+              </button>
+              <button aria-label="Zoom in" onClick={() => zoom(1.2)}>
+                +
+              </button>
+            </div>
+          </div>
+          {((mode === "3d" && !ready) || notice) && (
+            <div role="status" className="atlas-notice">
+              {notice || (
+                <>
+                  Preparing 3D. Keep exploring.
+                  <button
+                    onClick={() => {
+                      setMode("2d");
+                      setReady(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </section>
       </div>
-
-      {/* Fog overlay */}
-      <div className="fog-overlay" />
-
-
-      {/* UI overlays */}
-      <MapTitle />
-      <MapLegend islands={layout.islands} onIslandClick={handleLegendIslandClick} />
-      <CompassRose onResetView={resetView} />
-      <LandscapeNav />
-
-      {/* Tooltip (ref-driven, no re-renders) */}
-      <div ref={tooltipRef} className="tooltip" style={{ display: 'none' }}>
-        <div className="tooltip-name" />
-        <div className="tooltip-desc" />
-      </div>
-
-      {/* Journal panel */}
-      {journal && (
-        <JournalPanel
-          toolName={journal.beacon.tool.name}
-          toolDescription={journal.beacon.tool.description}
-          toolUrl={journal.beacon.tool.url}
-          toolUsage={journal.beacon.tool.usage}
-          toolRelated={journal.beacon.tool.related}
-          toolTags={journal.beacon.tool.tags}
-          categoryName={journal.island.category.name}
-          categoryColor={journal.island.color}
-          onClose={handleJournalClose}
-        />
-      )}
-
-      {/* Feature links — hidden when journal is open */}
-      {!journal && (
-        <div className="feature-link-stack">
-          <Link to="/ai-impact-map/" className="impact-map-link feature-link-float">
-            <span className="tsunami-link-icon">🗺️</span>
-            <span className="tsunami-link-text">
-              <span className="tsunami-link-title">AI Impact Map</span>
-              <span className="tsunami-link-sub">Which jobs are underwater?</span>
-            </span>
-          </Link>
-          <Link to="/productivity-loop/" className="loop-compass-link feature-link-float">
-            <span className="tsunami-link-icon">🧭</span>
-            <span className="tsunami-link-text">
-              <span className="tsunami-link-title">Productivity Compass</span>
-              <span className="tsunami-link-sub">Advance the loop first.</span>
-            </span>
-          </Link>
-          <Link to="/tsunami/" className="tsunami-link feature-link-float">
-            <span className="tsunami-link-icon">🌊</span>
-            <span className="tsunami-link-text">
-              <span className="tsunami-link-title">AI Tsunami Tracker</span>
-              <span className="tsunami-link-sub">Are you ready?</span>
-            </span>
-          </Link>
+      <AtlasNavigation />
+      {preview && !journal && (
+        <div
+          id="atlas-tool-preview"
+          role="tooltip"
+          className="atlas-tool-preview"
+          style={{ left: preview.x, top: preview.y }}
+        >
+          <strong>{preview.tool.name}</strong>
+          <p>{preview.tool.description}</p>
         </div>
       )}
-    </>
+      {journal && journalIsland && (
+        <JournalPanel
+          toolName={journal.tool.name}
+          toolDescription={journal.tool.description}
+          toolUrl={journal.tool.url}
+          toolUsage={journal.tool.usage}
+          toolRelated={journal.tool.related}
+          toolTags={journal.tool.tags}
+          categoryName={journalIsland.category.name}
+          categoryColor={journalIsland.accent}
+          onClose={closeTool}
+        />
+      )}
+    </main>
   );
 }
