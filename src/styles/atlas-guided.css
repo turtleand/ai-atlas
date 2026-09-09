@@ -178,7 +178,9 @@
   color: #bed0c7;
   margin: 5px 0 0;
 }
-@media (max-width: 760px) {
+/* Short landscape uses the base side-by-side grid, not the mobile sheet. */
+@media (max-width: 760px) and (orientation: portrait),
+  (max-width: 760px) and (min-height: 501px) {
   [data-variant] .atlas-header {
     height: 58px;
     padding: 0 16px;
@@ -212,7 +214,7 @@
     margin-right: auto;
   }
 }
-@media (max-height: 500px) and (min-width: 761px) {
+@media (max-height: 500px) and (orientation: landscape) {
   [data-variant] .atlas-map-heading {
     display: none;
   }
