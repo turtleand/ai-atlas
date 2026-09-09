@@ -130,6 +130,130 @@ const mount = () =>
       <ArchipelagoMap categories={categories} />
     </MemoryRouter>,
   );
+it("lets pointer exploration replace turtle-driven emphasis without changing the journey", () => {
+  history.replaceState(null, "", "/?capture=1&destination=images&time=1");
+  const { container } = render(
+    <MemoryRouter>
+      <ArchipelagoMap categories={parseToolsYaml(catalog)} />
+    </MemoryRouter>,
+  );
+  const map = container.querySelector(".atlas-discovery")!;
+  const tool = within(map as HTMLElement).getByRole("button", {
+    name: "Claude Code",
+  });
+  const focus = () => map.getAttribute("data-active-islands");
+  const journey = document.documentElement.dataset.atlasJourney;
+  const positions = [...map.querySelectorAll<HTMLElement>("button")].map(
+    (el) => el.style.cssText,
+  );
+  expect(focus()).toBe("");
+  fireEvent.pointerMove(tool, { pointerType: "mouse", buttons: 0 });
+  expect(focus()).toBe("code");
+  expect(document.documentElement.dataset.atlasJourney).toBe(journey);
+  expect(
+    container.querySelectorAll('.atlas-island-art[data-emphasis="active"]'),
+  ).toHaveLength(1);
+  expect(map.querySelectorAll('.is-tool[data-emphasis="active"]')).toHaveLength(
+    6,
+  );
+  fireEvent.pointerLeave(container.querySelector("main")!);
+  expect(focus()).toBe("");
+  fireEvent.pointerMove(
+    within(map as HTMLElement).getByRole("button", { name: "Recraft" }),
+    { pointerType: "mouse", buttons: 0 },
+  );
+  expect(focus()).toBe("images");
+  act(() => tool.focus());
+  expect(focus()).toBe("code");
+  fireEvent.click(tool);
+  expect(screen.getByRole("dialog", { name: "Claude Code" })).toBeTruthy();
+  expect(focus()).toBe("code");
+  expect(
+    [...map.querySelectorAll<HTMLElement>("button")].map(
+      (el) => el.style.cssText,
+    ),
+  ).toEqual(positions);
+  expect(map.querySelectorAll(".is-tool.is-named")).toHaveLength(29);
+});
+
+it("supports shore taps and ignores drags and multi-touch as selections", () => {
+  const { container } = mount();
+  const viewport = container.querySelector<HTMLElement>(".atlas-viewport")!;
+  viewport.setPointerCapture = vi.fn();
+  const scene = createScene(categories);
+  const view = JSON.parse(document.documentElement.dataset.atlasView!);
+  const p = {
+    clientX:
+      view.width / 2 + (scene.islands[1].center.x - view.center.x) * view.zoom,
+    clientY:
+      view.height / 2 + (scene.islands[1].center.y - view.center.y) * view.zoom,
+  };
+  const event = { ...p, pointerType: "touch", pointerId: 1, button: 0 };
+  fireEvent.pointerDown(viewport, event);
+  fireEvent.pointerUp(viewport, event);
+  expect(
+    container
+      .querySelector(".atlas-discovery")
+      ?.getAttribute("data-active-islands"),
+  ).toBe("code");
+  const empty = {
+    clientX: -100,
+    clientY: -100,
+    pointerType: "touch",
+    pointerId: 2,
+    button: 0,
+  };
+  fireEvent.pointerDown(viewport, empty);
+  fireEvent.pointerUp(viewport, empty);
+  expect(
+    container
+      .querySelector(".atlas-discovery")
+      ?.getAttribute("data-active-islands"),
+  ).toBe("");
+  fireEvent.pointerDown(viewport, event);
+  fireEvent.pointerMove(viewport, { ...event, clientX: p.clientX + 30 });
+  fireEvent.pointerUp(viewport, event);
+  expect(
+    container
+      .querySelector(".atlas-discovery")
+      ?.getAttribute("data-active-islands"),
+  ).toBe("");
+  fireEvent.pointerDown(viewport, event);
+  fireEvent.pointerDown(viewport, { ...event, pointerId: 2 });
+  fireEvent.pointerUp(viewport, event);
+  fireEvent.pointerUp(viewport, { ...event, pointerId: 2 });
+  expect(
+    container
+      .querySelector(".atlas-discovery")
+      ?.getAttribute("data-active-islands"),
+  ).toBe("");
+});
+
+it("preserves navigation destinations and makes the wave a labelled central link", () => {
+  mount();
+  const dock = screen.getByRole("navigation", { name: "Atlas and Turtleand" });
+  const links = within(dock).getAllByRole("link");
+  expect(links.map((a) => a.getAttribute("href"))).toEqual([
+    "https://lab.turtleand.com/",
+    "/ai-impact-map/",
+    "/tsunami/",
+    "/productivity-loop/",
+  ]);
+  expect(
+    within(dock)
+      .getByRole("link", { name: "Tsunami" })
+      .classList.contains("atlas-tsunami-link"),
+  ).toBe(true);
+  expect(
+    [...dock.querySelectorAll("svg")].every(
+      (svg) => svg.getAttribute("aria-hidden") === "true",
+    ),
+  ).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Pause motion" }));
+  expect(document.querySelector("main")?.getAttribute("data-motion")).toBe(
+    "paused",
+  );
+});
 describe("shared home interaction contract", () => {
   it("starts in SVG without loading 3D and opens details immediately", () => {
     mount();

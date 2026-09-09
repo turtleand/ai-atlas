@@ -16,7 +16,11 @@ import {
 } from "./journey";
 import { buildSeaGeometry } from "./atlas-sea-geometry";
 import { MeshLambertMaterial } from "three";
-import { buildAtlasGeometry, buildTurtle } from "./atlas-geometry";
+import {
+  buildAtlasGeometry,
+  buildTurtle,
+  focusIslandGeometry,
+} from "./atlas-geometry";
 const categories = parseToolsYaml(data);
 const scene = createScene(categories);
 describe("living archipelago geography", () => {
@@ -115,6 +119,27 @@ describe("turtle journey continuity", () => {
   });
 });
 describe("procedural asset budgets", () => {
+  it("focuses only the requested terrain while retaining complete geometry in at most three draws", () => {
+    const art = buildAtlasGeometry(scene);
+    for (const selected of [null, ...scene.islands.map((i) => i.id)]) {
+      focusIslandGeometry(art.terrain, art.islandRanges, selected);
+      expect(art.terrain.groups.length).toBeLessThanOrEqual(3);
+      let end = 0;
+      for (const group of art.terrain.groups) {
+        expect(group.start).toBe(end);
+        end += group.count;
+      }
+      expect(end).toBe(art.terrain.getAttribute("position").count);
+      const active = art.terrain.groups.filter((g) => g.materialIndex === 1);
+      expect(active).toHaveLength(selected ? 1 : 0);
+      if (selected) {
+        const range = art.islandRanges.find((r) => r.id === selected)!;
+        expect(active[0].start).toBe(range.start);
+        expect(active[0].count).toBe(range.count);
+      }
+    }
+    art.terrain.dispose();
+  });
   it("keeps geometry finite, deterministic, and within the scene triangle allowance", () => {
     const a = buildAtlasGeometry(scene),
       b = buildAtlasGeometry(scene),

@@ -12,8 +12,9 @@ import {
 import { Link } from "react-router-dom";
 import type { Category, Tool } from "../utils/parseTools";
 import { atlasCapture } from "./atlas/capture";
-import { createScene } from "./atlas/atlas-model";
+import { createScene, inside } from "./atlas/atlas-model";
 import { AtlasSvg } from "./atlas/AtlasSvg";
+import { AtlasNavigation } from "./atlas/AtlasNavigation";
 import { AtlasDiscovery, type ToolPreview } from "./atlas/AtlasDiscovery";
 import "../styles/atlas-guided.css";
 import { useAtlasView, useJourney, useMotionPolicy } from "./atlas/useAtlas";
@@ -51,6 +52,15 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     const tool = island?.category.tools.find((t) => t.id === capture?.tool);
     return island && tool ? { tool, categoryId: island.id } : null;
   });
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [focused, setFocused] = useState<string | null>(null);
+  const activeId = hovered ?? focused ?? selected;
+  const tap = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    moved: boolean;
+  } | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [paused, setPaused] = useState(false);
   const [mode, setMode] = useState<"2d" | "3d">("2d");
@@ -80,7 +90,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     () => ({ ref: journey.ref, subscribe: journey.subscribe }),
     [journey.ref, journey.subscribe],
   );
-  const island = scene.islands.find((i) => i.id === selected);
+  const island = scene.islands.find((i) => i.id === activeId);
   const journalIsland = scene.islands.find((i) => i.id === journal?.categoryId);
   const origin = useRef<HTMLElement | null>(null);
   const depth = mode === "3d" && ready;
@@ -175,6 +185,8 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   }, []);
   const reset = () => {
     setSelected(null);
+    setHovered(null);
+    setFocused(null);
     resetView();
   };
   useEffect(() => {
@@ -187,13 +199,65 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, [journal]);
+  const islandAt = (clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    const p = {
+      x: view.center.x + (clientX - rect.left - view.width / 2) / view.zoom,
+      y:
+        view.center.y +
+        (clientY - rect.top - view.height / 2) / view.zoom / (depth ? 0.72 : 1),
+    };
+    return (
+      scene.islands.find((i) =>
+        inside(
+          {
+            x: i.center.x + (p.x - i.center.x) / 1.12,
+            y: i.center.y + (p.y - i.center.y) / 1.12,
+          },
+          i.coast,
+        ),
+      )?.id ?? null
+    );
+  };
   return (
     <main
+      onPointerMove={(event) => {
+        if (event.pointerType === "touch" || event.buttons) return;
+        const el = event.target as Element;
+        setHovered(
+          el.closest<HTMLElement>("[data-island]")?.dataset.island ??
+            (el.closest(".atlas-viewport")
+              ? islandAt(event.clientX, event.clientY)
+              : null),
+        );
+      }}
+      onPointerLeave={() => setHovered(null)}
+      onPointerDownCapture={() => {
+        setFocused(null);
+        setHovered(null);
+      }}
+      onFocusCapture={(event) => {
+        if (event.target.matches(":focus-visible")) {
+          setHovered(null);
+          setFocused(
+            event.target.closest<HTMLElement>("[data-island]")?.dataset
+              .island ?? null,
+          );
+        }
+      }}
+      onBlurCapture={() => setFocused(null)}
       className="living-atlas"
       data-variant="rail"
       data-mode={depth ? "3d" : "2d"}
+      data-reduced-motion={reduced || undefined}
       data-motion={
-        paused || reduced || !visible || journal || staticQuality
+        paused ||
+        reduced ||
+        !visible ||
+        journal ||
+        staticQuality ||
+        atlasCapture()
           ? "paused"
           : "running"
       }
@@ -277,6 +341,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               {scene.islands.map((i, n) => (
                 <button
                   key={i.id}
+                  data-island={i.id}
                   className="atlas-category"
                   style={{ "--island-accent": i.accent } as CSSProperties}
                   aria-pressed={selected === i.id}
@@ -306,6 +371,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               <section
                 key={island.id}
                 className="atlas-tools"
+                data-island={island.id}
                 aria-label={`${island.category.name} tools`}
               >
                 <div className="atlas-directory-heading">
@@ -336,9 +402,9 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
         <section className="atlas-map-area" aria-label="Interactive island map">
           <div className="atlas-map-heading">
             <span className="atlas-eyebrow">
-              {island ? island.category.name : "THE KNOWN SHORES"}
+              {island ? island.category.name : "CHOOSE A SHORE"}
             </span>
-            <span>Drag to roam · open any tool</span>
+            <span>Hover or tap a shore · drag to roam</span>
           </div>
           <div className="atlas-controls" aria-label="Map controls">
             <div
@@ -412,12 +478,60 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               </svg>
             </button>
           </div>
-          <div ref={containerRef} className="atlas-viewport" {...handlers}>
+          <div
+            ref={containerRef}
+            className="atlas-viewport"
+            {...handlers}
+            onPointerDown={(event) => {
+              handlers.onPointerDown(event);
+              if (
+                event.button !== 0 ||
+                (event.target as Element).closest("button,a")
+              )
+                return;
+              if (tap.current) tap.current.moved = true;
+              else
+                tap.current = {
+                  id: event.pointerId,
+                  x: event.clientX,
+                  y: event.clientY,
+                  moved: false,
+                };
+            }}
+            onPointerMove={(event) => {
+              handlers.onPointerMove(event);
+              if (
+                tap.current &&
+                Math.hypot(
+                  event.clientX - tap.current.x,
+                  event.clientY - tap.current.y,
+                ) > 8
+              )
+                tap.current.moved = true;
+            }}
+            onPointerUp={(event) => {
+              handlers.onPointerUp(event);
+              const touch = tap.current;
+              tap.current = null;
+              if (!touch || touch.moved || touch.id !== event.pointerId) return;
+              const id = islandAt(event.clientX, event.clientY);
+              if (id) select(id);
+              else {
+                setSelected(null);
+                setHovered(null);
+                setFocused(null);
+              }
+            }}
+            onPointerCancel={(event) => {
+              handlers.onPointerCancel(event);
+              tap.current = null;
+            }}
+          >
             {!depth && (
               <AtlasSvg
                 scene={scene}
                 view={view}
-                selected={selected}
+                selected={activeId}
                 driver={driver}
               />
             )}
@@ -437,7 +551,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                       !staticQuality &&
                       !atlasCapture()
                     }
-                    selected={selected}
+                    selected={activeId}
                     onReady={onReady}
                     onFail={onFail}
                     onSlow={onSlow}
@@ -451,6 +565,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                 view={view}
                 selected={selected}
                 depth={depth}
+                activeId={activeId}
                 names
                 onSelect={select}
                 onTool={openTool}
@@ -495,20 +610,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           )}
         </section>
       </div>
-      <nav className="atlas-navigation" aria-label="Atlas and Turtleand">
-        <a href="https://lab.turtleand.com/">
-          AI Lab <span>↗</span>
-        </a>
-        <Link to="/ai-impact-map/">
-          Impact Map <span>↗</span>
-        </Link>
-        <Link to="/productivity-loop/">
-          Compass <span>↗</span>
-        </Link>
-        <Link to="/tsunami/">
-          Tsunami <span>↗</span>
-        </Link>
-      </nav>
+      <AtlasNavigation />
       {preview && !journal && (
         <div
           id="atlas-tool-preview"

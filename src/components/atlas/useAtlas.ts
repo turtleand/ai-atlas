@@ -287,7 +287,15 @@ export function useJourney(
   }, [scene]);
   const select = useCallback(
     (id: string) => {
+      const startedAt =
+        import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1"
+          ? performance.now()
+          : 0;
       redirectJourney(scene, ref.current, id, reduced);
+      if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+        document.documentElement.dataset.atlasRouteMs = String(
+          performance.now() - startedAt,
+        );
       listeners.current.forEach((fn) => fn());
     },
     [scene, reduced],

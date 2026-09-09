@@ -29,7 +29,10 @@ function IslandArt({
   const transform = (scale: number, dy = 0) =>
     `translate(${c.x},${c.y + dy}) scale(${scale}) translate(${-c.x},${-c.y})`;
   return (
-    <g>
+    <g
+      className="atlas-island-art"
+      data-emphasis={selected ? "active" : "muted"}
+    >
       <defs>
         <linearGradient id={`land-${island.id}`} x2=".5" y2="1">
           <stop stopColor={palette.raised} />

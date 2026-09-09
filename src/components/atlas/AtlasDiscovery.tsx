@@ -266,6 +266,7 @@ export function AtlasDiscovery({
   scene,
   view,
   depth,
+  activeId,
   selected,
   names,
   onSelect,
@@ -277,6 +278,7 @@ export function AtlasDiscovery({
   scene: AtlasScene;
   view: AtlasView;
   depth: boolean;
+  activeId: string | null;
   selected: string | null;
   names: boolean;
   onSelect: (id: string) => void;
@@ -328,6 +330,7 @@ export function AtlasDiscovery({
   return (
     <div
       className={`atlas-labels atlas-discovery ${compact ? "is-overview" : ""}`}
+      data-active-islands={activeId ?? ""}
     >
       <svg
         className="atlas-leaders"
@@ -352,6 +355,8 @@ export function AtlasDiscovery({
               return (
                 <circle
                   key={`${i.id}:${t.tool.id}`}
+                  className="atlas-overview-beacon"
+                  data-emphasis={activeId === i.id ? "active" : "muted"}
                   cx={p.x}
                   cy={p.y}
                   r="2"
@@ -364,12 +369,16 @@ export function AtlasDiscovery({
         {labels
           .filter((l) => l.tool || compact)
           .map((l) => (
-            <g key={l.key} style={{ color: l.island.accent }}>
+            <g
+              key={l.key}
+              className="atlas-tool-leader"
+              data-emphasis={activeId === l.island.id ? "active" : "muted"}
+              style={{ "--island-accent": l.island.accent } as CSSProperties}
+            >
               <path
                 d={`M${l.anchor.x},${l.anchor.y} L${l.x},${l.y}`}
                 fill="none"
                 stroke="currentColor"
-                strokeOpacity=".45"
                 strokeWidth="1"
               />
               <circle
@@ -399,6 +408,8 @@ export function AtlasDiscovery({
         <button
           key={l.key}
           className={`atlas-discovery-label ${l.tool ? "is-tool" : "is-category"} ${l.named ? "is-named" : "is-beacon"}`}
+          data-emphasis={activeId === l.island.id ? "active" : "muted"}
+          data-island={l.island.id}
           style={
             {
               left: l.x,
@@ -440,7 +451,9 @@ export function AtlasDiscovery({
               });
             if (l.tool) peek(l.tool, e.currentTarget);
           }}
-          onBlur={() => onPreview(null)}
+          onBlur={() => {
+            onPreview(null);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Escape" && preview) {
               e.stopPropagation();

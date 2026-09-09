@@ -5,6 +5,8 @@ import { random, islandPoint, type AtlasScene } from "./atlas-model";
 type V3 = [number, number, number];
 export function buildAtlasGeometry(scene: AtlasScene) {
   const pieces: THREE.BufferGeometry[] = [];
+  const islandRanges: { id: string; start: number; count: number }[] = [];
+  let vertices = 0;
   const matrix = new THREE.Matrix4(),
     rotation = new THREE.Quaternion();
   function add(
@@ -34,8 +36,10 @@ export function buildAtlasGeometry(scene: AtlasScene) {
     );
     g.applyMatrix4(matrix);
     pieces.push(g);
+    vertices += g.getAttribute("position").count;
   }
   const trees: {
+    islandId: string;
     x: number;
     y: number;
     z: number;
@@ -43,6 +47,7 @@ export function buildAtlasGeometry(scene: AtlasScene) {
     size: number;
   }[] = [];
   for (const island of scene.islands) {
+    const start = vertices;
     const c = island.center,
       rng = random(island.seed),
       base = 22;
@@ -263,6 +268,7 @@ export function buildAtlasGeometry(scene: AtlasScene) {
         r = island.radius * (0.6 + rng() * 0.12);
       const p = islandPoint(island, Math.cos(a) * r, Math.sin(a) * r * 0.7);
       trees.push({
+        islandId: island.id,
         x: p.x,
         y: 14,
         z: p.y,
@@ -270,12 +276,29 @@ export function buildAtlasGeometry(scene: AtlasScene) {
         size: 0.75 + rng() * 0.45,
       });
     }
+    islandRanges.push({ id: island.id, start, count: vertices - start });
   }
   const terrain = pieces.length
     ? mergeGeometries(pieces)
     : new THREE.BufferGeometry();
   pieces.forEach((g) => g.dispose());
-  return { terrain, trees };
+  for (const range of islandRanges)
+    terrain.addGroup(range.start, range.count, 0);
+  return { terrain, trees, islandRanges };
+}
+
+export function focusIslandGeometry(
+  geometry: THREE.BufferGeometry,
+  ranges: { id: string; start: number; count: number }[],
+  selected: string | null,
+) {
+  geometry.clearGroups();
+  for (const range of ranges) {
+    const material = range.id === selected ? 1 : 0;
+    const previous = geometry.groups.at(-1);
+    if (previous?.materialIndex === material) previous.count += range.count;
+    else geometry.addGroup(range.start, range.count, material);
+  }
 }
 
 export function buildTurtle() {

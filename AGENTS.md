@@ -56,6 +56,7 @@ Keep private things private. Share learnings, not exposure.
 - Category and tool navigation responds immediately. Turtle travel never delays navigation, opens details, steals focus, or drives the camera.
 - Keep journeys in navigable water and redirect from the current pose. SVG and 3D share one scene model and journey controller.
 - Preserve direct tool discovery and free map exploration. Category navigation must not force a zoom change in the organic home; keep manually explored center and scale through resize.
+- Map emphasis follows hover, keyboard focus, or explicit tap/click selection, never autonomous turtle travel. Keep inactive islands and annotations subdued; hovering must not redirect the turtle or camera, and drags/pinches must not select a shore.
 - Keep complete keyboard-accessible tool navigation independent of either renderer. Preserve readable overview labels, mobile sheet scrolling, and detail-dialog focus restoration.
 - Pause hidden, reduced-motion, and user-paused animation. Recover from cancelled loading or WebGL failure in 2D without losing navigation state.
 - Keep category palettes consistent across terrain, landmarks, HTML labels, and both renderers. Pair color with category names and landmark glyphs.

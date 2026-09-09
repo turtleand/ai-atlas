@@ -5,7 +5,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, extend } from "@react-three/fiber";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { buildAtlasGeometry, buildTurtle } from "./atlas-geometry";
+import {
+  buildAtlasGeometry,
+  buildTurtle,
+  focusIslandGeometry,
+} from "./atlas-geometry";
 import type { AtlasThreeProps } from "./atlas-renderer";
 import { freshTiming, sampleQuality } from "./quality";
 extend({
@@ -20,6 +24,7 @@ export function AtlasWorld({
   scene,
   view,
   driver,
+  selected,
   active,
   onReady,
   onFail,
@@ -39,6 +44,30 @@ export function AtlasWorld({
   const turtle = useMemo(() => buildTurtle(), []);
   const terrainMaterial = useMemo(
     () => new THREE.MeshLambertMaterial({ vertexColors: true }),
+    [],
+  );
+  const inactiveTerrain = useMemo(
+    () =>
+      new THREE.MeshLambertMaterial({
+        color: "#6b7a7e",
+        transparent: true,
+        opacity: 0.24,
+      }),
+    [],
+  );
+  const coastMaterials = useMemo(
+    () => [
+      new THREE.MeshBasicMaterial({
+        color: "#617577",
+        transparent: true,
+        opacity: 0.08,
+      }),
+      new THREE.MeshBasicMaterial({
+        color: "#477e79",
+        transparent: true,
+        opacity: 0.58,
+      }),
+    ],
     [],
   );
   const sea = useMemo(
@@ -79,9 +108,20 @@ export function AtlasWorld({
     const merged = geometries.length
       ? mergeGeometries(geometries)
       : new THREE.BufferGeometry();
-    geometries.forEach((g) => g.dispose());
+    let offset = 0;
+    geometries.forEach((g) => {
+      const count = g.index?.count ?? g.getAttribute("position").count;
+      merged.addGroup(offset, count, 0);
+      offset += count;
+      g.dispose();
+    });
     return merged;
   }, [scene]);
+  const coastRanges = useMemo(
+    () =>
+      coastGeometry.groups.map((g, n) => ({ ...g, id: scene.islands[n].id })),
+    [coastGeometry, scene],
+  );
   // The shared flat ocean avoids a full-screen animated fragment shader.
   const water = useMemo(
     () => new THREE.MeshBasicMaterial({ color: "#173e48", toneMapped: false }),
@@ -157,7 +197,8 @@ export function AtlasWorld({
     authored.trees.forEach((t, n) => {
       dummy.position.set(t.x, t.y + 13 * t.size, t.z);
       dummy.rotation.set(0.08, 0, 0.12);
-      dummy.scale.set(t.size, t.size, t.size);
+      const size = t.islandId === selected ? t.size : 0;
+      dummy.scale.set(size, size, size);
       dummy.updateMatrix();
       trunk.current?.setMatrixAt(n, dummy.matrix);
       for (let k = 0; k < 4; k++) {
@@ -169,7 +210,7 @@ export function AtlasWorld({
           t.z + Math.sin(a) * 8,
         );
         dummy.rotation.set(0, -a, 0.12);
-        dummy.scale.set(15 * t.size, 1.8, 4.3 * t.size);
+        dummy.scale.set(15 * size, size ? 1.8 : 0, 4.3 * size);
         dummy.updateMatrix();
         leaves.current?.setMatrixAt(index++, dummy.matrix);
       }
@@ -183,7 +224,13 @@ export function AtlasWorld({
       leaves.current.computeBoundingSphere();
     }
     invalidate();
-  }, [authored, invalidate, low]);
+  }, [authored, invalidate, low, selected]);
+  useLayoutEffect(() => {
+    // Adjacent inactive islands share one draw group; focus needs at most three.
+    focusIslandGeometry(authored.terrain, authored.islandRanges, selected);
+    focusIslandGeometry(coastGeometry, coastRanges, selected);
+    invalidate();
+  }, [authored, coastGeometry, coastRanges, selected, invalidate]);
   useEffect(() => {
     let disposed = false,
       frame = 0;
@@ -313,6 +360,8 @@ export function AtlasWorld({
       authored.terrain.dispose();
       coastGeometry.dispose();
       terrainMaterial.dispose();
+      inactiveTerrain.dispose();
+      coastMaterials.forEach((m) => m.dispose());
       trunkMaterial.dispose();
       leafMaterial.dispose();
       trunkGeometry.dispose();
@@ -329,6 +378,8 @@ export function AtlasWorld({
       sea,
       coastGeometry,
       terrainMaterial,
+      inactiveTerrain,
+      coastMaterials,
       trunkMaterial,
       leafMaterial,
       trunkGeometry,
@@ -359,10 +410,11 @@ export function AtlasWorld({
       >
         <planeGeometry args={[scene.width * 5, scene.height * 5]} />
       </mesh>
-      <mesh geometry={coastGeometry}>
-        <meshBasicMaterial color="#477e79" transparent opacity={0.58} />
-      </mesh>
-      <mesh geometry={authored.terrain} material={terrainMaterial} />
+      <mesh geometry={coastGeometry} material={coastMaterials} />
+      <mesh
+        geometry={authored.terrain}
+        material={[inactiveTerrain, terrainMaterial]}
+      />
       <instancedMesh
         ref={trunk}
         args={[trunkGeometry, trunkMaterial, authored.trees.length]}
