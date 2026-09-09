@@ -2,12 +2,14 @@ import { atlasCapture, capturedJourney } from "./capture";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type RefObject,
 } from "react";
 import { advanceJourney, redirectJourney, type Journey } from "./journey";
 import type { AtlasScene, Point } from "./atlas-model";
+import { fitScene, revealIsland, type ViewIntent } from "./atlas-camera";
 export interface AtlasView {
   center: Point;
   zoom: number;
@@ -22,7 +24,11 @@ export function projection(point: Point, view: AtlasView, depth = false) {
       (point.y - view.center.y) * view.zoom * (depth ? 0.72 : 1),
   };
 }
-export function useAtlasView(scene: AtlasScene, selected: string | null) {
+export function useAtlasView(
+  scene: AtlasScene,
+  _selected: string | null,
+  reduced = false,
+) {
   const ref = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<AtlasView>({
     center: { x: scene.width / 2, y: scene.height / 2 },
@@ -30,59 +36,132 @@ export function useAtlasView(scene: AtlasScene, selected: string | null) {
     width: 1,
     height: 1,
   });
-  const fit = useCallback(
-    (width: number, height: number, id: string | null = null): AtlasView => {
-      const island = scene.islands.find((i) => i.id === id);
-      const center = island
-        ? island.center
-        : { x: scene.width / 2 - 20, y: scene.height / 2 - 10 };
-      return {
-        width,
-        height,
-        center: { ...center },
-        zoom:
-          Math.min(
-            width / (island ? 550 : scene.width),
-            height / (island ? 460 : scene.height),
-          ) * 0.96,
-      };
-    },
-    [scene],
-  );
+  const viewRef = useRef(view),
+    intent = useRef<ViewIntent>("overview"),
+    all = useRef(false),
+    cameraFrame = useRef(0);
+  const depthRef = useRef(false);
+  useLayoutEffect(() => {
+    viewRef.current = view;
+  });
+  const cancelCamera = useCallback(() => {
+    cancelAnimationFrame(cameraFrame.current);
+    cameraFrame.current = 0;
+  }, []);
+  const manual = useCallback(() => {
+    cancelCamera();
+    intent.current = "manual";
+  }, [cancelCamera]);
+  useEffect(() => cancelCamera, [cancelCamera]);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const observer = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
-      setView(fit(width, height, selected));
+      cancelCamera();
+      setView((v) =>
+        intent.current === "manual" && v.width > 1
+          ? { ...v, width, height }
+          : fitScene(scene, width, height, all.current),
+      );
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [fit, selected]);
-  const reset = useCallback(
-    () => setView((v) => fit(v.width, v.height)),
-    [fit],
+  }, [scene, cancelCamera]);
+  useEffect(() => {
+    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+      document.documentElement.dataset.atlasView = JSON.stringify({
+        ...view,
+        intent: intent.current,
+      });
+  }, [view]);
+  const reset = useCallback(() => {
+    cancelCamera();
+    intent.current = "overview";
+    all.current = true;
+    setView((v) => fitScene(scene, v.width, v.height, true));
+  }, [scene, cancelCamera]);
+  const panTo = useCallback(
+    (target: Point) => {
+      cancelCamera();
+      const current = viewRef.current;
+      if (
+        Math.hypot(target.x - current.center.x, target.y - current.center.y) <
+        0.1
+      )
+        return;
+      intent.current = "manual";
+      if (reduced) {
+        setView((v) => ({ ...v, center: target }));
+        return;
+      }
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, Math.max(0, (now - start) / 240));
+        const ease = 1 - (1 - t) ** 3;
+        setView((v) => ({
+          ...v,
+          center: {
+            x: current.center.x + (target.x - current.center.x) * ease,
+            y: current.center.y + (target.y - current.center.y) * ease,
+          },
+        }));
+        if (t < 1) cameraFrame.current = requestAnimationFrame(tick);
+      };
+      cameraFrame.current = requestAnimationFrame(tick);
+    },
+    [cancelCamera, reduced],
   );
   const focus = useCallback(
-    (id: string) => setView((v) => fit(v.width, v.height, id)),
-    [fit],
+    (id: string) => {
+      cancelCamera();
+      const island = scene.islands.find((i) => i.id === id);
+      if (!island) return;
+      const current = viewRef.current;
+      const target = revealIsland(current, island, depthRef.current);
+      if (
+        Math.hypot(target.x - current.center.x, target.y - current.center.y) <
+        0.1
+      )
+        return;
+      panTo(target);
+    },
+    [scene, cancelCamera, panTo],
+  );
+  const reveal = useCallback(
+    (point: Point) => {
+      const v = viewRef.current,
+        p = projection(point, v, depthRef.current);
+      const x =
+        p.x < 90 ? p.x - 90 : p.x > v.width - 90 ? p.x - v.width + 90 : 0;
+      const y =
+        p.y < 34 ? p.y - 34 : p.y > v.height - 34 ? p.y - v.height + 34 : 0;
+      if (x || y)
+        panTo({
+          x: v.center.x + x / v.zoom,
+          y: v.center.y + y / v.zoom / (depthRef.current ? 0.72 : 1),
+        });
+    },
+    [panTo],
   );
   const zoom = useCallback(
-    (factor: number) =>
+    (factor: number) => {
+      manual();
       setView((v) => ({
         ...v,
         zoom: Math.max(0.12, Math.min(2.4, v.zoom * factor)),
-      })),
-    [],
+      }));
+    },
+    [manual],
   );
   const pointers = useRef(new Map<number, Point>());
   const previous = useRef<{ mid: Point; span: number } | null>(null);
-  const depthRef = useRef(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     function wheel(e: WheelEvent) {
       e.preventDefault();
+      manual();
       const rect = el!.getBoundingClientRect();
       setView((v) => {
         const scale = Math.max(
@@ -105,10 +184,11 @@ export function useAtlasView(scene: AtlasScene, selected: string | null) {
     }
     el.addEventListener("wheel", wheel, { passive: false });
     return () => el.removeEventListener("wheel", wheel);
-  }, []);
+  }, [manual]);
   const handlers = {
     onPointerDown(e: React.PointerEvent) {
       if (e.button !== 0 || (e.target as Element).closest("button,a")) return;
+      manual();
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
       previous.current = null;
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -119,8 +199,8 @@ export function useAtlasView(scene: AtlasScene, selected: string | null) {
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
       const values = [...pointers.current.values()];
       if (values.length > 1) {
-        const [a, b] = values;
-        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+        const [a, b] = values,
+          mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
           span = Math.hypot(a.x - b.x, a.y - b.y);
         const last = previous.current;
         if (last)
@@ -158,7 +238,17 @@ export function useAtlasView(scene: AtlasScene, selected: string | null) {
       previous.current = null;
     },
   };
-  return { ref, view, focus, reset, zoom, handlers, depthRef };
+  // Presentation changes are not navigation, even when their available width changes.
+  return {
+    ref,
+    view,
+    focus,
+    reset,
+    zoom,
+    handlers,
+    depthRef,
+    reveal,
+  };
 }
 export function useMotionPolicy() {
   const [reduced, setReduced] = useState(
@@ -188,7 +278,8 @@ export function useJourney(
   paused: boolean,
   reduced: boolean,
 ) {
-  const ref = useRef(capturedJourney(scene));
+  const [initial] = useState(() => capturedJourney(scene));
+  const ref = useRef(initial);
   const listeners = useRef(new Set<() => void>());
   useEffect(() => {
     ref.current = capturedJourney(scene);

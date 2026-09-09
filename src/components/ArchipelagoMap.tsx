@@ -7,13 +7,15 @@ import {
   useState,
   type ComponentType,
   type ReactNode,
+  type CSSProperties,
 } from "react";
 import { Link } from "react-router-dom";
 import type { Category, Tool } from "../utils/parseTools";
 import { atlasCapture } from "./atlas/capture";
 import { createScene } from "./atlas/atlas-model";
 import { AtlasSvg } from "./atlas/AtlasSvg";
-import { AtlasLabels } from "./atlas/AtlasLabels";
+import { AtlasDiscovery, type ToolPreview } from "./atlas/AtlasDiscovery";
+import "../styles/atlas-guided.css";
 import { useAtlasView, useJourney, useMotionPolicy } from "./atlas/useAtlas";
 import type { AtlasThreeProps } from "./atlas/AtlasThree";
 import { JournalPanel } from "./JournalPanel";
@@ -35,6 +37,7 @@ class SceneBoundary extends Component<
 }
 export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const scene = useMemo(() => createScene(categories), [categories]);
+  const [preview, setPreview] = useState<ToolPreview>(null);
   const [selected, setSelected] = useState<string | null>(
     () =>
       scene.islands.find((i) => i.id === atlasCapture()?.selection)?.id ?? null,
@@ -66,7 +69,8 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     zoom,
     handlers,
     depthRef,
-  } = useAtlasView(scene, selected);
+    reveal,
+  } = useAtlasView(scene, selected, reduced);
   const journey = useJourney(
     scene,
     paused || !!journal || !visible || staticQuality,
@@ -138,12 +142,6 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     update();
     return driver.subscribe(update);
   }, [driver]);
-  useEffect(() => {
-    if (expanded && selected && window.innerWidth <= 760)
-      document
-        .querySelector(".atlas-tools")
-        ?.scrollIntoView({ block: "nearest" });
-  }, [expanded, selected]);
   const select = (id: string) => {
     const start = performance.now();
 
@@ -156,11 +154,20 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           performance.now() - start,
         );
       });
-    setExpanded(false);
   };
   const openTool = (tool: Tool, categoryId: string) => {
+    const start = performance.now();
     origin.current = document.activeElement as HTMLElement;
+    setPreview(null);
+    setSelected(categoryId);
+    journey.select(categoryId);
     setJournal({ tool, categoryId });
+    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
+      requestAnimationFrame(() => {
+        document.documentElement.dataset.atlasToolMs = String(
+          performance.now() - start,
+        );
+      });
   };
   const closeTool = useCallback(() => {
     setJournal(null);
@@ -175,15 +182,15 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
       if (event.key === "Escape" && !journal) {
         setExpanded(false);
         setSelected(null);
-        resetView();
       }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [journal, resetView]);
+  }, [journal]);
   return (
     <main
       className="living-atlas"
+      data-variant="rail"
       data-mode={depth ? "3d" : "2d"}
       data-motion={
         paused || reduced || !visible || journal || staticQuality
@@ -191,14 +198,21 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           : "running"
       }
     >
-      <a className="atlas-skip" href="#atlas-directory">
+      <a
+        className="atlas-skip"
+        href="#atlas-directory"
+        onClick={() => setExpanded(true)}
+      >
         Explore the tool directory
       </a>
       <header className="atlas-header">
         <Link
           className="atlas-brand"
           to="/"
-          onClick={reset}
+          onClick={(event) => {
+            event.preventDefault();
+            reset();
+          }}
           aria-label="AI Atlas overview"
         >
           <svg viewBox="0 0 48 40" aria-hidden="true">
@@ -245,24 +259,13 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
             aria-controls="atlas-directory-content"
             onClick={() => setExpanded((v) => !v)}
           >
-            <span>
-              {island
-                ? island.category.name
-                : `${scene.islands.length} islands to explore`}
-            </span>
+            <span>All tools · directory</span>
             <span aria-hidden="true">{expanded ? "−" : "+"}</span>
           </button>
           <div id="atlas-directory-content" className="atlas-directory-content">
             <div className="atlas-intro">
               <span className="atlas-eyebrow">THE ARCHIPELAGO</span>
-              <h1>
-                Find your
-                <br />
-                next shore.
-              </h1>
-              <p>
-                Tools I’ve charted on my journey. Choose an island to explore.
-              </p>
+              <h1>Explore the shores</h1>
             </div>
             <div className="atlas-directory-heading">
               <span>AI SPACES</span>
@@ -275,6 +278,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                 <button
                   key={i.id}
                   className="atlas-category"
+                  style={{ "--island-accent": i.accent } as CSSProperties}
                   aria-pressed={selected === i.id}
                   onClick={() => select(i.id)}
                 >
@@ -290,15 +294,26 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                 </button>
               ))}
             </nav>
-            {island && (
+            <button
+              className="atlas-all-tools"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? "Categories" : "Browse every tool"}{" "}
+              <span aria-hidden="true">↗</span>
+            </button>
+            {(expanded ? scene.islands : []).map((island) => (
               <section
+                key={island.id}
                 className="atlas-tools"
                 aria-label={`${island.category.name} tools`}
               >
                 <div className="atlas-directory-heading">
-                  <span>{island.category.name}</span>
-                  <button onClick={reset} aria-label="Show all islands">
-                    ↗
+                  <button
+                    className="atlas-section-title"
+                    onClick={() => select(island.id)}
+                  >
+                    {island.category.name} · {island.category.tools.length}
                   </button>
                 </div>
                 {island.category.tools.map((tool) => (
@@ -307,17 +322,15 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                     key={tool.id}
                     onClick={() => openTool(tool, island.id)}
                   >
-                    <span>{tool.name}</span>
+                    <span>
+                      {tool.name}
+                      <small>{tool.description}</small>
+                    </span>
                     <span aria-hidden="true">↗</span>
                   </button>
                 ))}
               </section>
-            )}
-            <p className="atlas-directory-foot">
-              A map for orientation.
-              <br />
-              Your judgment sets the course.
-            </p>
+            ))}
           </div>
         </aside>
         <section className="atlas-map-area" aria-label="Interactive island map">
@@ -325,11 +338,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
             <span className="atlas-eyebrow">
               {island ? island.category.name : "THE KNOWN SHORES"}
             </span>
-            <span>
-              {island
-                ? "Select a tool or explore another island"
-                : "Choose an island. Follow your curiosity."}
-            </span>
+            <span>Drag to roam · open any tool</span>
           </div>
           <div className="atlas-controls" aria-label="Map controls">
             <div
@@ -436,25 +445,28 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                 </div>
               </SceneBoundary>
             )}
-            <AtlasLabels
-              scene={scene}
-              view={view}
-              selected={selected}
-              depth={depth}
-              onSelect={select}
-              onTool={openTool}
-            />
+            {view.width > 1 && (
+              <AtlasDiscovery
+                scene={scene}
+                view={view}
+                selected={selected}
+                depth={depth}
+                names
+                onSelect={select}
+                onTool={openTool}
+                onReveal={reveal}
+                preview={preview}
+                onPreview={setPreview}
+              />
+            )}
             {!scene.islands.length && (
               <p className="atlas-empty">New shores are being charted.</p>
             )}
           </div>
           <div className="atlas-map-footer">
-            <span>
-              <i />{" "}
-              {paused || reduced || staticQuality
-                ? "A moment at the shore"
-                : "A turtle, a little curiosity, an open sea"}
-            </span>
+            <button className="atlas-overview" onClick={reset}>
+              Show all islands
+            </button>
             <div>
               <button aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>
                 −
@@ -481,14 +493,6 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               )}
             </div>
           )}
-          {island && (
-            <div className="atlas-mobile-tools">
-              <button onClick={() => setExpanded(true)}>
-                Explore {island.category.tools.length} tools in{" "}
-                {island.category.name} <span>↑</span>
-              </button>
-            </div>
-          )}
         </section>
       </div>
       <nav className="atlas-navigation" aria-label="Atlas and Turtleand">
@@ -505,6 +509,17 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           Tsunami <span>↗</span>
         </Link>
       </nav>
+      {preview && !journal && (
+        <div
+          id="atlas-tool-preview"
+          role="tooltip"
+          className="atlas-tool-preview"
+          style={{ left: preview.x, top: preview.y }}
+        >
+          <strong>{preview.tool.name}</strong>
+          <p>{preview.tool.description}</p>
+        </div>
+      )}
       {journal && journalIsland && (
         <JournalPanel
           toolName={journal.tool.name}

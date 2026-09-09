@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { random, type AtlasScene } from "./atlas-model";
+import { random, islandPoint, type AtlasScene } from "./atlas-model";
 
 type V3 = [number, number, number];
 export function buildAtlasGeometry(scene: AtlasScene) {
@@ -48,8 +48,8 @@ export function buildAtlasGeometry(scene: AtlasScene) {
       base = 22;
     for (const [scale, y, height, color] of [
       [1, 0, 5, "#c5bb91"],
-      [0.9, 5, 8, "#678d67"],
-      [0.67, 13, 8, "#8ea478"],
+      [0.9, 5, 8, island.palette.land],
+      [0.67, 13, 8, island.palette.raised],
     ] as const) {
       const shape = new THREE.Shape(
         island.coast.map(
@@ -196,15 +196,76 @@ export function buildAtlasGeometry(scene: AtlasScene) {
         box(48, 32, 26, 12, 9, 1, accent);
         break;
     }
-    const dockX = c.x + island.radius * 0.99;
-    add(new THREE.BoxGeometry(30, 3, 17), "#baab86", [dockX, 5, c.y + 22]);
+    add(new THREE.CylinderGeometry(62, 66, 5, 8), "#334d56", [c.x, base, c.y]);
+    for (const x of [-46, 46]) box(x, 4, 23, 16, 2, 4, accent);
+    if (island.landmark === "pavilion" || island.landmark === "harbor") {
+      box(0, 80, 0, 3, 34, 3, dark);
+      add(new THREE.OctahedronGeometry(6), accent, [c.x, base + 99, c.y]);
+      box(0, 87, 0, 34, 2, 2, accent);
+    }
+    if (island.landmark === "pigment")
+      for (let n = -1; n <= 1; n++)
+        add(
+          new THREE.OctahedronGeometry(15),
+          accent,
+          [c.x + n * 34, base + 48 + n * 5, c.y],
+          [0.65, 1.5, 0.65],
+        );
+    if (island.landmark === "cinema") {
+      box(-49, 34, -10, 4, 72, 4, accent);
+      box(49, 34, -10, 4, 72, 4, accent);
+      box(0, 70, -10, 102, 3, 4, accent);
+    }
+    if (island.landmark === "workshop") {
+      box(30, 54, -13, 13, 58, 16, dark);
+      for (let n = 0; n < 3; n++) box(30, 55 + n * 8, -4, 9, 3, 2, accent);
+      box(-35, 6, 29, 43, 7, 19, dark);
+      for (let n = 0; n < 4; n++) box(-50 + n * 10, 10, 29, 2, 2, 19, accent);
+    }
+    if (island.landmark === "observatory") {
+      add(
+        new THREE.TorusGeometry(37, 1.7, 4, 24),
+        accent,
+        [c.x, base + 32, c.y],
+        [1, 1, 1],
+        [Math.PI / 2, 0, 0],
+      );
+      box(-42, 28, 0, 2, 65, 2, dark);
+      box(-42, 63, 0, 12, 2, 2, accent);
+    }
+    if (island.landmark === "library") {
+      box(-6, 57, 0, 22, 3, 25, accent);
+      box(7, 62, 0, 22, 3, 25, accent);
+      for (const x of [-29, -15, 15, 29]) box(x, 28, 24, 6, 2, 2, accent);
+    }
+    if (island.landmark === "utilities")
+      for (let n = -1; n <= 1; n++) box(n * 28, 54, 0, 2, 22, 2, accent);
+    if (island.landmark === "harbor")
+      for (const x of [-33, 33]) {
+        box(x, 19, 28, 17, 38, 17, dark);
+        box(x, 40, 28, 19, 3, 19, accent);
+      }
+    if (island.landmark === "jetty") {
+      box(38, 35, 26, 4, 70, 4, dark);
+      box(52, 68, 26, 31, 5, 5, cream);
+      box(65, 45, 26, 1, 44, 1, accent);
+      box(65, 17, 26, 16, 16, 16, accent);
+    }
+    add(
+      new THREE.BoxGeometry(30, 3, 17),
+      "#baab86",
+      [island.jetty.x, 5, island.jetty.y],
+      [1, 1, 1],
+      [0, -island.rotation, 0],
+    );
     for (let n = 0; n < 7; n++) {
       const a = rng() * Math.PI * 2,
         r = island.radius * (0.6 + rng() * 0.12);
+      const p = islandPoint(island, Math.cos(a) * r, Math.sin(a) * r * 0.7);
       trees.push({
-        x: c.x + Math.cos(a) * r,
+        x: p.x,
         y: 14,
-        z: c.y + Math.sin(a) * r * 0.7,
+        z: p.y,
         angle: rng() * 6,
         size: 0.75 + rng() * 0.45,
       });

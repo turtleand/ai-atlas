@@ -1,7 +1,10 @@
+import { STROKE_RATE } from "./journey";
+import { AtlasSea } from "./AtlasSea";
 import { useEffect, useRef } from "react";
 import {
   coastPath,
   random,
+  islandPoint,
   type AtlasScene,
   type AtlasIsland,
 } from "./atlas-model";
@@ -15,13 +18,25 @@ function IslandArt({
   island: AtlasIsland;
   selected: boolean;
 }) {
-  const { center: c, coast, seed, accent } = island;
+  const { center: c, coast, seed, accent, palette } = island;
   const d = coastPath(coast),
     rng = random(seed);
+  const trail = [
+    islandPoint(island, 35, 27),
+    islandPoint(island, 83, 55),
+    islandPoint(island, island.radius, 26),
+  ];
   const transform = (scale: number, dy = 0) =>
     `translate(${c.x},${c.y + dy}) scale(${scale}) translate(${-c.x},${-c.y})`;
   return (
     <g>
+      <defs>
+        <linearGradient id={`land-${island.id}`} x2=".5" y2="1">
+          <stop stopColor={palette.raised} />
+          <stop offset=".5" stopColor={palette.land} />
+          <stop offset="1" stopColor={palette.shadow} />
+        </linearGradient>
+      </defs>
       <path
         d={d}
         transform={transform(1.25, 10)}
@@ -31,7 +46,7 @@ function IslandArt({
       <path
         d={d}
         transform={transform(1.17, 8)}
-        fill="#3c9490"
+        fill={accent}
         opacity=".19"
         stroke="#7bb9a0"
         strokeWidth="1"
@@ -41,35 +56,35 @@ function IslandArt({
       <path
         d={d}
         transform={transform(0.91, -3)}
-        fill="url(#atlas-land)"
-        stroke="#a5b592"
+        fill={`url(#land-${island.id})`}
+        stroke={palette.raised}
         strokeWidth="2.5"
       />
       <path
         d={d}
         transform={transform(0.75, -13)}
-        fill="#728d6b"
+        fill={palette.land}
         opacity=".7"
-        stroke="#94a583"
+        stroke={palette.raised}
         strokeWidth="1.2"
       />
       <path
         d={d}
         transform={transform(0.55, -22)}
-        fill="#8da27c"
+        fill={palette.raised}
         opacity=".5"
       />
       <path
         d={d}
         transform={transform(1.12, 5)}
         fill="none"
-        stroke={selected ? accent : "#99d0bc"}
+        stroke={accent}
         strokeWidth={selected ? 3 : 1.2}
         opacity={selected ? 0.85 : 0.3}
         strokeDasharray={selected ? undefined : "14 19 4 21"}
       />
       <path
-        d={`M${c.x + 35},${c.y + 27} Q${c.x + 83},${c.y + 55} ${c.x + island.radius},${c.y + 26}`}
+        d={`M${trail[0].x},${trail[0].y} Q${trail[1].x},${trail[1].y} ${trail[2].x},${trail[2].y}`}
         stroke="#dbd0a0"
         strokeWidth="8"
         fill="none"
@@ -78,8 +93,11 @@ function IslandArt({
       {Array.from({ length: 7 }, (_, n) => {
         const a = rng() * Math.PI * 2,
           r = island.radius * (0.57 + rng() * 0.19),
-          x = c.x + Math.cos(a) * r,
-          y = c.y + Math.sin(a) * r * 0.68;
+          { x, y } = islandPoint(
+            island,
+            Math.cos(a) * r,
+            Math.sin(a) * r * 0.68,
+          );
         return (
           <g key={n} transform={`translate(${x},${y})`}>
             <ellipse
@@ -109,7 +127,7 @@ function IslandArt({
         <AtlasLandmark kind={island.landmark} accent={accent} />
       </g>
       <g
-        transform={`translate(${c.x + island.radius * 0.99},${c.y + 22}) rotate(-8)`}
+        transform={`translate(${island.jetty.x},${island.jetty.y}) rotate(${(island.rotation * 180) / Math.PI - 8})`}
       >
         <path d="M-10-9H19V9H-10Z" fill="#ad9871" stroke="#645e44" />
         <path d="M-4-9V9M4-9V9M12-9V9" stroke="#ddcda2" strokeWidth="1.4" />
@@ -260,7 +278,7 @@ export function AtlasSvg({
         const side = Number(sideString),
           front = part === "front";
         const angle =
-          Math.sin(j.time * 4 + (front ? 0 : 1)) *
+          Math.sin(j.time * STROKE_RATE + (front ? 0 : 1)) *
           (front ? 18 : 7) *
           side *
           (j.phase === "visit" ? 0.18 : 1);
@@ -306,11 +324,6 @@ export function AtlasSvg({
           <stop stopColor="#e4d6ab" />
           <stop offset="1" stopColor="#b9ab80" />
         </linearGradient>
-        <linearGradient id="atlas-land" x2=".5" y2="1">
-          <stop stopColor="#91a67b" />
-          <stop offset=".5" stopColor="#678866" />
-          <stop offset="1" stopColor="#3c6855" />
-        </linearGradient>
         <radialGradient id="atlas-shell" cx=".3" cy=".25">
           <stop stopColor="#c5bc7b" />
           <stop offset=".6" stopColor="#8e9560" />
@@ -343,6 +356,7 @@ export function AtlasSvg({
             />
           ))}
         </g>
+        <AtlasSea scene={scene} driver={driver} />
         {scene.islands.map((island) => (
           <IslandArt
             key={island.id}

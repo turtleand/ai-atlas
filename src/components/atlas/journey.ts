@@ -4,6 +4,8 @@ import {
   type AtlasScene,
   type Point,
 } from "./atlas-model";
+export const CRUISE_SPEED = 410;
+export const STROKE_RATE = 6;
 export type JourneyPhase = "depart" | "swim" | "approach" | "visit";
 export interface Journey {
   position: Point;
@@ -104,7 +106,8 @@ export function advanceJourney(scene: AtlasScene, j: Journey, elapsed: number) {
       continue;
     }
     const left = j.length - j.traveled;
-    const speed = 88 * Math.min(1, 0.32 + j.traveled / 90, 0.23 + left / 100);
+    const speed =
+      CRUISE_SPEED * Math.min(1, 0.32 + j.traveled / 180, 0.15 + left / 210);
     j.traveled = Math.min(j.length, j.traveled + speed * dt);
     j.phase = left < 85 ? "approach" : j.traveled < 65 ? "depart" : "swim";
     let k = 1;

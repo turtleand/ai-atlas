@@ -1,3 +1,6 @@
+import { STROKE_RATE } from "./journey";
+import { buildSeaGeometry } from "./atlas-sea-geometry";
+import { featureMotion } from "./atlas-features";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, extend } from "@react-three/fiber";
 import * as THREE from "three";
@@ -37,6 +40,10 @@ export function AtlasWorld({
   const terrainMaterial = useMemo(
     () => new THREE.MeshLambertMaterial({ vertexColors: true }),
     [],
+  );
+  const sea = useMemo(
+    () => buildSeaGeometry(scene, terrainMaterial),
+    [scene, terrainMaterial],
   );
   const trunkMaterial = useMemo(
     () => new THREE.MeshLambertMaterial({ color: "#a2946b" }),
@@ -233,6 +240,9 @@ export function AtlasWorld({
       routeGeometry.computeBoundingSphere();
       routeLine.computeLineDistances();
     }
+    sea.roots.forEach((root, n) => {
+      root.position.y = featureMotion(scene.features[n], j.time);
+    });
     turtle.root.position.set(
       j.position.x,
       Math.sin(j.time * 2) * 0.3,
@@ -243,7 +253,7 @@ export function AtlasWorld({
     turtle.root.scale.setScalar(scale);
     turtle.paddles.forEach((p, n) => {
       p.rotation.y =
-        Math.sin(j.time * 4 + (n % 2 ? 0 : 1)) *
+        Math.sin(j.time * STROKE_RATE + (n % 2 ? 0 : 1)) *
         (n % 2 ? 0.3 : 0.12) *
         (n < 2 ? -1 : 1) *
         (j.phase === "visit" ? 0.18 : 1);
@@ -299,6 +309,7 @@ export function AtlasWorld({
   });
   useEffect(
     () => () => {
+      sea.dispose();
       authored.terrain.dispose();
       coastGeometry.dispose();
       terrainMaterial.dispose();
@@ -315,6 +326,7 @@ export function AtlasWorld({
     },
     [
       authored,
+      sea,
       coastGeometry,
       terrainMaterial,
       trunkMaterial,
@@ -331,6 +343,9 @@ export function AtlasWorld({
   );
   return (
     <>
+      {sea.roots.map((root, n) => (
+        <primitive key={scene.features[n].id} object={root} dispose={null} />
+      ))}
       <ambientLight intensity={1.45} />
       <directionalLight
         position={[-400, 900, -500]}

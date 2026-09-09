@@ -8,7 +8,14 @@ import {
   isWater,
   distance,
 } from "./atlas-model";
-import { advanceJourney, createJourney, redirectJourney } from "./journey";
+import {
+  advanceJourney,
+  createJourney,
+  redirectJourney,
+  CRUISE_SPEED,
+} from "./journey";
+import { buildSeaGeometry } from "./atlas-sea-geometry";
+import { MeshLambertMaterial } from "three";
 import { buildAtlasGeometry, buildTurtle } from "./atlas-geometry";
 const categories = parseToolsYaml(data);
 const scene = createScene(categories);
@@ -29,6 +36,20 @@ describe("living archipelago geography", () => {
         for (let n = 1; n < path!.length; n++)
           expect(clearSegment(scene, path![n - 1], path![n])).toBe(true);
       }
+  });
+  it("keeps seven deterministic sea features clear of docks and blocks their territory", () => {
+    expect(scene.features).toHaveLength(7);
+    expect(createScene([...categories].reverse()).features).toEqual(
+      scene.features,
+    );
+    for (const f of scene.features) {
+      expect(isWater(scene, f.center), f.name).toBe(false);
+      for (const i of scene.islands)
+        expect(distance(f.center, i.dock)).toBeGreaterThan(f.radius + 140);
+      expect(findWaterPath(scene, f.center, scene.islands[0].dock)).toBeNull();
+    }
+    expect(createScene([]).features).toHaveLength(0);
+    expect(createScene(categories.slice(0, 1)).features).toHaveLength(0);
   });
   it("rejects paths through land and handles empty and single-island scenes", () => {
     expect(
@@ -54,7 +75,9 @@ describe("turtle journey continuity", () => {
       advanceJourney(scene, j, 1 / 60);
       phases.add(j.phase);
       expect(isWater(scene, j.position)).toBe(true);
-      expect(distance(before, j.position)).toBeLessThan(2);
+      expect(distance(before, j.position)).toBeLessThanOrEqual(
+        CRUISE_SPEED / 60 + 0.001,
+      );
       if (j.phase === "visit") {
         arrived = true;
         break;
@@ -108,6 +131,19 @@ describe("procedural asset budgets", () => {
         triangles += (g.index?.count ?? g.getAttribute("position").count) / 3;
       }
     });
+    const material = new MeshLambertMaterial({ vertexColors: true }),
+      sea = buildSeaGeometry(scene, material);
+    expect(sea.roots).toHaveLength(7);
+    for (const mesh of sea.roots) {
+      triangles += mesh.geometry.getAttribute("position").count / 3;
+      expect(
+        [...mesh.geometry.getAttribute("position").array].every(
+          Number.isFinite,
+        ),
+      ).toBe(true);
+    }
+    sea.dispose();
+    material.dispose();
     expect(triangles).toBeLessThan(35000);
     expect(
       [...a.terrain.getAttribute("position").array].every(Number.isFinite),

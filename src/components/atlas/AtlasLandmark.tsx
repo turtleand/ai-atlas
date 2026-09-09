@@ -8,9 +8,9 @@ export function AtlasLandmark({
   kind: Landmark;
   accent: string;
 }) {
-  const ink = "#233e39",
-    wall = "#d8ceb0",
-    roof = "#526f63";
+  const ink = "#203743",
+    wall = "#d0d4c2",
+    roof = "#3d5a68";
   return (
     <g stroke={ink} strokeWidth="1.5" strokeLinejoin="round">
       <ellipse
@@ -20,6 +20,22 @@ export function AtlasLandmark({
         fill="#173d32"
         opacity=".28"
         stroke="none"
+      />
+      <path
+        d="M-62 17-45-1 26-8 62 14 44 38-24 47Z"
+        fill="#334d56"
+        stroke="#93aba6"
+      />
+      <path
+        d="M-61 20-24 44 43 35 59 17M-24 44V49M43 35V40"
+        fill="none"
+        stroke={accent}
+        strokeWidth="2"
+      />
+      <path
+        d="M-48 28-39 33M-34 37-27 40M34 37 42 34"
+        stroke="#e3dfba"
+        strokeWidth="3"
       />
       {kind === "pavilion" && (
         <>
@@ -152,6 +168,162 @@ export function AtlasLandmark({
           <path d="M29 4V-22L45-17 29-11" fill={accent} />
         </>
       )}
+      {/* Small authored fittings give each familiar landmark its frontier role. */}
+      {kind === "pavilion" && (
+        <>
+          <path
+            d="M0-54V-76M-13-67 0-74 13-67M-20-60 0-70 20-60"
+            fill="none"
+            stroke={accent}
+            strokeWidth="3"
+          />
+          <circle cy="-78" r="4" fill={accent} />
+          <path
+            d="M-27 12-12 20 14 16 25 8"
+            fill="none"
+            stroke={accent}
+            strokeWidth="3"
+          />
+        </>
+      )}
+      {kind === "pigment" &&
+        [-1, 0, 1].map((n) => (
+          <g key={n} transform={`translate(${n * 33},${n === 0 ? 6 : -9})`}>
+            <path d="M-10-25 0-52 12-27 0-16Z" fill={accent} />
+            <path d="M0-52V-16L12-27Z" fill="#6c4f86" />
+            <path d="M-13-12H13" stroke="#e0dbcf" strokeWidth="3" />
+          </g>
+        ))}
+      {kind === "cinema" && (
+        <>
+          <path
+            d="M-52-44-49-54 46-46 52-33M-52-44V8M52-33V15"
+            fill="none"
+            stroke={accent}
+            strokeWidth="3"
+          />
+          <path
+            d="M-31-29 29-24M-31-21 29-16M-31-13 29-8M-31-5 29 0"
+            opacity=".25"
+            stroke={accent}
+          />
+          <path d="M-29 37-7 28 25 33 7 43Z" fill="#334d56" stroke={accent} />
+        </>
+      )}
+      {kind === "workshop" && (
+        <>
+          <path d="M28-25V-58L40-63 48-57V-20" fill={roof} />
+          <path
+            d="M34-49 42-52M34-41 42-44M34-33 42-36"
+            stroke={accent}
+            strokeWidth="3"
+          />
+          <path d="M-30 28-51 40-27 50-6 38Z" fill="#334d56" stroke={accent} />
+          <path d="M-37 35-15 44M-44 39-23 48" stroke={wall} strokeWidth="3" />
+        </>
+      )}
+      {kind === "observatory" && (
+        <>
+          <ellipse
+            cy="-6"
+            rx="39"
+            ry="19"
+            fill="none"
+            stroke={accent}
+            strokeWidth="3"
+          />
+          <path
+            d="M-40 15V-39M-45-40H-35M-44-48-40-52-36-48"
+            fill="none"
+            stroke={wall}
+            strokeWidth="2"
+          />
+          <circle cx="-40" cy="-40" r="3" fill={accent} />
+        </>
+      )}
+      {kind === "library" && (
+        <>
+          <path d="M-23-27-6-43 13-33-4-18Z" fill={accent} />
+          <path
+            d="M-6-43V-29L-4-18 13-33M-19-24-3-14 14-28"
+            fill="none"
+            stroke={wall}
+            strokeWidth="2"
+          />
+          <path d="M-41 22-9 33M15 33 41 23" stroke={accent} strokeWidth="3" />
+        </>
+      )}
+      {kind === "utilities" && (
+        <>
+          <path
+            d="M-32-33V-51M0-31V-55M31-33V-49"
+            stroke={accent}
+            strokeWidth="3"
+          />
+          <path
+            d="M-10 34-9 23 3 17 15 24V35L3 42Z"
+            fill={roof}
+            stroke={accent}
+          />
+          <path d="M-4 27 3 23 10 27 3 33Z" fill={accent} />
+        </>
+      )}
+      {kind === "harbor" && (
+        <>
+          <path
+            d="M3-49V-75M-11-68 3-75 17-68M-4-59 3-64 10-59"
+            fill="none"
+            stroke={accent}
+            strokeWidth="3"
+          />
+          <path
+            d="M-40 5-40-19-28-25-20-18V8M29-4V-27L39-32 49-25V-8"
+            fill={roof}
+            stroke={accent}
+          />
+        </>
+      )}
+      {kind === "jetty" && (
+        <>
+          <path
+            d="M28 12V-36L54-50V-42L35-31V15M53-44V-12"
+            fill={roof}
+            stroke={wall}
+            strokeWidth="3"
+          />
+          <path d="M40-11 49-17 58-12V0L49 5 40 0Z" fill={accent} />
+          <path
+            d="M-30 2-16-5-1 1V13L-16 20-30 13Z"
+            fill={roof}
+            stroke={accent}
+          />
+        </>
+      )}
     </g>
+  );
+}
+
+export function AtlasGlyph({ kind }: { kind: Landmark }) {
+  const paths: Record<Landmark, string> = {
+    pavilion: "M2 2h12v8H8l-4 4v-4H2Z",
+    pigment: "m8 1 6 7-6 7-6-7Z M8 1v14M2 8h12",
+    cinema: "M1 3h14v10H1Z M6 5l5 3-5 3Z",
+    workshop: "m5 3-4 5 4 5M11 3l4 5-4 5M9 2 7 14",
+    observatory: "m3 10 7-8 4 4-8 7ZM7 11l-2 4M7 11l5 4",
+    library: "M8 4 1 2v10l7 2 7-2V2ZM8 4v10",
+    utilities: "M2 1h12v14H2ZM5 4h6M5 8h6M5 12h6",
+    harbor: "M6 1h4v5H6ZM1 11h4v4H1ZM11 11h4v4h-4ZM8 6v3H3v2M8 9h5v2",
+    jetty: "m1 5 7-4 7 4v7l-7 3-7-3ZM1 5l7 4 7-4M8 9v6",
+  };
+  return (
+    <svg className="atlas-glyph" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d={paths[kind]}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
