@@ -9,6 +9,8 @@ import {
 } from "./atlas-model";
 import { discoveryLayout } from "./AtlasDiscovery";
 import { fitScene, revealIsland } from "./atlas-camera";
+import { shoreSignpostLayout } from "./shore-signposts";
+import { projection } from "./useAtlas";
 const categories = parseToolsYaml(data);
 const scene = createScene(categories);
 describe("organic discovery", () => {
@@ -61,14 +63,17 @@ describe("organic discovery", () => {
       [374, 500],
       [828, 180],
     ]) {
-      const labels = discoveryLayout(
-        scene,
-        fitScene(scene, width, height, true),
-        false,
-        false,
-        false,
-      );
+      const view = fitScene(scene, width, height);
+      const labels = discoveryLayout(scene, view, false, false, false);
       expect(labels).toHaveLength(9);
+      for (const island of scene.islands)
+        for (const point of island.coast) {
+          const { x, y } = projection(point, view);
+          expect(x).toBeGreaterThanOrEqual(0);
+          expect(x).toBeLessThanOrEqual(width);
+          expect(y).toBeGreaterThanOrEqual(0);
+          expect(y).toBeLessThanOrEqual(height);
+        }
       for (const [n, label] of labels.entries()) {
         for (const other of labels.slice(n + 1))
           expect(
@@ -83,6 +88,41 @@ describe("organic discovery", () => {
       }
     }
   });
+  it.each([
+    [1118, 630, false, false, 15],
+    [1118, 630, true, false, 15],
+    [390, 335, false, true, 9],
+    [320, 307, false, true, 9],
+    [320, 270, false, true, 9],
+  ])(
+    "fits the featured signposts at %sx%s with depth %s",
+    (width, height, depth, compact, count) => {
+      const signs = shoreSignpostLayout(
+        scene,
+        fitScene(scene, width, height),
+        depth,
+        compact,
+      );
+      expect(signs.flatMap((sign) => sign.tools)).toHaveLength(count);
+      expect(
+        signs
+          .find((sign) => sign.island.id === "images")
+          ?.tools.map((tool) => tool.id),
+      ).toEqual(compact ? ["nano-banana"] : ["nano-banana", "recraft"]);
+      for (const [index, sign] of signs.entries()) {
+        expect(sign.x - sign.w / 2).toBeGreaterThanOrEqual(0);
+        expect(sign.x + sign.w / 2).toBeLessThanOrEqual(width);
+        expect(sign.y - sign.h / 2).toBeGreaterThanOrEqual(0);
+        expect(sign.y + sign.h / 2).toBeLessThanOrEqual(height);
+        for (const other of signs.slice(index + 1))
+          expect(
+            Math.abs(sign.x - other.x) >= (sign.w + other.w) / 2 ||
+              Math.abs(sign.y - other.y) >= (sign.h + other.h) / 2,
+            `${sign.island.id} overlaps ${other.island.id}`,
+          ).toBe(true);
+      }
+    },
+  );
   it("keeps visible selections still and pans clipped coastlines without zoom", () => {
     const overview = fitScene(scene, 1200, 700);
     expect(revealIsland(overview, scene.islands[0], false)).toEqual(

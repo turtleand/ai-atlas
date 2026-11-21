@@ -38,7 +38,6 @@ export function useAtlasView(
   });
   const viewRef = useRef(view),
     intent = useRef<ViewIntent>("overview"),
-    all = useRef(false),
     cameraFrame = useRef(0);
   const depthRef = useRef(false);
   useLayoutEffect(() => {
@@ -62,7 +61,7 @@ export function useAtlasView(
       setView((v) =>
         intent.current === "manual" && v.width > 1
           ? { ...v, width, height }
-          : fitScene(scene, width, height, all.current),
+          : fitScene(scene, width, height),
       );
     });
     observer.observe(el);
@@ -78,8 +77,7 @@ export function useAtlasView(
   const reset = useCallback(() => {
     cancelCamera();
     intent.current = "overview";
-    all.current = true;
-    setView((v) => fitScene(scene, v.width, v.height, true));
+    setView((v) => fitScene(scene, v.width, v.height));
   }, [scene, cancelCamera]);
   const panTo = useCallback(
     (target: Point) => {
@@ -115,6 +113,7 @@ export function useAtlasView(
   const focus = useCallback(
     (id: string) => {
       cancelCamera();
+      if (intent.current === "overview") return;
       const island = scene.islands.find((i) => i.id === id);
       if (!island) return;
       const current = viewRef.current;

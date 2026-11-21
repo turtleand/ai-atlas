@@ -131,7 +131,7 @@ const mount = () =>
     </MemoryRouter>,
   );
 it("lets pointer exploration replace turtle-driven emphasis without changing the journey", () => {
-  history.replaceState(null, "", "/?capture=1&destination=images&time=1");
+  history.replaceState(null, "", "/?capture=1&destination=agents&time=1");
   const { container } = render(
     <MemoryRouter>
       <ArchipelagoMap categories={parseToolsYaml(catalog)} />
@@ -146,18 +146,15 @@ it("lets pointer exploration replace turtle-driven emphasis without changing the
   const positions = [...map.querySelectorAll<HTMLElement>("button")].map(
     (el) => el.style.cssText,
   );
-  expect(focus()).toBe("");
+  expect(focus()).toBe("images");
   fireEvent.pointerMove(tool, { pointerType: "mouse", buttons: 0 });
   expect(focus()).toBe("code");
   expect(document.documentElement.dataset.atlasJourney).toBe(journey);
   expect(
     container.querySelectorAll('.atlas-island-art[data-emphasis="active"]'),
   ).toHaveLength(1);
-  expect(map.querySelectorAll('.is-tool[data-emphasis="active"]')).toHaveLength(
-    6,
-  );
   fireEvent.pointerLeave(container.querySelector("main")!);
-  expect(focus()).toBe("");
+  expect(focus()).toBe("images");
   fireEvent.pointerMove(
     within(map as HTMLElement).getByRole("button", { name: "Recraft" }),
     { pointerType: "mouse", buttons: 0 },
@@ -173,7 +170,7 @@ it("lets pointer exploration replace turtle-driven emphasis without changing the
       (el) => el.style.cssText,
     ),
   ).toEqual(positions);
-  expect(map.querySelectorAll(".is-tool.is-named")).toHaveLength(29);
+  expect(map.querySelectorAll(".is-tool")).toHaveLength(15);
 });
 
 it("supports shore taps and ignores drags and multi-touch as selections", () => {
@@ -249,9 +246,9 @@ it("preserves navigation destinations and makes the wave a labelled central link
       (svg) => svg.getAttribute("aria-hidden") === "true",
     ),
   ).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Pause motion" }));
-  expect(document.querySelector("main")?.getAttribute("data-motion")).toBe(
-    "paused",
+  expect(screen.queryByRole("button", { name: /pause|hide turtle/i })).toBeNull();
+  expect(screen.getByRole("link", { name: "Turtleand home" }).getAttribute("href")).toBe(
+    "https://turtleand.com/",
   );
 });
 describe("shared home interaction contract", () => {
@@ -259,9 +256,9 @@ describe("shared home interaction contract", () => {
     mount();
     expect(loader.calls).toBe(0);
     expect(document.querySelector(".atlas-svg")).toBeTruthy();
-    const nav = screen.getByRole("navigation", { name: "AI categories" });
+    const nav = screen.getByRole("region", { name: "Interactive island map" });
     fireEvent.click(within(nav).getByRole("button", { name: /Code/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Tool B" }));
+    fireEvent.click(within(nav).getByRole("button", { name: "Tool B" }));
     expect(screen.getByRole("dialog", { name: "Tool B" })).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "Visit Tool →" }).getAttribute("href"),
@@ -271,7 +268,7 @@ describe("shared home interaction contract", () => {
   });
   it("keeps 2D usable during preparation, cancels cleanly, and preserves category across switches", async () => {
     mount();
-    const nav = screen.getByRole("navigation", { name: "AI categories" });
+    const nav = screen.getByRole("region", { name: "Interactive island map" });
     fireEvent.click(within(nav).getByRole("button", { name: /Code/ }));
     fireEvent.click(screen.getByRole("button", { name: "3D" }));
     await waitFor(() => expect(loader.props).not.toBeNull());
@@ -295,7 +292,7 @@ describe("shared home interaction contract", () => {
     mount();
     fireEvent.click(
       within(
-        screen.getByRole("navigation", { name: "AI categories" }),
+        screen.getByRole("region", { name: "Interactive island map" }),
       ).getByRole("button", { name: /Chatbot/ }),
     );
     fireEvent.click(screen.getByRole("button", { name: "3D" }));
@@ -383,7 +380,7 @@ it("pans and pinches the shared view, releases cancelled touches, and ignores na
   const before = result.current.view;
   act(() => result.current.handlers.onPointerDown(event(1, 100, 100)));
   act(() => result.current.handlers.onPointerMove(event(1, 120, 100)));
-  expect(result.current.view.center.x).toBe(before.center.x - 40);
+  expect(result.current.view.center.x).toBeCloseTo(before.center.x - 20 / before.zoom);
   act(() => result.current.handlers.onPointerDown(event(2, 200, 100)));
   act(() => result.current.handlers.onPointerMove(event(2, 210, 100)));
   act(() => result.current.handlers.onPointerMove(event(2, 240, 100)));
@@ -402,25 +399,28 @@ it("pans and pinches the shared view, releases cancelled touches, and ignores na
   expect(result.current.view).toEqual(released);
 });
 
-describe("Guided atlas", () => {
-  it.each(["", "rail"])("exposes every tool directly in %s", (variant) => {
-    history.replaceState(null, "", `/?atlasVariant=${variant}`);
-    const { container } = render(
+describe("Shore Signposts", () => {
+  const mountCatalog = () =>
+    render(
       <MemoryRouter>
         <ArchipelagoMap categories={parseToolsYaml(catalog)} />
       </MemoryRouter>,
     );
-    const map = container.querySelector(".atlas-discovery")!;
-    expect(map.querySelectorAll(".is-tool")).toHaveLength(29);
-    expect(map.querySelectorAll(".is-tool.is-named")).toHaveLength(29);
-    const tool = within(map as HTMLElement).getByRole("button", {
-      name: "Claude Code",
-    });
+  const allTools = () =>
+    screen.getByRole("button", { name: "All 29 tools" });
+
+  it("starts with curated tools and opens a signpost’s notes immediately", () => {
+    const { container } = mountCatalog();
+    const map = container.querySelector<HTMLElement>(".atlas-discovery")!;
+    const tools = () => map.querySelectorAll(".is-tool");
+    expect(tools()).toHaveLength(15);
+    const source = within(map);
+    expect(source.getByRole("button", { name: "Nano Banana" })).toBeTruthy();
+    expect(source.getByRole("button", { name: "Recraft" })).toBeTruthy();
+    expect(source.queryByRole("button", { name: "Cursor" })).toBeNull();
+    const tool = source.getByRole("button", { name: "Claude Code" });
     act(() => tool.focus());
     expect(screen.getByRole("tooltip").textContent).toContain("Claude Code");
-    fireEvent.pointerLeave(
-      within(map as HTMLElement).getByRole("button", { name: "Cursor" }),
-    );
     fireEvent.pointerLeave(tool);
     expect(screen.getByRole("tooltip").textContent).toContain("Claude Code");
     fireEvent.keyDown(tool, { key: "Escape" });
@@ -433,17 +433,30 @@ describe("Guided atlas", () => {
     act(() => callbacks.forEach((fn) => fn(performance.now())));
     expect(document.activeElement).toBe(tool);
   });
-  it("uses the guided rail without comparison chrome and exposes the full directory", () => {
-    mount();
-    expect(
-      screen.queryByRole("navigation", { name: "Compare atlas presentations" }),
-    ).toBeNull();
-    expect(
-      screen.queryByText("A turtle, a little curiosity, an open sea"),
-    ).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Browse every tool/ }));
+
+  it("shows one named tool per island on phones", () => {
+    const { container } = mountCatalog();
+    act(() => resize!(390, 330));
+    const map = container.querySelector<HTMLElement>(".atlas-discovery")!;
+    expect(map.querySelectorAll(".is-tool")).toHaveLength(9);
+    expect(within(map).getByRole("button", { name: "Nano Banana" })).toBeTruthy();
+    expect(within(map).queryByRole("button", { name: "Recraft" })).toBeNull();
+  });
+
+  it("exposes the full map and the directory from the collection menu", () => {
+    const { container } = mountCatalog();
+    const toolElements = () => container.querySelectorAll(".atlas-discovery .is-tool");
+    fireEvent.click(allTools());
+    fireEvent.click(screen.getByRole("button", { name: /Show all tools on the map/ }));
+    expect(toolElements()).toHaveLength(29);
+    fireEvent.click(allTools());
+    fireEvent.click(screen.getByRole("button", { name: /Show featured tools on the map/ }));
+    expect(toolElements()).toHaveLength(15);
+    fireEvent.click(allTools());
+    fireEvent.click(screen.getByRole("button", { name: /Browse the directory/ }));
     expect(screen.getByRole("region", { name: "Chatbot tools" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Code tools" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Cursor/ })).toBeTruthy();
   });
 });
 

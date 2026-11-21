@@ -1,7 +1,13 @@
-import { useMemo, type CSSProperties } from "react";
+import {
+  useMemo,
+  type ComponentPropsWithoutRef,
+  type CSSProperties,
+} from "react";
 import type { Tool } from "../../utils/parseTools";
 import type { AtlasScene, Point } from "./atlas-model";
+import { fitScene } from "./atlas-camera";
 import { projection, type AtlasView } from "./useAtlas";
+import { shoreSignpostLayout } from "./shore-signposts";
 
 import { AtlasGlyph } from "./AtlasLandmark";
 
@@ -268,7 +274,7 @@ export function AtlasDiscovery({
   depth,
   activeId,
   selected,
-  names,
+  display,
   onSelect,
   onTool,
   preview,
@@ -280,36 +286,53 @@ export function AtlasDiscovery({
   depth: boolean;
   activeId: string | null;
   selected: string | null;
-  names: boolean;
+  display: "featured" | "all";
   onSelect: (id: string) => void;
-  onTool: (tool: Tool, id: string) => void;
+  onTool: (tool: Tool, id: string, trigger?: HTMLButtonElement) => void;
   preview: ToolPreview;
   onPreview: (preview: ToolPreview) => void;
   onReveal: (point: Point) => void;
 }) {
-  const named =
-    names && ((view.width >= 600 && view.height >= 330) || view.zoom >= 0.48);
+  const featured = display === "featured";
   const { zoom, width, height } = view;
-  const compact = (width < 600 || height < 330) && zoom < 0.48;
+  const compact = featured && (width < 600 || height < 330);
   const layout = useMemo(() => {
+    const overview = featured ? fitScene(scene, width, height) : null;
+    const overviewScale = overview && zoom <= overview.zoom * 1.01;
     const frame = {
-      center: { x: scene.width / 2, y: scene.height / 2 },
+      center: overview?.center ?? { x: scene.width / 2, y: scene.height / 2 },
       zoom,
-      width: Math.max(width, scene.width * zoom),
-      height: Math.max(height, scene.height * zoom * (depth ? 0.72 : 1)),
+      width: overviewScale
+        ? width
+        : Math.max(width, scene.width * zoom, featured ? 0 : 832),
+      height: overviewScale
+        ? height
+        : Math.max(
+            height,
+            scene.height * zoom * (depth ? 0.72 : 1),
+            featured ? 0 : 512,
+          ),
     };
-    const labels = discoveryLayout(scene, frame, depth, named, !compact);
+    const signs = featured
+      ? shoreSignpostLayout(scene, frame, depth, compact)
+      : [];
+    const labels = featured ? [] : discoveryLayout(scene, frame, depth, true);
     return {
       frame,
+      signs,
       labels,
-      captions: compact ? [] : seaCaptionLayout(scene, frame, depth, labels),
+      captions:
+        compact || (featured && zoom < 0.55)
+          ? []
+          : seaCaptionLayout(scene, frame, depth, featured ? signs : labels),
     };
-  }, [scene, zoom, width, height, depth, named, compact]);
+  }, [scene, zoom, width, height, depth, compact, featured]);
   const dx =
-    (width - layout.frame.width) / 2 + (scene.width / 2 - view.center.x) * zoom;
+    (width - layout.frame.width) / 2 +
+    (layout.frame.center.x - view.center.x) * zoom;
   const dy =
     (height - layout.frame.height) / 2 +
-    (scene.height / 2 - view.center.y) * zoom * (depth ? 0.72 : 1);
+    (layout.frame.center.y - view.center.y) * zoom * (depth ? 0.72 : 1);
   const labels = layout.labels.map((l) => ({
     ...l,
     x: l.x + dx,
@@ -327,10 +350,52 @@ export function AtlasDiscovery({
       y: Math.min(window.innerHeight - 150, r.bottom + 8),
     });
   };
+  const buttonProps = (
+    tool: Tool | null,
+    id: string,
+    point: Point,
+    reveal = true,
+  ): ComponentPropsWithoutRef<"button"> => ({
+    type: "button",
+    "aria-describedby":
+      tool && preview?.tool === tool ? "atlas-tool-preview" : undefined,
+    onPointerEnter: (event) => {
+      if (tool && event.pointerType !== "touch")
+        peek(tool, event.currentTarget);
+    },
+    onPointerLeave: (event) => {
+      if (
+        preview?.tool === tool &&
+        document.activeElement !== event.currentTarget
+      )
+        onPreview(null);
+    },
+    onFocus: (event) => {
+      if (reveal && event.currentTarget.matches(":focus-visible"))
+        onReveal({
+          x: view.center.x + (point.x - width / 2) / zoom,
+          y: view.center.y + (point.y - height / 2) / zoom / (depth ? 0.72 : 1),
+        });
+      if (tool) peek(tool, event.currentTarget);
+    },
+    onBlur: () => onPreview(null),
+    onKeyDown: (event) => {
+      if (event.key === "Escape" && preview) {
+        event.stopPropagation();
+        onPreview(null);
+      }
+    },
+    onClick: (event) => {
+      onPreview(null);
+      if (tool) onTool(tool, id, event.currentTarget);
+      else onSelect(id);
+    },
+  });
   return (
     <div
       className={`atlas-labels atlas-discovery ${compact ? "is-overview" : ""}`}
       data-active-islands={activeId ?? ""}
+      data-display={display}
     >
       <svg
         className="atlas-leaders"
@@ -348,26 +413,20 @@ export function AtlasDiscovery({
             strokeOpacity=".28"
           />
         ))}
-        {compact &&
-          scene.islands.flatMap((i) =>
-            i.tools.map((t) => {
-              const p = projection(t.point, view, depth);
-              return (
-                <circle
-                  key={`${i.id}:${t.tool.id}`}
-                  className="atlas-overview-beacon"
-                  data-emphasis={activeId === i.id ? "active" : "muted"}
-                  cx={p.x}
-                  cy={p.y}
-                  r="2"
-                  fill={i.accent}
-                  opacity=".7"
-                />
-              );
-            }),
-          )}
+        {layout.signs.map(({ island, anchor, end }) => (
+          <path
+            key={island.id}
+            className="atlas-signpost-leader"
+            data-emphasis={activeId === island.id ? "active" : "muted"}
+            style={{ "--island-accent": island.accent } as CSSProperties}
+            d={`M${anchor.x + dx},${anchor.y + dy}L${end.x + dx},${end.y + dy}`}
+            fill="none"
+            stroke={island.accent}
+            strokeWidth="1"
+          />
+        ))}
         {labels
-          .filter((l) => l.tool || compact)
+          .filter((l) => l.tool)
           .map((l) => (
             <g
               key={l.key}
@@ -404,10 +463,57 @@ export function AtlasDiscovery({
           {c.feature.name}
         </span>
       ))}
+      {layout.signs.map((sign) => {
+        const { island, tools, w, h } = sign;
+        const point = { x: sign.x + dx, y: sign.y + dy };
+        const clipped =
+          point.x - w / 2 < 0 ||
+          point.x + w / 2 > width ||
+          point.y - h / 2 < 0 ||
+          point.y + h / 2 > height;
+        return (
+          <div
+            key={island.id}
+            className="atlas-signpost"
+            data-island={island.id}
+            data-emphasis={activeId === island.id ? "active" : "muted"}
+            style={
+              {
+                left: point.x,
+                top: point.y,
+                width: w,
+                "--island-accent": island.accent,
+              } as CSSProperties
+            }
+          >
+            <button
+              {...buttonProps(null, island.id, point, clipped)}
+              className="atlas-signpost-category"
+              aria-label={`${island.category.name}, ${island.category.tools.length} tools`}
+              aria-pressed={selected === island.id}
+            >
+              <AtlasGlyph kind={island.landmark} />
+              <span>{island.category.name}</span>
+            </button>
+            {tools.map((tool) => (
+              <button
+                {...buttonProps(tool, island.id, point, clipped)}
+                key={tool.id}
+                className="atlas-signpost-tool is-tool is-named"
+                aria-label={tool.name}
+              >
+                <span>{tool.name}</span>
+                <span aria-hidden="true">↗</span>
+              </button>
+            ))}
+          </div>
+        );
+      })}
       {labels.map((l) => (
         <button
+          {...buttonProps(l.tool, l.island.id, l)}
           key={l.key}
-          className={`atlas-discovery-label ${l.tool ? "is-tool" : "is-category"} ${l.named ? "is-named" : "is-beacon"}`}
+          className={`atlas-discovery-label is-named ${l.tool ? "is-tool" : "is-category"}`}
           data-emphasis={activeId === l.island.id ? "active" : "muted"}
           data-island={l.island.id}
           style={
@@ -425,58 +531,12 @@ export function AtlasDiscovery({
             `${l.island.category.name}, ${l.island.category.tools.length} tools`
           }
           aria-pressed={!l.tool ? l.island.id === selected : undefined}
-          aria-describedby={
-            l.tool && preview?.tool === l.tool
-              ? "atlas-tool-preview"
-              : undefined
-          }
-          onPointerEnter={(e) => {
-            if (l.tool && e.pointerType !== "touch")
-              peek(l.tool, e.currentTarget);
-          }}
-          onPointerLeave={(e) => {
-            if (
-              preview?.tool === l.tool &&
-              document.activeElement !== e.currentTarget
-            )
-              onPreview(null);
-          }}
-          onFocus={(e) => {
-            if (e.currentTarget.matches(":focus-visible"))
-              onReveal({
-                x: view.center.x + (l.x - width / 2) / zoom,
-                y:
-                  view.center.y +
-                  (l.y - height / 2) / zoom / (depth ? 0.72 : 1),
-              });
-            if (l.tool) peek(l.tool, e.currentTarget);
-          }}
-          onBlur={() => {
-            onPreview(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && preview) {
-              e.stopPropagation();
-              onPreview(null);
-            }
-          }}
-          onClick={() => {
-            onPreview(null);
-            if (l.tool) onTool(l.tool, l.island.id);
-            else onSelect(l.island.id);
-          }}
         >
-          {l.named ? (
-            <>
-              <span>
-                {!l.tool && <AtlasGlyph kind={l.island.landmark} />}{" "}
-                {l.tool?.name ?? l.island.category.name}
-              </span>
-              {!l.tool && <small>{l.island.category.tools.length} tools</small>}
-            </>
-          ) : (
-            <span aria-hidden="true" />
-          )}
+          <span>
+            {!l.tool && <AtlasGlyph kind={l.island.landmark} />}{" "}
+            {l.tool?.name ?? l.island.category.name}
+          </span>
+          {!l.tool && <small>{l.island.category.tools.length} tools</small>}
         </button>
       ))}
     </div>
