@@ -7,7 +7,6 @@ import {
   type CSSProperties,
 } from "react";
 import { Link } from "react-router-dom";
-import turtleandMark from "../assets/turtleand-mark.svg";
 import type { Category, Tool } from "../utils/parseTools";
 import { atlasCapture } from "./atlas/capture";
 import { createScene, inside } from "./atlas/atlas-model";
@@ -20,6 +19,7 @@ import { toolNote } from "./atlas/tool-notes";
 import "../styles/atlas-guided.css";
 import { useAtlasView, useJourney, useMotionPolicy } from "./atlas/useAtlas";
 import { JournalPanel } from "./JournalPanel";
+import { TurtleandHubLink } from "./TurtleandHubLink";
 
 export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const scene = useMemo(() => createScene(categories), [categories]);
@@ -73,10 +73,6 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   );
   const selectedIsland = scene.islands.find((i) => i.id === selected);
   const sidebarIsland = selectedIsland ?? defaultIsland;
-  const toolCount = categories.reduce(
-    (total, category) => total + category.tools.length,
-    0,
-  );
   const journalIsland = scene.islands.find((i) => i.id === journal?.categoryId);
   const historicalJournal = journal?.tool.id === "openclaw";
   const origin = useRef<HTMLElement | null>(null);
@@ -306,21 +302,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               </div>
             </div>
           </div>
-          <a
-            className="atlas-hub"
-            href="https://turtleand.com/"
-            rel="home"
-            aria-label="Turtleand home"
-          >
-            <img
-              className="atlas-hub-mark"
-              src={turtleandMark}
-              alt=""
-              width="37"
-              height="37"
-            />
-            <span>Turtleand <span aria-hidden="true">↗</span></span>
-          </a>
+          <TurtleandHubLink />
         </div>
       </header>
       <div className="atlas-workspace">
@@ -422,7 +404,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               <div className="atlas-shore-header">
                 <div>
                   <p>AI Atlas</p>
-                  <h2>All {toolCount} tools</h2>
+                  <h2>All tools</h2>
                 </div>
                 <button
                   type="button"

@@ -401,6 +401,10 @@ describe("Shore Signposts", () => {
     expect(toolElements()).toHaveLength(15);
     fireEvent.click(allTools());
     fireEvent.click(screen.getByRole("button", { name: /Browse the directory/ }));
+    expect(
+      within(screen.getByRole("complementary", { name: "Tool directory" }))
+        .getByRole("heading", { name: /^All tools$/ }),
+    ).toBeTruthy();
     expect(screen.getByRole("region", { name: "Chatbot tools" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Code tools" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Cursor/ })).toBeTruthy();

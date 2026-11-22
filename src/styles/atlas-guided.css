@@ -199,6 +199,8 @@
   padding: 5px 14px calc(5px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--atlas-line);
   background: var(--atlas-panel);
+  font-size: 11px;
+  font-weight: 650;
 }
 .atlas-nav-side {
   display: flex;
@@ -213,8 +215,6 @@
   min-height: 44px;
   color: var(--atlas-muted);
   text-decoration: none;
-  font-size: 11px;
-  font-weight: 650;
 }
 .atlas-nav-link:hover {
   color: var(--atlas-ink);
@@ -260,6 +260,7 @@
 }
 .atlas-tsunami-link.is-footer {
   padding-inline: 12px;
+  font: inherit;
 }
 .atlas-wave-horizon {
   stroke: #86d3c9;
@@ -286,13 +287,13 @@
     justify-content: space-evenly;
     gap: 4px;
     padding-inline: var(--atlas-gutter);
+    font-size: 10px;
   }
   .atlas-nav-side {
     gap: 6px;
   }
   .atlas-navigation .atlas-nav-link {
     gap: 3px;
-    font-size: 10px;
   }
   .atlas-nav-link svg {
     width: 17px;
