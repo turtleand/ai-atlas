@@ -19,7 +19,7 @@ const catalogNotes: Readonly<Record<string, string>> = {
   cursor: "Exploring code in an AI-assisted editor.",
   "sourcegraph-deepsearch": "Finding patterns in large codebases.",
   "sourcegraph-amp": "Exploring agent-assisted coding workflows.",
-  "openai-codex": "Exploring coding workflows with an agent.",
+  "openai-codex": "Designing, curating, and testing Atlas with subagents.",
   "chatgpt-deep-search": "Researching topics with cited sources.",
   "perplexity-comet": "Exploring AI-assisted browsing.",
   notebooklm: "Turning documents into study material.",

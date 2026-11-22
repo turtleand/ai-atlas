@@ -87,6 +87,7 @@ export function AtlasDiscovery({
   preview,
   onPreview,
   onReveal,
+  experimentalFallback,
 }: {
   scene: AtlasScene;
   view: AtlasView;
@@ -98,6 +99,7 @@ export function AtlasDiscovery({
   preview: ToolPreview;
   onPreview: (preview: ToolPreview) => void;
   onReveal: (point: Point) => void;
+  experimentalFallback?: ReadonlySet<string>;
 }) {
   const { zoom, width, height } = view;
   const compact = width < 600 || height < 330;
@@ -112,14 +114,16 @@ export function AtlasDiscovery({
         ? height
         : Math.max(height, scene.height * zoom * (depth ? 0.72 : 1)),
     };
-    const signs = shoreSignpostLayout(scene, frame, depth, compact);
+    const signs = shoreSignpostLayout(
+      scene, frame, depth, compact, experimentalFallback,
+    );
     return {
       frame,
       signs,
       captions:
         compact || zoom < 0.55 ? [] : seaCaptionLayout(scene, frame, depth, signs),
     };
-  }, [scene, zoom, width, height, depth, compact]);
+  }, [scene, zoom, width, height, depth, compact, experimentalFallback]);
   const dx =
     (width - layout.frame.width) / 2 +
     (layout.frame.center.x - view.center.x) * zoom;
@@ -228,6 +232,7 @@ export function AtlasDiscovery({
       ))}
       {layout.signs.map((sign) => {
         const { island, tools, w, h } = sign;
+        const experimental = experimentalFallback?.has(island.id);
         const point = { x: sign.x + dx, y: sign.y + dy };
         const clipped =
           point.x - w / 2 < 0 ||
@@ -252,7 +257,9 @@ export function AtlasDiscovery({
             <button
               {...buttonProps(null, island.id, point, clipped)}
               className="atlas-signpost-category"
-              aria-label={`${island.category.name}, ${island.category.tools.length} tools`}
+              aria-label={experimental
+                ? `${island.category.name}, ${island.category.tools.length} experimental ${island.category.tools.length === 1 ? "tool" : "tools"}`
+                : `${island.category.name}, ${island.category.tools.length} tools`}
               aria-pressed={selected === island.id}
             >
               <AtlasGlyph kind={island.landmark} />
@@ -269,6 +276,7 @@ export function AtlasDiscovery({
                 <span aria-hidden="true">↗</span>
               </button>
             ))}
+            {experimental && <p className="atlas-signpost-status">Experimental</p>}
           </div>
         );
       })}

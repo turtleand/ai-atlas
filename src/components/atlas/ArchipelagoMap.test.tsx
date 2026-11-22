@@ -108,6 +108,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
   frames.clear();
 });
+const flushFrame = () => {
+  const callbacks = [...frames.values()];
+  frames.clear();
+  act(() => callbacks.forEach((fn) => fn(performance.now())));
+};
 const mount = () =>
   render(
     <MemoryRouter>
@@ -115,7 +120,7 @@ const mount = () =>
     </MemoryRouter>,
   );
 it("lets pointer exploration replace turtle-driven emphasis without changing the journey", () => {
-  history.replaceState(null, "", "/?capture=1&destination=agents&time=1");
+  history.replaceState(null, "", "/?capture=1&destination=voice&time=1");
   const { container } = render(
     <MemoryRouter>
       <ArchipelagoMap categories={parseToolsYaml(catalog)} />
@@ -140,7 +145,7 @@ it("lets pointer exploration replace turtle-driven emphasis without changing the
   fireEvent.pointerLeave(container.querySelector("main")!);
   expect(focus()).toBe("images");
   fireEvent.pointerMove(
-    within(map as HTMLElement).getByRole("button", { name: "Recraft" }),
+    within(map as HTMLElement).getByRole("button", { name: "ChatGPT Image" }),
     { pointerType: "mouse", buttons: 0 },
   );
   expect(focus()).toBe("images");
@@ -154,7 +159,6 @@ it("lets pointer exploration replace turtle-driven emphasis without changing the
       (el) => el.style.cssText,
     ),
   ).toEqual(positions);
-  expect(map.querySelectorAll(".is-tool")).toHaveLength(15);
 });
 
 it("supports shore taps and ignores drags and multi-touch as selections", () => {
@@ -170,7 +174,7 @@ it("supports shore taps and ignores drags and multi-touch as selections", () => 
       view.height / 2 + (scene.islands[1].center.y - view.center.y) * view.zoom,
   };
   const event = { ...p, pointerType: "touch", pointerId: 1, button: 0 };
-  fireEvent.click(screen.getByRole("button", { name: "All tools" }));
+  fireEvent.click(screen.getByRole("button", { name: /^Tools$/ }));
   fireEvent.pointerDown(viewport, event);
   fireEvent.pointerUp(viewport, event);
   expect(
@@ -358,17 +362,19 @@ describe("Shore Signposts", () => {
         <ArchipelagoMap categories={parseToolsYaml(catalog)} />
       </MemoryRouter>,
     );
-  const allTools = () =>
-    screen.getByRole("button", { name: "All tools" });
+  const toolsButton = () => screen.getByRole("button", { name: /^Tools$/ });
+  const toolDirectory = () =>
+    within(screen.getByRole("complementary", { name: "Tool directory" }));
+  const selectedPanel = () =>
+    within(screen.getByRole("complementary", { name: "Selected island tools" }));
 
   it("starts with curated tools and opens a signpost’s notes immediately", () => {
     const { container } = mountCatalog();
     const map = container.querySelector<HTMLElement>(".atlas-discovery")!;
-    const tools = () => map.querySelectorAll(".is-tool");
-    expect(tools()).toHaveLength(15);
     const source = within(map);
-    expect(source.getByRole("button", { name: "Nano Banana" })).toBeTruthy();
-    expect(source.getByRole("button", { name: "Recraft" })).toBeTruthy();
+    expect(source.getByRole("button", { name: "ChatGPT Image" })).toBeTruthy();
+    expect(source.queryByRole("button", { name: "Nano Banana" })).toBeNull();
+    expect(source.queryByRole("button", { name: "OpenCode" })).toBeNull();
     expect(source.queryByRole("button", { name: "Cursor" })).toBeNull();
     const tool = source.getByRole("button", { name: "Claude Code" });
     act(() => tool.focus());
@@ -380,9 +386,7 @@ describe("Shore Signposts", () => {
     fireEvent.click(tool);
     expect(screen.getByRole("dialog", { name: "Claude Code" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    const callbacks = [...frames.values()];
-    frames.clear();
-    act(() => callbacks.forEach((fn) => fn(performance.now())));
+    flushFrame();
     expect(document.activeElement).toBe(tool);
   });
 
@@ -390,38 +394,101 @@ describe("Shore Signposts", () => {
     const { container } = mountCatalog();
     act(() => resize!(390, 330));
     const map = container.querySelector<HTMLElement>(".atlas-discovery")!;
-    expect(map.querySelectorAll(".is-tool")).toHaveLength(9);
-    expect(within(map).getByRole("button", { name: "Nano Banana" })).toBeTruthy();
-    expect(within(map).queryByRole("button", { name: "Recraft" })).toBeNull();
+    const signposts = [...map.querySelectorAll(".atlas-signpost")];
+    expect(signposts).toHaveLength(6);
+    expect(signposts.map((signpost) => signpost.querySelectorAll(".is-tool").length))
+      .toEqual([1, 1, 1, 1, 1, 1]);
+    expect(within(map).getByRole("button", { name: "ChatGPT Image" })).toBeTruthy();
   });
 
-  it("opens the complete directory directly while keeping the map curated", () => {
+  it("opens the Active directory and shows the merged categories", () => {
+    mountCatalog();
+    fireEvent.click(toolsButton());
+    const directory = toolDirectory();
+    expect(directory.getByRole("heading", { name: "Tools" })).toBeTruthy();
+    expect(directory.getByRole("button", { name: "Active", pressed: true })).toBeTruthy();
+    expect(toolsButton().getAttribute("aria-expanded")).toBe("true");
+    const agentsAndCode = directory.getByRole("region", { name: "Agents and Code tools" });
+    expect(within(agentsAndCode).getByRole("button", { name: /^Claude Code/ })).toBeTruthy();
+    expect(within(agentsAndCode).getByRole("button", { name: /^ChatGPT Docs/ })).toBeTruthy();
+    const researchAndEducation = directory.getByRole("region", { name: "Research and Education tools" });
+    expect(within(researchAndEducation).getByRole("button", { name: /^NotebookLM/ })).toBeTruthy();
+    expect(directory.queryByRole("region", { name: "Voice tools" })).toBeNull();
+  });
+
+  it("labels the Experimental fallback for Voice and switches directory scope without changing signposts", () => {
+    mountCatalog();
+    const map = within(screen.getByRole("region", { name: "Interactive island map" }));
+    const voice = map.getByRole("button", { name: /^Voice,.*experimental/i });
+    expect(map.getByText("Experimental", { exact: true })).toBeTruthy();
+    expect(map.getByRole("button", { name: "ElevenLabs" })).toBeTruthy();
+    fireEvent.click(voice);
+    expect(selectedPanel().getByRole("heading", { name: "Voice" })).toBeTruthy();
+    expect(selectedPanel().getByText(/1 experimental tool/i)).toBeTruthy();
+    expect(selectedPanel().getByRole("button", { name: /^ElevenLabs/ })).toBeTruthy();
+    expect(selectedPanel().queryByRole("button", { name: /^Sesame/ })).toBeNull();
+
+    fireEvent.click(toolsButton());
+    fireEvent.click(toolDirectory().getByRole("button", { name: "Experimental" }));
+    expect(toolDirectory().getByRole("button", { name: "Experimental", pressed: true })).toBeTruthy();
+    const voiceTools = toolDirectory().getByRole("region", { name: "Voice tools" });
+    expect(within(voiceTools).getByRole("button", { name: /^ElevenLabs/ })).toBeTruthy();
+    expect(toolDirectory().getByRole("button", { name: /^OpenCode/ })).toBeTruthy();
+    expect(toolDirectory().queryByRole("button", { name: /^ChatGPT Image/ })).toBeNull();
+    expect(map.getByRole("button", { name: "ChatGPT Image" })).toBeTruthy();
+    expect(map.queryByRole("button", { name: "OpenCode" })).toBeNull();
+    expect(voice.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("opens Archive-only categories without moving the map and restores directory focus", () => {
     const { container } = mountCatalog();
-    fireEvent.click(allTools());
-    const directory = screen.getByRole("complementary", { name: "Tool directory" });
-    expect(within(directory).getByRole("heading", { name: "All tools" })).toBeTruthy();
-    expect(directory.querySelectorAll(".atlas-tool-row")).toHaveLength(29);
-    expect(container.querySelectorAll(".atlas-discovery .is-tool")).toHaveLength(15);
-    expect(allTools().getAttribute("aria-expanded")).toBe("true");
+    const map = within(screen.getByRole("region", { name: "Interactive island map" }));
+    expect(container.querySelectorAll(".atlas-island-art")).toHaveLength(6);
+    expect(map.queryByRole("button", { name: /^(Video Generation|Auxiliary Tools),/ })).toBeNull();
+    const images = map.getByRole("button", { name: /^Images,/ });
+    fireEvent.click(toolsButton());
+    fireEvent.click(toolDirectory().getByRole("button", { name: "Experimental" }));
+    const archiveButton = toolDirectory().getByRole("button", { name: "Archive" });
+    fireEvent.click(archiveButton);
+    const archive = within(screen.getByRole("complementary", { name: "Tool archive" }));
+    const video = archive.getByRole("region", { name: "Video Generation tools" });
+    const auxiliary = archive.getByRole("region", { name: "Auxiliary Tools tools" });
+    expect(within(video).getByRole("heading", { name: "Video Generation" })).toBeTruthy();
+    expect(within(video).getByRole("button", { name: /^Sora/ })).toBeTruthy();
+    expect(archive.queryByRole("button", { name: /^ChatGPT Image/ })).toBeNull();
+    const ntfy = within(auxiliary).getByRole("button", { name: /^ntfy/ });
+    fireEvent.click(ntfy);
+    const journal = within(screen.getByRole("dialog", { name: "ntfy" }));
+    expect(journal.getByText("Auxiliary Tools", { exact: true })).toBeTruthy();
+    expect(images.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(journal.getByRole("button", { name: "Close" }));
+    flushFrame();
+    expect(document.activeElement).toBe(ntfy);
+    fireEvent.click(archive.getByRole("button", { name: "Close archive" }));
+    flushFrame();
+    expect(document.activeElement).toBe(toolDirectory().getByRole("button", { name: "Archive" }));
+    expect(toolDirectory().getByRole("button", { name: "Experimental", pressed: true })).toBeTruthy();
+    fireEvent.click(toolDirectory().getByRole("button", { name: "Close tool directory" }));
+    flushFrame();
+    expect(document.activeElement).toBe(toolsButton());
+    expect(selectedPanel().getByRole("heading", { name: "Images" })).toBeTruthy();
   });
 
   it("returns to a single island from the map and directory, even for the current island", () => {
     mountCatalog();
     const map = screen.getByRole("region", { name: "Interactive island map" });
-    fireEvent.click(allTools());
+    fireEvent.click(toolsButton());
     fireEvent.click(within(map).getByRole("button", { name: /^Images,/ }));
-    const selectedPanel = () =>
-      within(screen.getByRole("complementary", { name: "Selected island tools" }));
     expect(selectedPanel().getByRole("heading", { name: "Images" })).toBeTruthy();
     expect(selectedPanel().queryByRole("button", { name: /Cursor/ })).toBeNull();
-    expect(allTools().getAttribute("aria-expanded")).toBe("false");
+    expect(toolsButton().getAttribute("aria-expanded")).toBe("false");
 
-    fireEvent.click(allTools());
-    const code = screen.getByRole("region", { name: "Code tools" });
-    fireEvent.click(within(code).getByRole("button", { name: "Code" }));
-    expect(selectedPanel().getByRole("heading", { name: "Code" })).toBeTruthy();
-    expect(selectedPanel().getByRole("button", { name: /Cursor/ })).toBeTruthy();
-    expect(selectedPanel().queryByRole("button", { name: /Nano Banana/ })).toBeNull();
+    fireEvent.click(toolsButton());
+    const code = toolDirectory().getByRole("region", { name: "Agents and Code tools" });
+    fireEvent.click(within(code).getByRole("button", { name: /^Agents and Code$/ }));
+    expect(selectedPanel().getByRole("heading", { name: "Agents and Code" })).toBeTruthy();
+    expect(selectedPanel().getByRole("button", { name: /^Claude Code/ })).toBeTruthy();
+    expect(selectedPanel().queryByRole("button", { name: /^Cursor/ })).toBeNull();
   });
 });
 
@@ -458,7 +525,7 @@ it("interrupts camera travel and preserves manual center and scale through resiz
   act(() => resize!(700, 450));
   expect(camera!.view.center).toEqual(manual.center);
   expect(camera!.view.zoom).toBe(manual.zoom);
-  act(() => camera!.focus(scene.islands[8].id));
+  act(() => camera!.focus(scene.islands.at(-1)!.id));
   expect(frames.size).toBe(1);
   act(() => camera!.focus(scene.islands[2].id));
   expect(frames.size).toBe(1);

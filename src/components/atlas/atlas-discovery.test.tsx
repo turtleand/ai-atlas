@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parseToolsYaml } from "../../utils/parseTools";
 import data from "../../data/ai-tools.yaml?raw";
+import { createAtlasCatalog } from "./atlas-catalog";
 import {
   createScene,
   isWater,
@@ -10,20 +11,21 @@ import {
 import { fitScene, revealIsland } from "./atlas-camera";
 import { shoreSignpostLayout } from "./shore-signposts";
 import { projection } from "./useAtlas";
-const categories = parseToolsYaml(data);
-const scene = createScene(categories);
+const rawCategories = parseToolsYaml(data);
+const { scene, experimentalFallback } = createAtlasCatalog(rawCategories);
+const categories = scene.islands.map((island) => island.category);
 describe("organic discovery", () => {
   it("keeps every authored footprint and tool anchor stable across catalog order", () => {
     const reversed = createScene([...categories].reverse());
     for (const i of scene.islands)
       expect(reversed.islands.find((j) => j.id === i.id)).toEqual(i);
-    expect(scene.islands.flatMap((i) => i.tools)).toHaveLength(29);
+    expect(scene.islands.flatMap((i) => i.tools)).toHaveLength(11);
     const extra = { id: "new-space", name: "New space", tools: [] };
     expect(createScene([...categories, extra])).toEqual(
       createScene([...categories, extra]),
     );
   });
-  it("keeps all 81 docking routes collision free after rotating shores", () => {
+  it("keeps every pair of docks connected by collision-free routes after rotating shores", () => {
     for (const a of scene.islands) {
       expect(isWater(scene, a.dock), a.id).toBe(true);
       for (const b of scene.islands) {
@@ -50,26 +52,27 @@ describe("organic discovery", () => {
       }
   });
   it.each([
-    [1118, 630, false, false, 15],
-    [1118, 630, true, false, 15],
-    [390, 335, false, true, 9],
-    [320, 307, false, true, 9],
-    [320, 270, false, true, 9],
+    [1118, 630, false, false, 9],
+    [1118, 630, true, false, 9],
+    [390, 335, false, true, 6],
+    [320, 307, false, true, 6],
+    [320, 270, false, true, 6],
   ])(
-    "fits the featured signposts at %sx%s with depth %s",
+    "fits the curated signposts at %sx%s with depth %s",
     (width, height, depth, compact, count) => {
       const signs = shoreSignpostLayout(
         scene,
         fitScene(scene, width, height),
         depth,
         compact,
+        experimentalFallback,
       );
       expect(signs.flatMap((sign) => sign.tools)).toHaveLength(count);
       expect(
         signs
-          .find((sign) => sign.island.id === "images")
+          .find((sign) => sign.island.id === "code")
           ?.tools.map((tool) => tool.id),
-      ).toEqual(compact ? ["nano-banana"] : ["nano-banana", "recraft"]);
+      ).toEqual(compact ? ["openai-codex"] : ["openai-codex", "claude-code"]);
       for (const [index, sign] of signs.entries()) {
         expect(sign.x - sign.w / 2).toBeGreaterThanOrEqual(0);
         expect(sign.x + sign.w / 2).toBeLessThanOrEqual(width);
@@ -84,6 +87,12 @@ describe("organic discovery", () => {
       }
     },
   );
+  it("retains authored features when no curated scope is provided", () => {
+    const images = rawCategories.find((category) => category.id === "images")!;
+    const chart = createScene([images]);
+    const [sign] = shoreSignpostLayout(chart, fitScene(chart, 800, 500), false, false);
+    expect(sign.tools.map((tool) => tool.id)).toEqual(["nano-banana", "recraft"]);
+  });
   it("keeps visible selections still and pans clipped coastlines without zoom", () => {
     const overview = fitScene(scene, 1200, 700);
     expect(revealIsland(overview, scene.islands[0], false)).toEqual(

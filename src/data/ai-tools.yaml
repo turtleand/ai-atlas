@@ -2,6 +2,7 @@ categories:
   - name: Chatbot
     tools:
       - name: ChatGPT
+        status: active
         url: https://chat.openai.com/
         description: OpenAI's conversational AI
         usage: |
@@ -9,7 +10,23 @@ categories:
           Great for quick research and explaining complex concepts.
         tags: [daily-driver]
 
+      - name: Gemini
+        status: active
+        url: https://gemini.google.com/
+        description: Google's AI assistant
+        usage: |
+          Integrated with Google ecosystem. Good for quick searches and multimodal tasks.
+
+      - name: Grok
+        status: archive
+        url: https://grok.x.ai/
+        description: xAI's chatbot
+        usage: |
+          Initial exploration on general models. Useful as an additional
+          point of comparison alongside ChatGPT and Gemini.
+
       - name: Claude
+        status: pending
         url: https://claude.ai/
         description: Anthropic's AI assistant
         usage: |
@@ -18,41 +35,120 @@ categories:
         related:
           - title: Persistent Agents
             url: https://openclaw.turtleand.com/topics/persistent-agents/
+
+  - name: Agents and Code
+    id: code
+    tools:
+      - name: OpenAI Codex
+        status: active
+        url: https://openai.com/codex/
+        description: OpenAI’s coding agent.
+        usage: |
+          I use Codex to design the Atlas, curate the tool catalog, and coordinate browser quality checks with subagents.
+
+      - name: Claude Code
+        status: active
+        url: https://claude.ai/
+        description: AI coding assistant in terminal
+        usage: |
+          My coding companion for complex tasks. Used for debugging, refactoring, and building entire features.
+        related:
+          - title: OpenClaw Lab
+            url: https://openclaw.turtleand.com/
         tags: [daily-driver]
 
-      - name: Grok
-        url: https://grok.x.ai/
-        description: xAI's chatbot
-        usage: |
-          Initial exploration on general models. Useful as an additional
-          point of comparison alongside ChatGPT and Gemini.
+      - name: ChatGPT Dots
+        status: active
+        url: https://chatgpt.com/get-dot/
+        description: An always-on agent in ChatGPT.
 
-      - name: Gemini
-        url: https://gemini.google.com/
-        description: Google's AI assistant
-        usage: |
-          Integrated with Google ecosystem. Good for quick searches and multimodal tasks.
+      - name: ChatGPT Docs
+        status: active
+        url: https://openai.com/business/plugins/documents/
+        description: Create and edit documents with ChatGPT.
 
-      - name: Sesame
-        url: https://www.sesame.com/
-        description: Voice-based AI companion
+      - name: OpenCode
+        status: experimental
+        url: https://opencode.ai/
+        description: Open-source AI coding agent.
+
+      - name: Orca Orchestrator
+        status: experimental
+        url: https://github.com/stablyai/orca
+        description: Runs coding agents in parallel Git worktrees.
+
+      - name: Hermes Agent
+        status: experimental
+        url: https://github.com/NousResearch/hermes-agent
+        description: Open-source AI agent framework with memory, skills, tools, messaging, and scheduled tasks
         usage: |
-          Exploring voice-first AI interactions for hands-free workflows.
+          Exploring voice-first interaction, persistent memory, reusable skills, repository work, and scheduled briefs while keeping human approval at the center.
+        related:
+          - title: Turtleand Hermes Lab
+            url: https://hermes.turtleand.com/
+          - title: Hermes Agent Documentation
+            url: https://hermes-agent.nousresearch.com/docs
+          - title: AI Lab
+            url: https://lab.turtleand.com/
+        tags: [agent-framework, infrastructure]
+
+      - name: Cursor
+        status: archive
+        url: https://cursor.sh/
+        description: AI-first code editor
+        usage: |
+          Initial exploration on vibe coding capabilities.
+          Full IDE experience with AI built-in for visual code exploration.
+
+      - name: GitHub Copilot
+        status: archive
+        url: https://github.com/features/copilot
+        description: AI pair programmer
+        usage: |
+          Initial exploration on assisted coding and PR reviews.
+
+      - name: Sourcegraph
+        status: archive
+        url: https://sourcegraph.com/
+        description: Code search and navigation.
+
+      - name: Sourcegraph DeepSearch
+        status: archive
+        url: https://sourcegraph.com/
+        description: AI-powered semantic code search
+        usage: |
+          Finding code patterns across large codebases. Useful for understanding
+          how similar problems were solved elsewhere.
+
+      - name: Sourcegraph AMP
+        status: archive
+        url: https://ampcode.com/
+        description: Agentic coding with autonomous workflows
+        usage: |
+          Experimenting with autonomous coding agents that can plan and execute
+          multi-step development tasks.
+
+      - name: OpenClaw
+        status: archive
+        url: https://github.com/openclaw/openclaw
+        description: Persistent AI agent platform
+        usage: |
+          Previously used as an always-on AI partner for Telegram, voice note transcription, GitHub development, scheduled tasks, and proactive check-ins. It supported earlier versions of the Atlas.
+        related:
+          - title: OpenClaw Lab
+            url: https://openclaw.turtleand.com/
+          - title: Persistent Agents Guide
+            url: https://openclaw.turtleand.com/topics/persistent-agents/
+          - title: Voice Notes Integration
+            url: https://openclaw.turtleand.com/topics/voice-notes-telegram/
+          - title: Git Autonomous Development
+            url: https://openclaw.turtleand.com/topics/git-autonomous-development/
+        tags: [infrastructure]
 
   - name: Images
     tools:
-      - name: Nano Banana
-        url: https://nanobanana.com/
-        description: AI image generation
-        usage: |
-          Used to craft iterations of the Turtleand avatar.
-          Great for character design and stylized illustrations.
-        related:
-          - title: Evolution Archive
-            url: https://turtleand.com/
-        tags: [avatar-design]
-
       - name: ChatGPT Image
+        status: active
         url: https://chat.openai.com/
         description: OpenAI's image generation in ChatGPT
         usage: |
@@ -63,7 +159,29 @@ categories:
             url: https://turtleand.com/
         tags: [avatar-design]
 
+      - name: Nano Banana
+        status: archive
+        url: https://nanobanana.com/
+        description: AI image generation
+        usage: |
+          Used to craft iterations of the Turtleand avatar.
+          Great for character design and stylized illustrations.
+        related:
+          - title: Evolution Archive
+            url: https://turtleand.com/
+        tags: [avatar-design]
+
+      - name: Gemini Drawing
+        status: archive
+        url: https://gemini.google.com/
+        description: Collaborative AI drawing
+        usage: |
+          Fun tool for quick sketches. Draw something rudimentary and
+          watch it transform into a polished illustration. Great for
+          playing around with visual ideas.
+
       - name: Recraft
+        status: archive
         url: https://www.recraft.ai/
         description: AI image generation and design
         usage: |
@@ -75,6 +193,7 @@ categories:
         tags: [logo-design]
 
       - name: Adobe Express
+        status: archive
         url: https://www.adobe.com/express/feature/image/remove-background
         description: AI background removal
         usage: |
@@ -84,17 +203,10 @@ categories:
           - title: Evolution Archive
             url: https://turtleand.com/
 
-      - name: Gemini Drawing
-        url: https://gemini.google.com/
-        description: Collaborative AI drawing
-        usage: |
-          Fun tool for quick sketches. Draw something rudimentary and
-          watch it transform into a polished illustration. Great for
-          playing around with visual ideas.
-
   - name: Video Generation
     tools:
       - name: Sora
+        status: archive
         url: https://openai.com/sora
         description: OpenAI's text-to-video model
         usage: |
@@ -102,9 +214,12 @@ categories:
         related:
           - title: Turtleand YouTube
             url: https://www.youtube.com/@turtleand-world
+          - title: Sora discontinuation
+            url: https://help.openai.com/en/articles/20001152-what-to-know-about-the-sora-discontinuation
         tags: [content-creation]
 
-      - name: VEO 3
+      - name: Veo 3
+        status: archive
         url: https://deepmind.google/technologies/veo/
         description: Google's AI video generation
         usage: |
@@ -115,7 +230,8 @@ categories:
             url: https://www.youtube.com/@turtleand-world
         tags: [content-creation]
 
-      - name: Hailuo Minimax
+      - name: Hailuo MiniMax
+        status: archive
         url: https://hailuoai.video/
         description: AI video generation
         usage: |
@@ -126,74 +242,11 @@ categories:
             url: https://www.youtube.com/@turtleand-world
         tags: [content-creation]
 
-  - name: Code
-    tools:
-      - name: GitHub Copilot
-        url: https://github.com/features/copilot
-        description: AI pair programmer
-        usage: |
-          Initial exploration on assisted coding and PR reviews.
-        tags: [daily-driver]
-
-      - name: Claude Code
-        url: https://claude.ai/
-        description: AI coding assistant in terminal
-        usage: |
-          My primary coding companion for complex tasks. Powers the OpenClaw agent.
-          Used for debugging, refactoring, and building entire features.
-        related:
-          - title: OpenClaw Lab
-            url: https://openclaw.turtleand.com/
-        tags: [daily-driver]
-
-      - name: Cursor
-        url: https://cursor.sh/
-        description: AI-first code editor
-        usage: |
-          Initial exploration on vibe coding capabilities.
-          Full IDE experience with AI built-in for visual code exploration.
-        tags: [daily-driver]
-
-      - name: Sourcegraph DeepSearch
-        url: https://sourcegraph.com/
-        description: AI-powered semantic code search
-        usage: |
-          Finding code patterns across large codebases. Useful for understanding
-          how similar problems were solved elsewhere.
-
-      - name: Sourcegraph AMP
-        url: https://ampcode.com/
-        description: Agentic coding with autonomous workflows
-        usage: |
-          Experimenting with autonomous coding agents that can plan and execute
-          multi-step development tasks.
-
-      - name: OpenAI Codex
-        url: https://openai.com/blog/openai-codex
-        description: Code generation model powering Copilot
-        usage: |
-          Initial exploration on agentic workflows.
-          Understanding autonomous code generation capabilities.
-
-  - name: Research
-    tools:
-      - name: ChatGPT Deep Search
-        url: https://chat.openai.com/
-        description: Advanced AI research
-        usage: |
-          In-depth research sessions when I need comprehensive analysis
-          of a topic with cited sources.
-
-      - name: Perplexity Comet
-        url: https://comet.perplexity.ai/
-        description: AI-powered desktop assistant
-        usage: |
-          Initial exploration on agentic browsers.
-          AI assistant that can navigate and interact with web content.
-
-  - name: Education
+  - name: Research and Education
+    id: research
     tools:
       - name: NotebookLM
+        status: active
         url: https://notebooklm.google/
         description: AI-powered learning notebook
         usage: |
@@ -207,15 +260,56 @@ categories:
         tags: [concrete-example]
 
       - name: Gamma
+        status: active
         url: https://gamma.app/
         description: AI presentation creation
         usage: |
           Rapid prototyping of presentations and visual documents.
           Useful for turning ideas into shareable formats quickly.
 
+      - name: Perplexity Comet
+        status: archive
+        url: https://comet.perplexity.ai/
+        description: AI-powered desktop assistant
+        usage: |
+          Initial exploration on agentic browsers.
+          AI assistant that can navigate and interact with web content.
+
+      - name: ChatGPT Deep Search
+        status: archive
+        url: https://chat.openai.com/
+        description: Advanced AI research
+        usage: |
+          In-depth research sessions when I need comprehensive analysis
+          of a topic with cited sources.
+
+  - name: Voice
+    tools:
+      - name: ElevenLabs
+        status: experimental
+        url: https://elevenlabs.io/
+        description: AI voice and audio tools.
+
+      - name: Sesame
+        status: archive
+        url: https://www.sesame.com/
+        description: Voice-based AI companion
+        usage: |
+          Exploring voice-first AI interactions for hands-free workflows.
+
   - name: Local & Infrastructure
     tools:
+      - name: Hugging Face
+        status: active
+        url: https://huggingface.co/
+        description: Model repository & community hub
+        usage: |
+          For downloading and hosting open source models in the cloud.
+          The GitHub of AI models.
+        tags: [infrastructure]
+
       - name: llama.cpp
+        status: experimental
         url: https://github.com/ggerganov/llama.cpp
         description: Local LLM inference engine
         usage: |
@@ -226,15 +320,8 @@ categories:
             url: https://lab.turtleand.com/topics/running-inference-locally/
         tags: [infrastructure]
 
-      - name: Hugging Face
-        url: https://huggingface.co/
-        description: Model repository & community hub
-        usage: |
-          For downloading and hosting open source models in the cloud.
-          The GitHub of AI models.
-        tags: [infrastructure]
-
       - name: Google AI Studio
+        status: archive
         url: https://aistudio.google.com/
         description: API key management and model playground for Gemini
         usage: |
@@ -244,46 +331,10 @@ categories:
           agent workflows.
         tags: [infrastructure]
 
-  - name: Agents
-    tools:
-      - name: Hermes Agent
-        url: https://github.com/NousResearch/hermes-agent
-        description: Open-source AI agent framework with memory, skills, tools, messaging, and scheduled tasks
-        usage: |
-          My active Turtleand operating companion. Useful for voice-first interaction,
-          persistent memory, reusable skills, repository work, scheduled briefs,
-          and turning private learning into public artifacts while keeping human
-          approval at the center.
-        related:
-          - title: Turtleand Hermes Lab
-            url: https://hermes.turtleand.com/
-          - title: Hermes Agent Documentation
-            url: https://hermes-agent.nousresearch.com/docs
-          - title: AI Lab
-            url: https://lab.turtleand.com/
-        tags: [daily-driver, agent-framework, infrastructure]
-
-      - name: OpenClaw
-        url: https://github.com/openclaw/openclaw
-        description: Persistent AI agent platform
-        usage: |
-          My always-on AI partner running 24/7. Handles Telegram messages,
-          voice note transcription, autonomous GitHub development, scheduled
-          tasks, and proactive check-ins. The infrastructure behind this atlas.
-        related:
-          - title: OpenClaw Lab
-            url: https://openclaw.turtleand.com/
-          - title: Persistent Agents Guide
-            url: https://openclaw.turtleand.com/topics/persistent-agents/
-          - title: Voice Notes Integration
-            url: https://openclaw.turtleand.com/topics/voice-notes-telegram/
-          - title: Git Autonomous Development
-            url: https://openclaw.turtleand.com/topics/git-autonomous-development/
-        tags: [daily-driver, infrastructure]
-
   - name: Auxiliary Tools
     tools:
       - name: ntfy
+        status: archive
         url: https://ntfy.sh/
         description: Push notifications for AI agents
         usage: |

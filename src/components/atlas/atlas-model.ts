@@ -14,6 +14,7 @@ export type Landmark =
   | "library"
   | "utilities"
   | "harbor"
+  | "recording"
   | "jetty";
 export interface IslandPalette {
   land: string;
@@ -71,6 +72,7 @@ export function islandPoint(
 }
 export const CELL = 24;
 export const CLEARANCE = 54;
+const harborColors = ["#8be1d0", "#458b81", "#74b4a4", "#2b5a58", "#203e3d"] as const;
 const styles: Record<
   string,
   [Landmark, string, string, string, string, string]
@@ -103,7 +105,8 @@ const styles: Record<
     "#634c3e",
     "#493429",
   ],
-  agents: ["harbor", "#8be1d0", "#458b81", "#74b4a4", "#2b5a58", "#203e3d"],
+  agents: ["harbor", ...harborColors],
+  voice: ["recording", ...harborColors],
   "auxiliary-tools": [
     "jetty",
     "#f5acac",
@@ -113,6 +116,12 @@ const styles: Record<
     "#493034",
   ],
 };
+export function getAtlasIslandStyle(
+  id: string,
+): Pick<AtlasIsland, "landmark" | "accent"> {
+  const [landmark, accent] = styles[id] ?? styles["auxiliary-tools"];
+  return { landmark, accent };
+}
 export function random(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -190,8 +199,12 @@ export function createScene(categories: Category[]): AtlasScene {
   let width: number, height: number;
   const fallback: Point[] = [];
   const authoredCenters = Object.values(geography).map(([x, y]) => ({ x, y }));
+  const agentsPresent = categories.some((category) => category.id === "agents");
+  // The recording studio takes the old harbor site when the original shore is absent.
+  const terrainId = (id: string) =>
+    id === "voice" && !agentsPresent ? "agents" : id;
   function placement(id: string): [number, number, number, number] {
-    const authored = geography[id];
+    const authored = geography[terrainId(id)];
     if (authored) return authored;
     const seed = hash(id);
     for (let n = 0; ; n++) {
@@ -210,7 +223,7 @@ export function createScene(categories: Category[]): AtlasScene {
     .sort((a, b) => a.id.localeCompare(b.id))
     .forEach((c) => positions.set(c.id, placement(c.id)));
   const islands = categories.map((category): AtlasIsland => {
-    const seed = hash(category.id),
+    const seed = hash(terrainId(category.id)),
       rng = random(seed);
     const authored = positions.get(category.id)!;
     const center = { x: authored[0], y: authored[1] },
@@ -255,7 +268,7 @@ export function createScene(categories: Category[]): AtlasScene {
           "local-infrastructure": 1.2,
           "auxiliary-tools": 2.8,
         };
-        const bearing = bearings[category.id] ?? -1.57;
+        const bearing = bearings[terrainId(category.id)] ?? -1.57;
         const a =
           bearing +
           (category.tools.length === 1
