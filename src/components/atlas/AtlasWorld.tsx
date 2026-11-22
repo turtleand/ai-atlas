@@ -1,6 +1,7 @@
 import { STROKE_RATE } from "./journey";
 import { buildSeaGeometry } from "./atlas-sea-geometry";
 import { featureMotion } from "./atlas-features";
+import { turtleScreenScale } from "./atlas-camera";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, extend } from "@react-three/fiber";
 import * as THREE from "three";
@@ -49,9 +50,8 @@ export function AtlasWorld({
   const inactiveTerrain = useMemo(
     () =>
       new THREE.MeshLambertMaterial({
-        color: "#6b7a7e",
-        transparent: true,
-        opacity: 0.24,
+        color: "#b3b9b7",
+        vertexColors: true,
       }),
     [],
   );
@@ -60,7 +60,7 @@ export function AtlasWorld({
       new THREE.MeshBasicMaterial({
         color: "#617577",
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.25,
       }),
       new THREE.MeshBasicMaterial({
         color: "#477e79",
@@ -137,9 +137,9 @@ export function AtlasWorld({
   const wakeMaterial = useMemo(
     () =>
       new THREE.LineBasicMaterial({
-        color: "#9fd4bf",
+        color: "#dfdfac",
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.52,
       }),
     [],
   );
@@ -158,9 +158,9 @@ export function AtlasWorld({
   const routeMaterial = useMemo(
     () =>
       new THREE.LineDashedMaterial({
-        color: "#a3c8b4",
+        color: "#dfdfac",
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.54,
         dashSize: 6,
         gapSize: 12,
       }),
@@ -296,7 +296,7 @@ export function AtlasWorld({
       j.position.y,
     );
     turtle.root.rotation.y = -j.heading;
-    const scale = Math.min(1.15, Math.max(0.62, 0.32 / view.zoom));
+    const scale = turtleScreenScale(view) / view.zoom;
     turtle.root.scale.setScalar(scale);
     turtle.paddles.forEach((p, n) => {
       p.rotation.y =

@@ -67,7 +67,7 @@ function fallbackBlock(metadata) {
         <h1>${escapeHtml(metadata.heading)}</h1>
         <p>${escapeHtml(metadata.summary)}</p>
         <nav aria-label="AI Atlas entry points">
-          <a href="/">AI tool map</a>
+          <a href="/islands/">AI tool map</a>
           <a href="/ai-impact-map/">AI Impact Map</a>
           <a href="/tsunami/">AI Tsunami Tracker</a>
           <a href="/productivity-loop/">The Turtleand Loop</a>
@@ -88,7 +88,11 @@ function renderRoute(metadata) {
   );
 }
 
-for (const [route, metadata] of Object.entries(routeMetadata)) {
+for (const [route, entry] of Object.entries(routeMetadata)) {
+  const metadata = typeof entry === 'string' ? routeMetadata[entry] : entry;
+  if (!metadata || typeof metadata !== 'object') {
+    throw new Error(`Invalid metadata for ${route}`);
+  }
   const outputPath = route === '/'
     ? templatePath
     : resolve(distRoot, route.slice(1), 'index.html');

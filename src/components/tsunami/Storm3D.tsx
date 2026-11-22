@@ -3,14 +3,17 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createSeededRandom, getLightningEnvelope } from './scene-utils';
 import type { SceneCaptureOptions } from './scene-utils';
-import { atmosphereGLSL } from './atmosphere';
-import { getWaveHeight } from './wave-field';
+import { atmosphereGLSL, STORM_STRIKE_SITES } from './atmosphere';
+import { getWaveHeight, waveHeightGLSL } from './wave-field';
 
 interface Storm3DProps {
   daysSinceStart: number;
   tier: number;
   stormIntensity: number;
+  calmRadius: number;
+  seaLoad: THREE.IUniform<number>;
   lightningUniform: THREE.IUniform<number>;
+  stormLightDirection: THREE.IUniform<THREE.Vector3>;
   captureTime?: number;
   timeUniform?: THREE.IUniform<number>;
   lighting?: SceneCaptureOptions['lighting'];
@@ -27,6 +30,7 @@ const rainVertexShader = /* glsl */ `
 
   uniform float uTime;
   uniform float uCalmRadius;
+  uniform float uSeaLoad;
 
   varying float vAlpha;
 
@@ -44,15 +48,21 @@ const rainVertexShader = /* glsl */ `
       horizontal += radial * (1.0-calm) * (uCalmRadius>8.0?4.2:2.8);
       // The singularity organizes the same wind into a slow, broad circulation.
       if(uCalmRadius>8.0) horizontal += vec2(-radial.y,radial.x)*(1.0-calm)*sin(top*0.12+uTime*0.06)*2.0;
+      float edge = distanceFromCore/uCalmRadius;
+      float curtain = smoothstep(0.43,0.82,edge)*(1.0-smoothstep(0.88,1.2,edge));
+      horizontal += radial * 0.55 * curtain * (0.6+uSeaLoad)*min(1.0,uCalmRadius/9.0);
     }
 
     vec3 transformed = vec3(
-      horizontal.x - aTip * 0.16,
+      horizontal.x - aTip * (0.08 + aLength * 0.21),
       top - aTip * aLength,
       horizontal.y
     );
-    vAlpha = calm * (0.35 + aLength * 0.12) * smoothstep(-2.0, -0.8, top) * (1.0-smoothstep(26.0,29.0,top));
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+    vec4 eye = modelViewMatrix * vec4(transformed, 1.0);
+    float depth = -eye.z;
+    float falloff = smoothstep(1.5, 5.0, depth) * (1.0 - smoothstep(17.0, 36.0, depth));
+    vAlpha = calm * falloff * mix(0.50, 0.12, aTip) * smoothstep(-2.0, -0.8, top) * (1.0-smoothstep(26.0,29.0,top));
+    gl_Position = projectionMatrix * eye;
   }
 `;
 
@@ -81,22 +91,28 @@ const sprayVertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uPixelRatio;
   uniform float uCalmRadius;
+  uniform float uStormIntensity;
 
   varying float vAlpha;
+
+  ${waveHeightGLSL}
 
   void main() {
     vec3 transformed = position;
     transformed.x = mod(position.x - uTime * aSpeed + 36.0, 72.0) - 36.0;
-    transformed.y += sin(uTime * 2.4 + aPhase) * 0.35;
     transformed.z += sin(uTime * 0.7 + aPhase) * 0.6;
+    float surface = waveHeight(transformed.xz);
+    float blowing = 0.5 + 0.5 * sin(uTime * 2.2 + aPhase);
+    transformed.y = surface + 0.06 + position.y * (0.25 + blowing * 0.75);
     float distanceFromCore = length(transformed.xz);
     float calm = uCalmRadius > 0.0
       ? smoothstep(uCalmRadius * 0.5, uCalmRadius * 1.2, distanceFromCore)
       : 1.0;
-    vAlpha = calm * (1.0 - smoothstep(26.0,36.0,abs(transformed.x)));
-
     vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
-    gl_PointSize = clamp(uPixelRatio * 24.0 / max(-mvPosition.z, 1.0), 1.2, 4.2);
+    float crest = smoothstep(0.38, 0.96, surface);
+    float distanceFade = 1.0 - smoothstep(15.0, 32.0, -mvPosition.z);
+    vAlpha = calm * crest * blowing * distanceFade;
+    gl_PointSize = clamp(uPixelRatio * 24.0 / max(-mvPosition.z, 1.0), 1.2, 3.8);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -111,7 +127,7 @@ const sprayFragmentShader = /* glsl */ `
 
   void main() {
     vec2 point = gl_PointCoord - 0.5;
-    float softParticle = 1.0 - smoothstep(0.12, 0.5, length(point));
+    float softParticle = 1.0 - smoothstep(0.09, 0.5, length(point * vec2(1.0, 1.9)));
     vec3 color = mix(uColor, vec3(0.86, 0.95, 1.0), uLightning);
     gl_FragColor = vec4(color, softParticle * uOpacity * vAlpha);
     #include <tonemapping_fragment>
@@ -134,6 +150,7 @@ const skyFragmentShader = /* glsl */ `
 
   uniform float uTime;
   uniform float uLightning;
+  uniform vec3 uStormLightDirection;
   uniform float uTier;
   uniform float uSubmersion;
   varying vec3 vDirection;
@@ -169,35 +186,40 @@ const skyFragmentShader = /* glsl */ `
 
   void main() {
     vec3 direction = normalize(vDirection);
-    float horizon = 1.0 - smoothstep(-0.12, 0.62, direction.y);
-    vec2 cloudUv = direction.xz / max(0.18, direction.y + 0.82);
-    cloudUv += vec2(uTime * 0.008, -uTime * 0.003);
-    float broadCloud = fbm(cloudUv * 2.1);
-    float detailCloud = fbm(cloudUv * 5.6 - uTime * 0.006);
-    float cloud = smoothstep(0.4, 0.78, broadCloud * 0.72 + detailCloud * 0.42);
-    cloud *= smoothstep(-0.35, 0.35, direction.y) * 0.75 + horizon * 0.62;
+    float elevation = max(direction.y, 0.0);
+    vec2 wind = vec2(0.011, -0.004) * uTime;
+    vec2 cloudUv = direction.xz * (1.65 / (elevation + 0.41));
+    float shelf = fbm(cloudUv * vec2(0.87, 1.2) + wind);
+    vec2 textureUv = cloudUv * 2.4 - vec2(shelf * 1.7, 0.8) + wind;
+    float textureCloud = fbm(textureUv);
+    float wisp = noise(textureUv * vec2(4.1, 6.8) + vec2(8.3, -2.6));
+    float density = shelf * 0.60 + textureCloud * 0.32 + wisp * 0.08;
+    float cloud = smoothstep(0.34, 0.71, density);
+    float silverEdge = smoothstep(0.32, 0.46, density) * (1.0 - smoothstep(0.46, 0.56, density));
+    float sloop = 1.0 - clamp(abs(uTier - 2.0), 0.0, 1.0);
+    float eye = smoothstep(4.1, 5.0, uTier);
+    vec3 openingDirection = normalize(mix(vec3(-0.26, 0.29, -1.0), vec3(0.06, 0.24, -1.0), eye));
+    float opening = pow(max(dot(direction, openingDirection), 0.0), 14.0 + eye * 38.0);
+    float gap = opening * (1.0 - smoothstep(0.28 + 0.17 * eye, 0.59, density));
 
-    vec3 zenith = vec3(0.003, 0.009, 0.021);
-    vec3 horizonColor = vec3(0.012, 0.030, 0.047);
-    vec3 color = mix(horizonColor, zenith, smoothstep(-0.2, 0.8, direction.y));
-    color = mix(color, vec3(0.060, 0.088, 0.12), cloud * 0.78);
-    float underside = smoothstep(0.50,0.75,broadCloud) * smoothstep(0.25,0.8,direction.y);
-    color *= 1.0 - underside * 0.42;
+    vec3 horizon = stormHorizon(uTier, uLightning);
+    vec3 lightSlate = mix(vec3(0.075, 0.110, 0.132), vec3(0.059, 0.088, 0.122), sloop);
+    vec3 darkSlate = mix(vec3(0.009, 0.022, 0.032), vec3(0.012, 0.022, 0.043), sloop);
+    vec3 color = mix(lightSlate, darkSlate, cloud);
+    color *= mix(0.94, 0.55, smoothstep(0.22, 0.82, elevation));
+    vec3 light = mix(vec3(0.20, 0.27, 0.31), vec3(0.22, 0.35, 0.44), eye);
+    color += light * (gap * (0.35 - sloop * 0.27 + eye * 0.35) + silverEdge * opening * (0.14 + 0.10 * wisp));
+    color += lightSlate * textureCloud * silverEdge * smoothstep(0.03, 0.28, elevation) * 0.22;
 
-    float command = smoothstep(3.5, 5.0, uTier);
-    vec3 commandColor = mix(vec3(0.02, 0.22, 0.28), vec3(0.28, 0.17, 0.04), smoothstep(4.4, 5.0, uTier));
-    color += commandColor * command * (0.08 + horizon * 0.1);
-    color += vec3(0.12, 0.19, 0.29) * uLightning * (0.38 + cloud * 0.8);
-    if (uTier > 4.5) {
-      float azimuth = atan(direction.z, direction.x);
-      float curtain = sin(azimuth * 3.0 + uTime * 0.045) * 0.04;
-      float aurora = exp(-pow((direction.y - 0.18 - curtain) * 19.0, 2.0));
-      float filaments = 0.62 + 0.38 * sin(azimuth * 26.0 + direction.y * 4.0 + uTime * 0.15);
-      // Whole longitude harmonics meet continuously at atan's -PI / PI wrap.
-      color += mix(vec3(0.032,0.16,0.12), vec3(0.15,0.10,0.025), smoothstep(-0.4,0.65,sin(azimuth))) * aurora * filaments;
-    }
+    float rainBand = smoothstep(0.50, 0.74, noise(direction.xz * 17.0 + vec2(elevation * 2.4, 0.0) + wind * 0.6));
+    float lowMist = (1.0 - smoothstep(0.015, 0.16, elevation)) * smoothstep(-0.018, 0.025, direction.y);
+    color = mix(color, horizon * 1.12, lowMist * (0.56 + rainBand * 0.26));
+    color = mix(horizon, color, smoothstep(-0.012, 0.044, direction.y));
 
-    color=mix(stormHorizon(uTier,uLightning),color,smoothstep(0.0,0.24,abs(direction.y)));
+    // Illuminate the same cloud bank seen behind the distant strike.
+    float strike = max(dot(direction, uStormLightDirection), 0.0);
+    float flashGlow = pow(strike, 30.0) * (0.14 + 0.64 * silverEdge + 0.38 * cloud) + pow(strike, 100.0) * 0.13;
+    color += vec3(0.32, 0.47, 0.68) * uLightning * flashGlow * smoothstep(-0.035, 0.08, direction.y);
     vec3 aquatic=vec3(0.003,0.019,0.028)
       +vec3(0.003,0.010,0.012)*max(direction.y,0.0)
       +vec3(0.001,0.008,0.011)*min(direction.y,0.0)
@@ -250,7 +272,7 @@ function createSprayGeometry(count: number) {
 
   for (let index = 0; index < count; index++) {
     position[index * 3] = (random() - 0.5) * 72;
-    position[index * 3 + 1] = random() * 4.8 - 0.4;
+    position[index * 3 + 1] = random() * 0.60;
     position[index * 3 + 2] = (random() - 0.5) * 46;
     phase[index] = random() * Math.PI * 2;
     speed[index] = 10 + random() * 9;
@@ -265,27 +287,49 @@ function createSprayGeometry(count: number) {
 
 function createLightningGeometry(seed: number) {
   const random = createSeededRandom(seed);
-  const points: THREE.Vector3[] = [];
-  let previous = new THREE.Vector3(0, 22, 0);
-
-  for (let segment = 1; segment <= 12; segment++) {
-    const next = new THREE.Vector3(
-      (random() - 0.5) * (1.2 + segment * 0.22),
-      22 - segment * 1.55,
-      (random() - 0.5) * 1.3,
-    );
-    points.push(previous, next);
-    previous = next;
+  const positions: number[] = [];
+  const colors: number[] = [];
+  const path = [new THREE.Vector3(0, 12.0, 0)];
+  function drawSegment(start: THREE.Vector3, end: THREE.Vector3, from: number, to: number) {
+    positions.push(start.x, start.y, start.z, end.x, end.y, end.z);
+    colors.push(from, from, from, to, to, to);
   }
-
-  return new THREE.BufferGeometry().setFromPoints(points);
+  for (let segment = 1; segment <= 22; segment++) {
+    const previous = path[segment - 1];
+    const next = new THREE.Vector3(
+      previous.x * 0.82 + (random() - 0.5) * 1.1,
+      12.0 - segment * 0.53,
+      previous.z * 0.8 + (random() - 0.5) * 0.6,
+    );
+    drawSegment(previous, next, 0.88, 0.95);
+    path.push(next);
+  }
+  for (const [joint, side, length] of [[4, -1, 8], [8, 1, 7], [12, -1, 5], [15, 1, 4]]) {
+    let previous = path[joint];
+    for (let segment = 0; segment < length; segment++) {
+      const next = new THREE.Vector3(
+        previous.x + side * (0.16 + random() * 0.42),
+        previous.y - 0.25 - random() * 0.32,
+        previous.z + (random() - 0.5) * 0.42,
+      );
+      drawSegment(previous, next, 0.64 * (1 - segment / length), 0.64 * (1 - (segment + 1) / length));
+      previous = next;
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  return geometry;
 }
 
 export function Storm3D({
   daysSinceStart,
   tier,
   stormIntensity,
+  calmRadius,
+  seaLoad,
   lightningUniform,
+  stormLightDirection,
   captureTime,
   timeUniform,
   lighting = 'scene',
@@ -297,7 +341,6 @@ export function Storm3D({
   const aquaticColor = useMemo(() => new THREE.Color().setRGB(0.003, 0.019, 0.028), []);
   const rainCount = reducedMotion ? 100 : 1100;
   const sprayCount = reducedMotion ? 30 : 380;
-  const calmRadius = tier === 5 ? 11 : tier === 4 ? 5 : 0;
   const seedOffset = daysSinceStart % 97;
 
   const rainGeometry = useMemo(() => createRainGeometry(rainCount), [rainCount]);
@@ -319,6 +362,7 @@ export function Storm3D({
         uniforms: {
           uTime: { value: 0 },
           uCalmRadius: { value: 0 },
+          uSeaLoad: seaLoad,
           uColor: { value: new THREE.Color('#8fa9c4') },
           uOpacity: { value: 0.46 },
           uLightning: lightningUniform,
@@ -328,7 +372,7 @@ export function Storm3D({
         blending: THREE.NormalBlending,
         toneMapped: true,
       }),
-    [lightningUniform],
+    [lightningUniform, seaLoad],
   );
 
   const sprayMaterial = useMemo(
@@ -340,6 +384,7 @@ export function Storm3D({
           uTime: { value: 0 },
           uPixelRatio: { value: Math.min(window.devicePixelRatio, 1.75) },
           uCalmRadius: { value: 0 },
+          uStormIntensity: { value: 1 },
           uColor: { value: new THREE.Color('#abc8d5') },
           uOpacity: { value: 0.34 },
           uLightning: lightningUniform,
@@ -360,6 +405,7 @@ export function Storm3D({
         uniforms: {
           uTime: { value: 0 },
           uLightning: lightningUniform,
+          uStormLightDirection: stormLightDirection,
           uTier: { value: 1 },
           uSubmersion: { value: 0 },
         },
@@ -367,7 +413,7 @@ export function Storm3D({
         depthWrite: false,
         toneMapped: true,
       }),
-    [lightningUniform],
+    [lightningUniform, stormLightDirection],
   );
 
   const boltMaterials = useMemo(
@@ -378,6 +424,7 @@ export function Storm3D({
             color: '#d9e8ff',
             transparent: true,
             opacity: 0,
+            vertexColors: true,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             toneMapped: true,
@@ -410,10 +457,7 @@ export function Storm3D({
       fogState.current = null;
     };
   }, [scene]);
-  useEffect(() => {
-    boltMaterials.forEach(material => material.color.set(tier === 5 ? '#ffe5a3' : '#d9e8ff'));
-  }, [boltMaterials, tier]);
-
+  // Read the updated orbit camera before the ocean and ship sample this flash.
   useFrame(({ clock, camera, gl }) => {
     const time = timeUniform?.value ?? captureTime ?? clock.getElapsedTime() * (reducedMotion ? 0.25 : 1);
     const waterDepth = getWaveHeight(camera.position.x, camera.position.z, time, stormIntensity, calmRadius) - camera.position.y;
@@ -422,13 +466,16 @@ export function Storm3D({
     const submersion = THREE.MathUtils.smoothstep(waterDepth, -0.035, 0.015);
     const airVisibility = 1 - submersion;
     const flash = reducedMotion || lighting === 'ambient' || lighting === 'neutral' ? 0 : lighting === 'flash' ? 0.8 : getLightningEnvelope(time);
-    const activeBolt = Math.floor(time / 8.5) % 3;
+    const activeBolt = Math.floor(time / 8.5) % STORM_STRIKE_SITES.length;
+    const [strikeX, , strikeZ] = STORM_STRIKE_SITES[activeBolt];
     lightningUniform.value = flash;
+    stormLightDirection.value.set(strikeX, 8.0, strikeZ).normalize();
 
     rainMaterial.uniforms.uTime.value = time;
     rainMaterial.uniforms.uCalmRadius.value = calmRadius;
     rainMaterial.uniforms.uOpacity.value = (reducedMotion ? 0.18 : 0.46) * airVisibility;
     sprayMaterial.uniforms.uTime.value = time;
+    sprayMaterial.uniforms.uStormIntensity.value = stormIntensity;
     sprayMaterial.uniforms.uCalmRadius.value = calmRadius;
     sprayMaterial.uniforms.uPixelRatio.value = gl.getPixelRatio();
     sprayMaterial.uniforms.uOpacity.value = (reducedMotion ? 0.12 : 0.34) * airVisibility;
@@ -444,15 +491,16 @@ export function Storm3D({
 
     boltMaterials.forEach((material, index) => {
       material.opacity = index === activeBolt ? flash * 0.9 * airVisibility : 0;
+      material.visible = material.opacity > 0;
     });
 
     if (lightningLight.current) {
-      const positions = [[8,18,-10],[-13,20,4],[4,17,14]];
-      lightningLight.current.position.set(...positions[activeBolt] as [number,number,number]);
-      lightningLight.current.intensity = flash * 3.8 * (1 - submersion * 0.85);
-      lightningLight.current.color.set(tier === 5 ? '#ffe1a0' : '#d5e5ff');
+      lightningLight.current.position.set(strikeX, 14, strikeZ);
+      // A distant strike lights the sky and water most strongly. Keep enough
+      // fill on the ship to read wet material instead of clipping to white.
+      lightningLight.current.intensity = flash * 0.78 * (1 - submersion * 0.85);
     }
-  });
+  }, -0.5);
 
   return (
     <>
@@ -463,15 +511,9 @@ export function Storm3D({
       <lineSegments geometry={rainGeometry} material={rainMaterial} frustumCulled={false} />
       <points geometry={sprayGeometry} material={sprayMaterial} />
 
-      <group position={[8, 0, -12]}>
-        <lineSegments geometry={boltGeometries[0]} material={boltMaterials[0]} />
-      </group>
-      <group position={[-13, 2, 2]} rotation={[0, 0, -0.08]}>
-        <lineSegments geometry={boltGeometries[1]} material={boltMaterials[1]} />
-      </group>
-      <group position={[4, 0, 12]} rotation={[0, 0, 0.06]}>
-        <lineSegments geometry={boltGeometries[2]} material={boltMaterials[2]} />
-      </group>
+      {STORM_STRIKE_SITES.map((site, index) => (
+        <lineSegments key={site[0]} position={site} geometry={boltGeometries[index]} material={boltMaterials[index]} />
+      ))}
 
       <directionalLight ref={lightningLight} position={[8,18,-10]} intensity={0} color="#d5e5ff" />
     </>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseToolsYaml } from "../../utils/parseTools";
 import data from "../../data/ai-tools.yaml?raw";
+import { createAtlasCatalog } from "./atlas-catalog";
 import {
   createScene,
   clearSegment,
@@ -21,8 +22,8 @@ import {
   buildTurtle,
   focusIslandGeometry,
 } from "./atlas-geometry";
-const categories = parseToolsYaml(data);
-const scene = createScene(categories);
+const { scene } = createAtlasCatalog(parseToolsYaml(data));
+const categories = scene.islands.map((island) => island.category);
 describe("living archipelago geography", () => {
   it("uses stable catalog identities and deterministic, safe docking points", () => {
     expect(createScene(categories)).toEqual(scene);
@@ -71,7 +72,7 @@ describe("living archipelago geography", () => {
 describe("turtle journey continuity", () => {
   it("crosses phases, stays in water, visits the destination, and never teleports", () => {
     const j = createJourney(scene);
-    redirectJourney(scene, j, scene.islands[4].id);
+    redirectJourney(scene, j, "local-infrastructure");
     const phases = new Set<string>();
     let arrived = false;
     for (let n = 0; n < 6000; n++) {
@@ -92,29 +93,30 @@ describe("turtle journey continuity", () => {
   });
   it("keeps the current pose during rapid redirection and uses the latest target", () => {
     const j = createJourney(scene);
-    redirectJourney(scene, j, scene.islands[4].id);
+    redirectJourney(scene, j, "local-infrastructure");
     for (let n = 0; n < 300; n++) advanceJourney(scene, j, 1 / 60);
     const position = { ...j.position },
       heading = j.heading;
-    for (const i of [2, 7, 3]) {
-      expect(redirectJourney(scene, j, scene.islands[i].id)).toBe(true);
+    for (const id of ["images", "voice", "research"]) {
+      expect(redirectJourney(scene, j, id)).toBe(true);
       expect(j.position).toEqual(position);
       expect(j.heading).toBe(heading);
     }
-    expect(j.destination).toBe(scene.islands[3].id);
+    expect(j.destination).toBe("research");
   });
   it("uses time-based motion and leaves a safe static pose for reduced motion", () => {
     const poses = [30, 60, 120].map((rate) => {
       const j = createJourney(scene);
-      redirectJourney(scene, j, scene.islands[5].id);
+      redirectJourney(scene, j, "code");
       for (let n = 0; n < rate * 6; n++) advanceJourney(scene, j, 1 / rate);
       return j;
     });
     for (const j of poses)
       expect(distance(j.position, poses[0].position)).toBeLessThan(0.001);
     const j = poses[0];
-    redirectJourney(scene, j, scene.islands[8].id, true);
-    expect(j.position).toEqual(scene.islands[8].dock);
+    const voice = scene.islands.find((island) => island.id === "voice")!;
+    redirectJourney(scene, j, voice.id, true);
+    expect(j.position).toEqual(voice.dock);
     expect(j.phase).toBe("visit");
   });
 });
