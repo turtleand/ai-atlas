@@ -21,13 +21,36 @@ function surface(color: string, metalness: number, roughness: number, emission?:
   });
 }
 
+/** Object-space finish stays on the part as it turns and fades at distance. */
+function finishedSurface(color: string, metalness: number, roughness: number, grain: number) {
+  const material = surface(color, metalness, roughness);
+  const finish = { value: grain };
+  material.onBeforeCompile = shader => {
+    shader.uniforms.uFinishGrain = finish;
+    shader.vertexShader = `varying vec3 vFinishPoint;\n${shader.vertexShader}`.replace(
+      '#include <begin_vertex>', '#include <begin_vertex>\nvFinishPoint = position;',
+    );
+    shader.fragmentShader = `varying vec3 vFinishPoint;\nuniform float uFinishGrain;\n${shader.fragmentShader}`.replace(
+      '#include <roughnessmap_fragment>', `
+      #include <roughnessmap_fragment>
+      float mill = dot(vFinishPoint, vec3(39.0, 72.0, 15.0));
+      float broadFinish = sin(dot(vFinishPoint, vec3(4.0, 12.0, 6.0)));
+      float brushedFinish = sin(mill + broadFinish) * (1.0 - smoothstep(0.6, 2.7, fwidth(mill)));
+      diffuseColor.rgb *= 1.0 + (broadFinish * 0.55 + brushedFinish * 0.32) * uFinishGrain;
+      roughnessFactor = clamp(roughnessFactor + (broadFinish * 0.48 - brushedFinish * 0.22) * uFinishGrain, 0.1, 1.0);
+    `);
+  };
+  material.customProgramCacheKey = () => 'cosmic-object-space-finish';
+  return material;
+}
+
 /** Local radiance varies across the real inner solid, never a surrounding shell. */
 function energyCore(tier: 4 | 5) {
   const clock = { value: 0 };
-  const cold = { value: new THREE.Color(tier === 4 ? '#062c47' : '#372513') };
-  const warm = { value: new THREE.Color(tier === 4 ? '#0ca3ab' : '#c57f25') };
-  const hot = { value: new THREE.Color(tier === 4 ? '#74dfd2' : '#f4d08a') };
-  const material = surface(tier === 4 ? '#145568' : '#75552b', 0.22, 0.31, '#ffffff', 1);
+  const cold = { value: new THREE.Color(tier === 4 ? '#03272f' : '#562d11') };
+  const warm = { value: new THREE.Color(tier === 4 ? '#159b94' : '#e4983b') };
+  const hot = { value: new THREE.Color(tier === 4 ? '#8ce9d4' : '#ffe4a8') };
+  const material = surface(tier === 4 ? '#104947' : '#865224', 0.16, 0.24, '#ffffff', 1);
   material.name = 'nested energy core with bounded local radiance';
   material.onBeforeCompile = shader => {
     shader.uniforms.uCoreTime = clock;
@@ -48,18 +71,18 @@ function energyCore(tier: 4 | 5) {
       #include <emissivemap_fragment>
       vec3 corePoint = vCorePoint / vec3(${tier === 4 ? '0.54, 0.6102, 0.54' : '0.43, 0.86, 0.43'});
       float coreLongitude = atan(corePoint.z, corePoint.x);
-      float coreBand = exp(-corePoint.y * corePoint.y * 5.5);
+      float coreBand = exp(-corePoint.y * corePoint.y * ${tier === 4 ? '4.8' : '1.45'});
       float coreFlow = 0.5 + 0.5 * sin(coreLongitude * 3.0 + corePoint.y * 4.5 - uCoreTime * 0.11);
-      float coreVein = pow(coreFlow, 7.0);
+      float coreVein = pow(coreFlow, 6.0);
       float coreFront = clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
-      float coreDepth = 0.22 + 0.78 * pow(coreFront, 0.75);
+      float coreDepth = 0.25 + 0.75 * pow(coreFront, 0.75);
       vec3 coreRadiance = mix(uCoreCold, uCoreWarm, 0.25 + 0.55 * coreBand);
-      coreRadiance = mix(coreRadiance, uCoreHot, coreVein * 0.72);
-      totalEmissiveRadiance = coreRadiance * coreDepth;
-      diffuseColor.rgb *= 0.5 + 0.35 * coreFlow;
+      coreRadiance = mix(coreRadiance, uCoreHot, coreVein * 0.66);
+      totalEmissiveRadiance = coreRadiance * coreDepth * ${tier === 4 ? '1.15' : '1.65'};
+      diffuseColor.rgb *= 0.34 + 0.30 * coreFlow;
     `);
   };
-  material.customProgramCacheKey = () => `cosmic-local-radiance-v1-${tier}`;
+  material.customProgramCacheKey = () => `cosmic-local-radiance-v2-${tier}`;
   return { material, update: (time: number) => { clock.value = time; } };
 }
 
@@ -181,32 +204,33 @@ function channel(radius: number, width: number, depth: number, segments: number,
   return geometry;
 }
 
-function createRing(radius: number, wide: boolean, body: Material, luminous: Material, trim: Material) {
+function createRing(radius: number, body: Material, panel: Material, luminous: Material, ceramicShell: boolean) {
   const group = new THREE.Group();
   const batch = new Batch();
-  const halfWidth = wide ? 0.065 : 0.057;
-  const depth = wide ? 0.037 : 0.044;
-  const segments = wide ? 48 : 64;
+  const halfWidth = ceramicShell ? 0.075 : 0.061;
+  const depth = 0.046;
+  const segments = 64;
   batch.add(rail(radius, halfWidth, depth, segments), body);
-  batch.add(channel(radius, halfWidth * 0.28, depth + 0.0015, segments, true), luminous);
-  // Eight purposeful clamps describe how the rail is assembled. They are merged
-  // with the body material; no individual fastener objects or subpixel bolts.
+  if (ceramicShell) {
+    // The broad porcelain faces stop at the rail seams and leave the dark chamfers exposed.
+    batch.add(channel(radius + 0.006, 0.043, depth + 0.0015, segments, true), panel);
+  }
+  const trackRadius = ceramicShell ? radius - 0.047 : radius;
+  batch.add(channel(trackRadius, 0.008, depth + 0.002, segments, true), luminous);
+  // Service collars describe how the casings attach to the rail, and double as
+  // orientation cues while the three axes turn independently.
   for (let i = 0; i < 8; i++) {
-    const theta = (i + 0.5) / 8 * TAU;
-    const clamp = bevelBlock(halfWidth * 2.5, 0.082, depth * 2.3);
+    const theta = (i + 0.94) / 8 * TAU;
+    const clamp = bevelBlock(halfWidth * 2.35, i === 0 ? 0.16 : 0.087, depth * 2.28);
     clamp.rotateZ(theta);
     clamp.translate(Math.cos(theta) * radius, Math.sin(theta) * radius, 0);
-    batch.add(clamp, body);
+    batch.add(clamp, ceramicShell ? body : panel);
   }
-  // One index plate supplies a stable orientation cue during rotation.
-  const plate = bevelBlock(halfWidth * 3.3, 0.18, depth * 2.6);
-  plate.translate(radius, 0, 0);
-  batch.add(plate, trim);
-  batch.build(group, 'gyro rail, inset energy channel and index plate');
+  batch.build(group, 'machined gyro rail with service collars and inset channels');
   return group;
 }
 
-function polyhedronArmor(radius: number, axialScale: number, panels: Material, edges: Material, batch: Batch, recessed: Material) {
+function polyhedronArmor(radius: number, axialScale: number, edges: Material, batch: Batch, recessed: Material) {
   const shell = new THREE.IcosahedronGeometry(radius, 0);
   const coordinates = shell.getAttribute('position');
   for (let i = 0; i < coordinates.count; i += 3) {
@@ -216,7 +240,7 @@ function polyhedronArmor(radius: number, axialScale: number, panels: Material, e
     const perimeter = points.map(p => p.clone().sub(center).multiplyScalar(0.82).add(center));
     const top = perimeter.map(p => p.clone().sub(center).multiplyScalar(0.91).add(center).addScaledVector(normal, 0.025));
     const bottom = perimeter.map(p => p.clone().addScaledVector(normal, -0.06));
-    const opening = top.map(p => p.clone().sub(center).multiplyScalar(0.66).add(center));
+    const opening = top.map(p => p.clone().sub(center).multiplyScalar(0.73).add(center));
     const ringPoints: THREE.Vector3[] = [];
     for (let edge = 0; edge < 3; edge++) {
       const next = (edge + 1) % 3;
@@ -224,7 +248,7 @@ function polyhedronArmor(radius: number, axialScale: number, panels: Material, e
     }
     const frame = new THREE.BufferGeometry().setFromPoints(ringPoints.map(p => p.clone().setY(p.y * axialScale)));
     frame.computeVertexNormals();
-    batch.add(frame, i % 6 === 0 ? panels : edges);
+    batch.add(frame, edges);
     // Alternating apertures expose a real inner volume. The remaining faces have
     // recessed panels, breaking up the broad unarticulated triangle silhouette.
     if (i % 6 !== 0) {
@@ -337,12 +361,13 @@ function flowPoints(count: number, height: number, radius: number, color: string
 export function createCosmicModel(tier: 4 | 5): CosmicModel {
   const root = new THREE.Group();
   root.name = tier === 4 ? 'AI Flagship: mechanical gyroscope' : 'The Singularity: celestial architecture';
-  const metal = surface('#526976', 0.7, 0.34);
-  const ceramic = surface('#9aafb1', 0.2, 0.39);
-  const bronze = surface('#c1a66b', 0.72, 0.35);
-  const dark = surface('#17343f', 0.5, 0.43);
-  const cyan = surface(CYAN, 0.15, 0.3, CYAN, 0.85);
-  const gold = surface(GOLD, 0.25, 0.34, GOLD, 0.7);
+  const flagship = tier === 4;
+  const metal = finishedSurface(flagship ? '#46545b' : '#354652', 0.74, 0.34, 0.13);
+  const ceramic = finishedSurface(flagship ? '#bbb4a5' : '#82939b', 0.18, 0.42, 0.08);
+  const bronze = finishedSurface(flagship ? '#a5814c' : '#bd8b46', 0.7, 0.31, 0.11);
+  const dark = surface(flagship ? '#23373a' : '#202c35', 0.48, 0.45);
+  const cyan = surface('#3aaca8', 0.24, 0.33, '#51cebd', 0.65);
+  const gold = surface('#c48b43', 0.29, 0.29, '#f9bb64', flagship ? 0.18 : 0.69);
   const energy = energyCore(tier);
   const inner = energy.material;
   const materials = [metal, ceramic, bronze, dark, cyan, gold, inner];
@@ -352,7 +377,7 @@ export function createCosmicModel(tier: 4 | 5): CosmicModel {
     const core = new THREE.Group();
     core.position.y = 0.68;
     const coreBatch = new Batch();
-    polyhedronArmor(0.69, 1.08, ceramic, metal, coreBatch, dark);
+    polyhedronArmor(0.69, 1.08, metal, coreBatch, dark);
     const crystal = new THREE.IcosahedronGeometry(0.54, 2);
     crystal.scale(1, 1.13, 1);
     coreBatch.add(crystal, inner);
@@ -368,7 +393,10 @@ export function createCosmicModel(tier: 4 | 5): CosmicModel {
     movements.push(time => { core.rotation.y = time * 0.075; });
 
     const rings = [1.02, 1.33, 1.66].map((radius, i) => {
-      const group = createRing(radius, false, i === 1 ? bronze : metal, i === 1 ? gold : cyan, i === 1 ? metal : bronze);
+      const outerCasing = i !== 1;
+      const group = outerCasing
+        ? createRing(radius, metal, ceramic, cyan, true)
+        : createRing(radius, bronze, metal, gold, false);
       group.position.y = 0.78;
       // Slightly flattened vertical span keeps a coherent hovering silhouette.
       group.scale.y = 0.8;
@@ -426,22 +454,20 @@ export function createCosmicModel(tier: 4 | 5): CosmicModel {
     // Open petals reveal successive layers through deliberate architectural gaps.
     for (let i = 0; i < 6; i++) {
       const angle = i / 6 * TAU;
-      batch.add(petal(angle, true), i % 2 ? metal : bronze);
-      batch.add(petal(angle + Math.PI / 6, false), i % 2 ? bronze : metal);
-      // Small pale shoulder plates establish a secondary material scale.
-      for (const upper of [true, false]) {
-        const panel = bevelBlock(0.18, 0.24, 0.065, true);
-        panel.translate(0.51, upper ? 0.33 : -0.24, 0);
-        panel.rotateY(angle + (upper ? 0 : Math.PI / 6));
-        batch.add(panel, ceramic);
-      }
+      batch.add(petal(angle, true), metal);
+      batch.add(petal(angle + Math.PI / 6, false), bronze);
+      // Dark keys articulate the lower brass cage and echo the upper vanes.
+      const key = bevelBlock(0.13, 0.2, 0.06, true);
+      key.translate(0.51, -0.24, 0);
+      key.rotateY(angle + Math.PI / 6);
+      batch.add(key, metal);
       const rib = rod([Math.cos(angle) * 0.36, 0.55, -Math.sin(angle) * 0.36],
         [Math.cos(angle) * 0.25, 1.53, -Math.sin(angle) * 0.25], 0.015, 4);
       batch.add(rib, gold);
     }
-    polyhedronArmor(0.56, 1.6, ceramic, bronze, batch, dark);
-    const kernel = new THREE.IcosahedronGeometry(0.43, 2);
-    kernel.scale(1, 2, 1);
+    polyhedronArmor(0.56, 1.6, bronze, batch, dark);
+    const kernel = new THREE.IcosahedronGeometry(0.43, 1);
+    kernel.scale(1, 2.15, 1);
     batch.add(kernel, inner);
     batch.build(core, 'open celestial petals around a nested luminous kernel');
     root.add(core);
@@ -463,15 +489,16 @@ export function createCosmicModel(tier: 4 | 5): CosmicModel {
       const transform = new THREE.Matrix4().compose(
         new THREE.Vector3(0, y, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(...rotation)), new THREE.Vector3(...scale),
       );
-      ringBatch.add(rail(r, 0.062, 0.042, 48).applyMatrix4(transform), index === 0 || index === 3 ? bronze : metal);
-      ringBatch.add(channel(r, 0.019, 0.044, 48, true).applyMatrix4(transform), index % 2 ? cyan : gold);
+      const brass = index === 0 || index === 3;
+      ringBatch.add(rail(r, brass ? 0.072 : 0.056, 0.042, 48).applyMatrix4(transform), brass ? bronze : metal);
+      ringBatch.add(channel(r, 0.012, 0.044, 48, true).applyMatrix4(transform), brass ? bronze : ceramic);
       for (let j = 0; j < 4; j++) {
         const angle = j / 4 * TAU;
         const key = bevelBlock(0.16, 0.1, 0.11);
         key.rotateZ(angle);
         key.translate(Math.cos(angle) * r, Math.sin(angle) * r, 0);
         key.applyMatrix4(transform);
-        ringBatch.add(key, index % 2 ? bronze : metal);
+        ringBatch.add(key, brass ? metal : bronze);
       }
     });
     ringBatch.build(cage, 'five indexed cage rings with inset channels');
@@ -505,18 +532,16 @@ export function createCosmicModel(tier: 4 | 5): CosmicModel {
       const angle = i / 6 * TAU;
       const x = Math.cos(angle) * 1.42;
       const z = Math.sin(angle) * 1.42;
-      anchors.add(rod([x, -2.465, z], [x, 0.12, z], 0.012, 6, 0.034), i % 2 ? cyan : gold);
+      anchors.add(rod([x, -2.465, z], [x, 0.12, z], 0.012, 6, 0.034), gold);
       const capital = new THREE.CylinderGeometry(0.085, 0.135, 0.2, 6);
       capital.translate(x, 0.05, z);
       anchors.add(capital, bronze);
       const link = rod([x, 0.16, z], [x * 0.47, 0.55, z * 0.47], 0.025, 6);
       anchors.add(link, bronze);
     }
-    anchors.add(rod([0, 1.98, 0], [0, 5.7, 0], 0.044, 6, 0.005), gold);
-    // Two offset filaments provide depth without a transparent cylinder shell.
-    for (const sign of [-1, 1]) {
-      anchors.add(rod([sign * 0.11, 2.08, 0], [sign * 0.035, 4.4, 0], 0.009, 4), cyan);
-    }
+    // One tapered gold axis leads from the kernel to the existing sky endpoint.
+    anchors.add(rod([0, 1.09, 0], [0, 2.65, 0], 0.054, 8, 0.037), gold);
+    anchors.add(rod([0, 2.65, 0], [0, 5.7, 0], 0.037, 8, 0.004), gold);
     anchors.build(root, 'six ocean pillars and an ascending sky connection');
     const data = flowPoints(68, 6.5, 0.71, GOLD);
     root.add(data.points);

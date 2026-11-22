@@ -122,9 +122,9 @@ function createSail(
   batch.add(material, ...[[a, b], [b, c], [c, a]].map((edge) => spar(edge[0], edge[1], 0.0055, 0.0055, 5)));
   const tape = material.clone();
   tape.name = 'reinforced-sail-seams';
-  tape.color.multiplyScalar(0.79);
+  tape.color.multiplyScalar(technological ? 0.70 : 0.61);
   const seamGeometries = [0.31, 0.64].map((v) => surface((u, offset) => {
-    const p = point(u, v + (offset - 0.5) * 0.007, 0);
+    const p = point(u, v + (offset - 0.5) * 0.011, 0);
     p[0] -= 0.0012;
     return p;
   }, 10, 1));
@@ -196,14 +196,20 @@ function createSloop(root: THREE.Group, materials: NavalMaterials, animations: A
   );
   animations.push(createSail(root, batch, materials, [[0.022, 1.035, 0.09], [0.022, 2.035, 0.09], [0.022, 1.055, -0.94]], 0.095, 0.3));
   animations.push(createSail(root, batch, materials, [[0.018, 0.415, 1.265], [0.018, 1.81, 0.305], [0.018, 0.75, 0.56]], 0.07, 0.7));
-  // One modest lantern: framed glass with a handle, no extra protective equipment.
+  // Faceted glass, a dark cage and a peaked cap retain one small amber focus.
   const lantern: Point = [-0.23, 0.40, -1.10];
-  batch.add(materials.lamp, block(0.054, 0.075, 0.054, lantern, 0.004));
+  const [lanternX, lanternY, lanternZ] = lantern;
+  batch.add(materials.lamp, spar([lanternX, lanternY - 0.035, lanternZ], [lanternX, lanternY + 0.037, lanternZ], 0.031, 0.029, 6));
   batch.add(materials.dark,
-    block(0.072, 0.015, 0.072, [-0.23, 0.354, -1.10], 0.003),
-    block(0.07, 0.018, 0.07, [-0.23, 0.449, -1.10], 0.003),
-    tube([[-0.257, 0.453, -1.10], [-0.25, 0.49, -1.10], [-0.21, 0.49, -1.10], [-0.203, 0.453, -1.10]], 0.004, 4),
+    spar([lanternX, lanternY - 0.054, lanternZ], [lanternX, lanternY - 0.033, lanternZ], 0.043, 0.039, 6),
+    spar([lanternX, lanternY + 0.033, lanternZ], [lanternX, lanternY + 0.072, lanternZ], 0.043, 0.012, 6),
+    tube([[-0.243, 0.465, -1.10], [-0.242, 0.49, -1.10], [-0.218, 0.49, -1.10], [-0.217, 0.465, -1.10]], 0.004, 4),
   );
+  for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+    const x = lanternX + Math.cos(angle) * 0.032;
+    const z = lanternZ + Math.sin(angle) * 0.032;
+    batch.add(materials.dark, spar([x, lanternY - 0.036, z], [x, lanternY + 0.038, z], 0.0038, 0.0038, 4));
+  }
   root.add(batch.build('continuous-sloop-construction'));
   const deckSamples: Point[] = [];
   for (const z of [-1.35, -1.05, -0.65, -0.20, 0.22, 0.65, 1.0, 1.3]) {
@@ -259,13 +265,27 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
     p[1] -= 0.08;
     return p;
   };
-  batch.add(materials.wood, surface((u, v) => wreckPoint(u, v), 18, 12));
-  batch.add(materials.dark, surface((u, v) => wreckPoint(u, v, 0.055), 18, 12, true));
+  batch.add(materials.wood, surface((u, v) => wreckPoint(u, v), 20, 24));
+  batch.add(materials.dark, surface((u, v) => wreckPoint(u, v, 0.055), 18, 24, true));
   batch.add(materials.end, surface((u, v) => {
     const outside = wreckPoint(0, v);
     const inside = wreckPoint(0, v, 0.055);
     return [THREE.MathUtils.lerp(outside[0], inside[0], u), THREE.MathUtils.lerp(outside[1], inside[1], u), outside[2]];
-  }, 1, 12));
+  }, 1, 24));
+  // Follow the hull curvature to make the surviving outside planks read at distance.
+  for (const [index, strake] of [0.15, 0.31, 0.49, 0.68, 0.85].entries()) {
+    batch.add(materials.dark, surface((u, v) => wreckPoint(
+      u, strake + (v - 0.5) * (0.004 + 0.005 * Math.sin(u * Math.PI)), -0.004,
+    ), 20, 1));
+    // Along the torn edge the outer skin has pulled lengthwise, revealing
+    // short wedge-shaped faces where individual planks split.
+    const split = [0.115, 0.075, 0.16, 0.098, 0.065][index];
+    batch.add(materials.end, surface((u, v) => wreckPoint(
+      0.003 + u * split * (0.34 + 0.66 * (1 - v)),
+      strake + (v - 0.5) * (0.058 - u * 0.038),
+      -0.004,
+    ), 6, 3));
+  }
   // Broad surviving inner planks give the quarter a continuous timber mass.
   // The darker backing remains visible between them and at the fracture.
   for (const [index, angle] of [0.22, 0.64, 1.06, 1.48].entries()) {
@@ -284,7 +304,11 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
       p[1] -= 0.055;
       return p;
     });
-    batch.add(materials.trim, tube(points, 0.031, 5));
+    batch.add(materials.trim, tube(points, 0.039, 6));
+    const end = new THREE.Vector3(...points[points.length - 1]);
+    const previous = new THREE.Vector3(...points[points.length - 2]);
+    const cut = end.clone().addScaledVector(end.clone().sub(previous).normalize(), 0.022).toArray();
+    batch.add(materials.end, spar(end.toArray(), cut, 0.04, 0.029, 5));
   }
   batch.add(materials.trim, tube(range(-0.71, 0.91, 17).map((z) => {
     const p = hullPoint(z, 0.13, { ...SLOOP, width: 1.0 });
@@ -296,6 +320,10 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
     translate(fracturedTimber(1.07, 0.18, 0.045, 17), [-0.26, 0.15, -0.11]),
     translate(fracturedTimber(0.80, 0.16, 0.045, 29), [-0.08, 0.145, 0.10]),
   );
+  batch.add(materials.end,
+    polygon([[-0.336, 0.173, 0.094], [-0.332, 0.173, 0.31], [-0.254, 0.173, 0.316], [-0.276, 0.173, 0.22]]),
+    polygon([[-0.139, 0.168, 0.24], [-0.136, 0.168, 0.365], [-0.075, 0.168, 0.374], [-0.097, 0.168, 0.305]]),
+  );
   batch.add(materials.dark, translate(fracturedTimber(2.05, 0.17, 0.1, 2), [0, -0.2, -0.1]));
   batch.add(materials.wood, spar([-0.20, 0.03, 0.45], [0.33, 0.65, -0.73], 0.045, 0.025, 8));
   batch.add(materials.rope, tube([[-0.2, 0.04, 0.42], [-0.42, -0.04, 0.17], [-0.65, 0.06, -0.31]], 0.011, 5));
@@ -304,22 +332,36 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
   const gravity: Point = [Math.sin(0.66), -Math.cos(0.66), 0];
   const across: Point = [-Math.cos(0.66), -Math.sin(0.66), 0];
   const clothPoint = (u: number, v: number, time: number): Point => {
+    const alongSpar = 0.20 + u * 0.66;
     const span = Math.pow(Math.sin(u * Math.PI), 0.85);
-    const edge = 0.065 + span * 0.34 + Math.sin(u * 23) * 0.014 + Math.sin(u * 47) * 0.005;
-    const fold = Math.sin(u * Math.PI * 2.4 + v * 0.6) * Math.sin(v * Math.PI * 0.5) * span;
+    const edge = 0.065 + span * 0.34 + Math.sin(u * 23) * 0.019 + Math.sin(u * 47) * 0.013;
+    const fold = (Math.sin(u * Math.PI * 2.4 + v * 0.6)
+      + 0.36 * Math.sin(u * Math.PI * 7.3 + v * 2.2)) * Math.sin(v * Math.PI * 0.5) * span;
     const reach = edge * v + Math.sin(v * Math.PI) * Math.sin(u * Math.PI * 2 + 0.7) * 0.055;
     const sag = Math.pow(v, 0.86) * (0.07 + span * 0.34) + Math.sin(v * Math.PI) * 0.03;
     const wind = Math.sin(time * 1.65 + u * 3.2) * 0.026 * v * span;
     return [
-      -0.2 + u * 0.53 + across[0] * reach + gravity[0] * sag,
-      0.075 + u * 0.57 + across[1] * reach + gravity[1] * sag + wind,
-      0.43 - u * 1.16 + fold * 0.105,
+      -0.2 + alongSpar * 0.53 + across[0] * reach + gravity[0] * sag,
+      0.075 + alongSpar * 0.57 + across[1] * reach + gravity[1] * sag + wind,
+      0.43 - alongSpar * 1.16 + fold * 0.105,
     ];
   };
   const cloth = surface((u, v) => clothPoint(u, v, 0), 22, 10);
   const tornCanvas = materials.cloth.clone();
   tornCanvas.name = 'salt-stained-torn-canvas';
-  tornCanvas.color.set('#b6a68b');
+  tornCanvas.color.set('#a8997b');
+  tornCanvas.roughness = 0.75;
+  tornCanvas.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vTornHem;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTornHem = uv;');
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vTornHem;')
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float dampEdge = smoothstep(0.40, 0.93, vTornHem.y + sin(vTornHem.x * 21.0) * 0.10);
+        float tideMark = (vTornHem.y - 0.48 - 0.08 * sin(vTornHem.x * 11.0)) * 11.0;
+        float salt = exp(-tideMark * tideMark);
+        diffuseColor.rgb *= 1.0 - 0.33 * dampEdge + salt * 0.10;`);
+  };
+  tornCanvas.customProgramCacheKey = () => 'naval-ragged-canvas';
   const clothMesh = new THREE.Mesh(cloth, tornCanvas);
   clothMesh.name = 'tethered-torn-canvas';
   exposedAssembly.add(clothMesh);
@@ -359,7 +401,13 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
   debris.forEach((fragment, index) => {
     const fragmentBatch = new NavalBatch();
     fragmentBatch.add(index === 0 ? materials.wood : materials.dark, fracturedTimber(fragment.length, fragment.width, 0.07, index + 9));
-    if (index === 0) fragmentBatch.add(materials.end, block(fragment.width * 0.9, 0.073, 0.012, [0, 0, -fragment.length / 2], 0.002));
+    if (index === 0) {
+      const end = -fragment.length / 2;
+      fragmentBatch.add(materials.end,
+        block(fragment.width * 0.9, 0.073, 0.012, [0, 0, end], 0.002),
+        polygon([[-0.096, 0.036, end + 0.039], [-0.066, 0.036, end + 0.23], [-0.044, 0.036, end + 0.132], [0.022, 0.036, end + 0.024]]),
+      );
+    }
     const group = fragmentBatch.build(`lagging-wreck-fragment-${index}`);
     root.add(group);
     animations.push((time) => {
@@ -465,12 +513,16 @@ function createCruiser(root: THREE.Group, materials: NavalMaterials, animations:
   // Separate structural plates conform to the fair hull and leave its timber lineage exposed.
   for (const side of [-1, 1]) {
     for (const [z0, z1] of [[-1.96, -1.13], [-1.08, -0.21], [-0.16, 0.73], [0.78, 1.59]]) {
-      batch.add(materials.chrome, surface((u, v) => {
+      const plate = surface((u, v) => {
         const angle = side < 0 ? 0.27 + v * 0.54 : Math.PI - 0.27 - v * 0.54;
-        return hullPoint(THREE.MathUtils.lerp(z0, z1, u), angle, CRUISER, -0.014);
-      }, 7, 3, side > 0));
+        const corner = 0.035 * Math.pow(Math.abs(v * 2 - 1), 5);
+        return hullPoint(THREE.MathUtils.lerp(z0 + corner, z1 - corner, u), angle, CRUISER, -0.018);
+      }, 7, 3, side > 0);
+      const uv = plate.getAttribute('uv');
+      for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) + 2);
+      batch.add(materials.chrome, plate);
       const line = range(z0 + 0.035, z1 - 0.035, 6).map((z) => hullPoint(z, side < 0 ? 0.36 : Math.PI - 0.36, CRUISER, -0.022));
-      batch.add(materials.energy, tube(line, 0.008, 4));
+      batch.add(materials.energy, tube(line, 0.006, 4));
     }
     const rail: Point[] = range(-1.8, 1.65, 24).map((z) => {
       const section = hullSection(z, CRUISER);
@@ -510,7 +562,7 @@ function createCruiser(root: THREE.Group, materials: NavalMaterials, animations:
 export function createNavalModel(tier: 1 | 2 | 3): NavalModel {
   const root = new THREE.Group();
   root.name = ['wreckage-hero', 'unprotected-sloop-hero', 'hybrid-cruiser-hero'][tier - 1];
-  const materials = navalMaterials();
+  const materials = navalMaterials(tier);
   const animations: Animation[] = [];
   let flotation: NavalModel['flotation'];
   if (tier === 1) createWreck(root, materials, animations);
