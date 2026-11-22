@@ -22,7 +22,7 @@ Each entry links to the tool's website. The [structured catalog](https://atlas.t
 - [Gemini](https://gemini.google.com/) (Google's AI assistant)
 
 #### Agents and Code
-- [OpenAI Codex](https://openai.com/codex/) (OpenAI’s coding agent.)
+- [OpenAI Codex](https://openai.com/codex/) (OpenAI’s coding agent.) [Turtleand repositories](https://github.com/turtleand)
 - [Claude Code](https://claude.ai/) (AI coding assistant in terminal)
 - [ChatGPT Dots](https://chatgpt.com/get-dot/) (An always-on agent in ChatGPT.)
 - [ChatGPT Docs](https://openai.com/business/plugins/documents/) (Create and edit documents with ChatGPT.)
@@ -32,7 +32,6 @@ Each entry links to the tool's website. The [structured catalog](https://atlas.t
 
 #### Research and Education
 - [NotebookLM](https://notebooklm.google/) (AI-powered learning notebook)
-- [Gamma](https://gamma.app/) (AI presentation creation)
 
 #### Local & Infrastructure
 - [Hugging Face](https://huggingface.co/) (Model repository & community hub)
@@ -75,6 +74,7 @@ Each entry links to the tool's website. The [structured catalog](https://atlas.t
 - [Hailuo MiniMax](https://hailuoai.video/) (AI video generation)
 
 #### Research and Education
+- [Gamma](https://gamma.app/) (AI presentation creation)
 - [Perplexity Comet](https://comet.perplexity.ai/) (AI-powered desktop assistant)
 - [ChatGPT Deep Search](https://chat.openai.com/) (Advanced AI research)
 

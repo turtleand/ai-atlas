@@ -17,9 +17,10 @@ const categories = scene.islands.map((island) => island.category);
 describe("organic discovery", () => {
   it("keeps every authored footprint and tool anchor stable across catalog order", () => {
     const reversed = createScene([...categories].reverse());
-    for (const i of scene.islands)
+    for (const i of scene.islands) {
       expect(reversed.islands.find((j) => j.id === i.id)).toEqual(i);
-    expect(scene.islands.flatMap((i) => i.tools)).toHaveLength(11);
+      expect(i.tools.map(({ tool }) => tool)).toEqual(i.category.tools);
+    }
     const extra = { id: "new-space", name: "New space", tools: [] };
     expect(createScene([...categories, extra])).toEqual(
       createScene([...categories, extra]),
@@ -52,14 +53,14 @@ describe("organic discovery", () => {
       }
   });
   it.each([
-    [1118, 630, false, false, 9],
-    [1118, 630, true, false, 9],
-    [390, 335, false, true, 6],
-    [320, 307, false, true, 6],
-    [320, 270, false, true, 6],
+    [1118, 630, false, false],
+    [1118, 630, true, false],
+    [390, 335, false, true],
+    [320, 307, false, true],
+    [320, 270, false, true],
   ])(
     "fits the curated signposts at %sx%s with depth %s",
-    (width, height, depth, compact, count) => {
+    (width, height, depth, compact) => {
       const signs = shoreSignpostLayout(
         scene,
         fitScene(scene, width, height),
@@ -67,13 +68,14 @@ describe("organic discovery", () => {
         compact,
         experimentalFallback,
       );
-      expect(signs.flatMap((sign) => sign.tools)).toHaveLength(count);
+      expect(signs).toHaveLength(categories.length);
       expect(
         signs
           .find((sign) => sign.island.id === "code")
           ?.tools.map((tool) => tool.id),
       ).toEqual(compact ? ["openai-codex"] : ["openai-codex", "claude-code"]);
       for (const [index, sign] of signs.entries()) {
+        expect(sign.tools).toEqual(sign.island.category.tools.slice(0, compact ? 1 : 2));
         expect(sign.x - sign.w / 2).toBeGreaterThanOrEqual(0);
         expect(sign.x + sign.w / 2).toBeLessThanOrEqual(width);
         expect(sign.y - sign.h / 2).toBeGreaterThanOrEqual(0);

@@ -45,6 +45,9 @@ categories:
         description: OpenAI’s coding agent.
         usage: |
           I use Codex to design the Atlas, curate the tool catalog, and coordinate browser quality checks with subagents.
+        related:
+          - title: Turtleand repositories
+            url: https://github.com/turtleand
 
       - name: Claude Code
         status: active
@@ -52,9 +55,6 @@ categories:
         description: AI coding assistant in terminal
         usage: |
           My coding companion for complex tasks. Used for debugging, refactoring, and building entire features.
-        related:
-          - title: OpenClaw Lab
-            url: https://openclaw.turtleand.com/
         tags: [daily-driver]
 
       - name: ChatGPT Dots
@@ -260,7 +260,7 @@ categories:
         tags: [concrete-example]
 
       - name: Gamma
-        status: active
+        status: archive
         url: https://gamma.app/
         description: AI presentation creation
         usage: |
