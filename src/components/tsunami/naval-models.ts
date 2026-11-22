@@ -6,12 +6,14 @@ import {
 import type { HullDimensions, Point } from './naval-geometry';
 import { navalMaterials } from './naval-materials';
 import type { NavalMaterials } from './naval-materials';
+import { getWaveHeight } from './wave-field';
 
 export interface NavalModel {
   root: THREE.Group;
   update(time: number): void;
   dispose(): void;
   flotation?: { deckSamples: Point[]; keelSamples: Point[] };
+  floatDebris?: (ship: THREE.Group, time: number, intensity: number) => void;
 }
 
 type Animation = (time: number) => void;
@@ -398,7 +400,7 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
     { position: [-0.68, -0.035, -0.88], length: 0.69, width: 0.14, angle: 0.59 },
     { position: [0.70, -0.10, 0.73], length: 0.5, width: 0.17, angle: -0.95 },
   ];
-  debris.forEach((fragment, index) => {
+  const looseTimbers = debris.map((fragment, index) => {
     const fragmentBatch = new NavalBatch();
     fragmentBatch.add(index === 0 ? materials.wood : materials.dark, fracturedTimber(fragment.length, fragment.width, 0.07, index + 9));
     if (index === 0) {
@@ -414,7 +416,22 @@ function createWreck(root: THREE.Group, materials: NavalMaterials, animations: A
       group.position.set(fragment.position[0] + Math.sin(time * 0.27 + index * 2) * 0.035, fragment.position[1] + Math.sin(time * (0.72 - index * 0.09) + index * 1.8) * 0.045, fragment.position[2]);
       group.rotation.set(Math.sin(time * 0.44 + index) * 0.07, fragment.angle + Math.sin(time * 0.19 + index) * 0.03, Math.sin(time * 0.58 + index * 2.1) * 0.09);
     });
+    return group;
   });
+
+  const point = new THREE.Vector3();
+  const up = new THREE.Vector3();
+  return (ship: THREE.Group, time: number, intensity: number) => {
+    const scale = ship.scale.y;
+    up.set(0, 1, 0).applyQuaternion(ship.quaternion);
+    looseTimbers.forEach((timber, index) => {
+      // Keep the splinters on their local swells even when the main wreck lags.
+      point.copy(timber.position).setY(0).multiplyScalar(scale).applyQuaternion(ship.quaternion);
+      const water = getWaveHeight(point.x, point.z, time, intensity);
+      const trim = 0.013 - index * 0.015;
+      timber.position.y = (water + trim - ship.position.y - point.y) / (scale * up.y);
+    });
+  };
 }
 
 function cruiserCabin(batch: NavalBatch, materials: NavalMaterials) {
@@ -565,13 +582,13 @@ export function createNavalModel(tier: 1 | 2 | 3): NavalModel {
   const materials = navalMaterials(tier);
   const animations: Animation[] = [];
   let flotation: NavalModel['flotation'];
-  if (tier === 1) createWreck(root, materials, animations);
+  const floatDebris = tier === 1 ? createWreck(root, materials, animations) : undefined;
   if (tier === 2) flotation = createSloop(root, materials, animations);
   if (tier === 3) createCruiser(root, materials, animations);
   const update = (time: number) => animations.forEach((animate) => animate(time));
   update(0);
   return {
-    root, update, flotation,
+    root, update, flotation, floatDebris,
     dispose() {
       const geometries = new Set<THREE.BufferGeometry>();
       const ownedMaterials = new Set<THREE.Material>(Object.values(materials));

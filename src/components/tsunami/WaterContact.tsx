@@ -15,8 +15,15 @@ export function WaterContact({tier,timeUniform,lightningUniform,stormIntensity}:
     vertexShader:/* glsl */`
       uniform float uTime;uniform float uStormIntensity;uniform float uCalmRadius;
       varying vec2 vPoint;
+      varying float vSwell;
       ${waveHeightGLSL}
-      void main(){vec3 p=position;p.y=waveHeight(p.xz)+0.045;vPoint=p.xz;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);}
+      void main(){
+        vec3 p=position;
+        vSwell=waveHeight(p.xz);
+        p.y=vSwell+0.045;
+        vPoint=p.xz;
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);
+      }
     `,
     fragmentShader:/* glsl */`
       uniform float uTime;
@@ -24,6 +31,7 @@ export function WaterContact({tier,timeUniform,lightningUniform,stormIntensity}:
       uniform float uStormIntensity;
       uniform float uLightning;
       varying vec2 vPoint;
+      varying float vSwell;
       float hash(vec2 p) {
         vec3 q=fract(p.xyx*0.1031);
         q+=dot(q,q.yzx+33.33);
@@ -76,6 +84,8 @@ export function WaterContact({tier,timeUniform,lightningUniform,stormIntensity}:
             -0.95+sin(uTime*0.19+2.0)*0.03,fragments)*0.52);
         }
         float white=foam*(wreck?0.78:sloop?0.43:0.58)*min(1.0,0.53+uStormIntensity*0.40);
+        float wash=smoothstep(-0.20,1.25,vSwell);
+        white=min(0.90,white*(0.85+wash*(wreck?0.74:0.48)));
         float alpha=max(contact,white);
         vec3 foamColor=vec3(0.31,0.47,0.49)*(1.0+uLightning*0.24);
         vec3 color=mix(vec3(0.002,0.008,0.011),foamColor,clamp(white/max(alpha,0.001),0.0,1.0));
@@ -95,6 +105,9 @@ export function WaterContact({tier,timeUniform,lightningUniform,stormIntensity}:
   }),[timeUniform,lightningUniform]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
   useEffect(()=>()=>material.dispose(),[material]);
-  useFrame(()=>{material.uniforms.uStormIntensity.value=stormIntensity;material.uniforms.uTier.value=tier;});
+  useFrame(()=>{
+    material.uniforms.uStormIntensity.value=stormIntensity;
+    material.uniforms.uTier.value=tier;
+  });
   return tier<=3?<mesh geometry={geometry} material={material} frustumCulled={false}/>:null;
 }

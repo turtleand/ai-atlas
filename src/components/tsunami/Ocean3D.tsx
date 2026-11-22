@@ -9,6 +9,7 @@ interface Ocean3DProps {
   wavePercent: number;
   tier: number;
   calmRadius?: number;
+  seaLoad: THREE.IUniform<number>;
   lightningUniform: THREE.IUniform<number>;
   stormLightDirection: THREE.IUniform<THREE.Vector3>;
   timeUniform?: THREE.IUniform<number>;
@@ -45,6 +46,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uStormLightDirection;
   uniform float uTier;
   uniform float uCalmRadius;
+  uniform float uSeaLoad;
   uniform float uSubmersion;
   ${atmosphereGLSL}
   varying vec3 vWorldPosition;
@@ -85,10 +87,10 @@ const fragmentShader = /* glsl */ `
     // owns hull support, shore intersections and camera submersion.
     float warp=noise(p*0.21+vec2(uTime*0.09,-uTime*0.055));
     float crossWarp=noise(p*0.37+vec2(-uTime*0.10,uTime*0.085));
-    vec2 waveAxis=vec2(0.43,0.90);
+    vec2 waveAxis=vec2(0.28,-0.96);
     vec2 alongCrest=vec2(-waveAxis.y,waveAxis.x);
     vec2 shortAxis=vec2(-0.89,0.46);
-    float phase=dot(p,waveAxis)*0.83+uTime*1.30+warp*5.5+crossWarp*1.45;
+    float phase=dot(p,waveAxis)*0.69+uTime*1.30+warp*5.5+crossWarp*1.45;
     float shortPhase=dot(p,shortAxis)*1.66+uTime*1.74+crossWarp*5.0;
     float longChop=sin(phase);
     float crossChop=sin(shortPhase);
@@ -97,7 +99,7 @@ const fragmentShader = /* glsl */ `
     float distantSwell=1.0-smoothstep(0.35,1.35,footprint);
     float gust=0.32+warp*0.44+crossWarp*0.32;
     float steepness=(0.48+wreck*0.12)*min(1.18,uStormIntensity)*gust*(1.0-calm*0.92);
-    vec2 shortNormal=(waveAxis*slope*0.46*distantSwell
+    vec2 shortNormal=(waveAxis*slope*0.32*distantSwell
       +shortAxis*cos(shortPhase)*0.29*localDetail)*steepness;
     vec2 foamUv=vec2(dot(p,alongCrest),dot(p,waveAxis));
     float grain=noise(foamUv*vec2(2.37,5.2)+vec2(crossWarp*3.8,uTime*2.1+warp*1.4));
@@ -132,6 +134,14 @@ const fragmentShader = /* glsl */ `
     float onCrest=smoothstep(0.60-wreck*0.076,0.92,combinedCrest+(grain-0.5)*0.22);
     float foam=onCrest*smoothstep(0.48,0.81,crestCell*0.68+grain*0.34);
     foam*=mix(0.30+wreck*0.14,0.92,smoothstep(-0.30,0.72,vHeight))*gust;
+    // Streaks follow the displaced crest across the water surface.
+    float lip = smoothstep(0.57, 1.24, vHeight);
+    float nearFoam = 1.0-smoothstep(12.0,43.0,distanceToCamera);
+    float cell = noise(foamUv*vec2(0.17,0.27)+vec2(uTime*0.055,-uTime*0.11));
+    float gaps = 0.24 + 0.76*smoothstep(0.28,0.70,cell);
+    float lace = smoothstep(0.44,0.82,crestCell*0.56 + mix(0.23,grain*0.26+skin*0.29,nearFoam));
+    float brokenLip = lip*lace*gaps*(0.29+nearFoam*0.54)*0.86;
+    foam = max(foam * 0.58, brokenLip);
     foam*=1.0-smoothstep(0.17,0.76,footprint);
     foam*=mix(1.0,0.33+0.67*smoothstep(0.32,0.66,skin),skinDetail);
     foam*=1.0-calm*0.985;
@@ -146,7 +156,8 @@ const fragmentShader = /* glsl */ `
       float singularity=step(4.5,uTier);
       vec3 energy=mix(vec3(0.012,0.28,0.26),vec3(0.68,0.35,0.082),singularity);
       float ring=pow(0.5+0.5*sin(radius*3.7-uTime*0.45),12.0);
-      float contactGlow=calm*calm*(mix(0.072,0.018,singularity)+ring*mix(0.085,0.018,singularity)*grain);
+      float ringStrength=0.58+0.18*singularity;
+      float contactGlow=calm*calm*(mix(0.072,0.018,singularity)+ring*ringStrength*mix(0.085,0.018,singularity)*grain);
       float streak=reflectedStreak(p,vec2(0.0),mix(0.23,0.57,singularity),mix(3.4,10.8,singularity))*calm;
       water+=energy*(contactGlow+streak*mix(0.11,0.35,singularity));
       if (uTier>4.5) {
@@ -158,6 +169,23 @@ const fragmentShader = /* glsl */ `
         }
         water+=energy*anchors;
       }
+    }
+    if (uTier > 3.5 && radius < uCalmRadius*1.25) {
+      float singularity = step(4.5, uTier);
+      vec3 signal = mix(vec3(0.045,0.23,0.24),vec3(0.26,0.19,0.10),singularity);
+      float edge = radius/uCalmRadius;
+      float angle = atan(p.y, p.x+0.0001);
+      float aperture = smoothstep(0.34,0.62,edge)*(1.0-smoothstep(0.86,1.2,edge));
+      float sweeping = sin(radius*1.7 - uTime*0.96 + sin(angle*3.0-uTime*0.31)*0.34);
+      float leeward = 0.20 + 0.80*smoothstep(-0.6,0.72,sin(angle*2.0-uTime*0.22));
+      float gathering = pow(max(sweeping,0.0),8.0)*leeward*(0.55+0.45*crestCell);
+      float phase = 0.35 + 0.65*uSeaLoad;
+      water += signal * aperture * gathering * phase * 0.060;
+
+      // The exposed side of the eye picks up a fine edge on the incoming crest.
+      float seam = smoothstep(0.78,0.99,edge)*(1.0-smoothstep(1.01,1.22,edge));
+      float crest = smoothstep(0.26,0.92,vHeight) * smoothstep(0.38,0.74,crestCell);
+      water += vec3(0.14,0.26,0.29) * seam * crest * leeward * 0.38;
     }
     if (sloop>0.0&&radius<4.3) {
       // The sloop's sole lantern is on the port quarter at its existing scale and heading.
@@ -176,7 +204,7 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-export function Ocean3D({wavePercent,tier,calmRadius,lightningUniform,stormLightDirection,timeUniform,captureTime,reducedMotion,lowQuality=false}:Ocean3DProps) {
+export function Ocean3D({wavePercent,tier,calmRadius,seaLoad,lightningUniform,stormLightDirection,timeUniform,captureTime,reducedMotion,lowQuality=false}:Ocean3DProps) {
   const intensity=0.5+wavePercent*0.015;
   const geometry=useMemo(()=>{
     const geometry=new THREE.PlaneGeometry(800,800,lowQuality?64:96,lowQuality?64:96);
@@ -193,7 +221,8 @@ export function Ocean3D({wavePercent,tier,calmRadius,lightningUniform,stormLight
   const material=useMemo(()=>new THREE.ShaderMaterial({vertexShader,fragmentShader,uniforms:{
     uTime:timeUniform??{value:0},uStormIntensity:{value:1},uCalmRadius:{value:0},
     uLightning:lightningUniform,uStormLightDirection:stormLightDirection,uTier:{value:1},uSubmersion:{value:0},
-  },side:THREE.DoubleSide}),[lightningUniform,stormLightDirection,timeUniform]);
+    uSeaLoad:seaLoad,
+  },side:THREE.DoubleSide}),[lightningUniform,stormLightDirection,timeUniform,seaLoad]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
   useEffect(()=>()=>material.dispose(),[material]);
   useFrame(({clock,camera})=>{

@@ -10,6 +10,8 @@ interface Storm3DProps {
   daysSinceStart: number;
   tier: number;
   stormIntensity: number;
+  calmRadius: number;
+  seaLoad: THREE.IUniform<number>;
   lightningUniform: THREE.IUniform<number>;
   stormLightDirection: THREE.IUniform<THREE.Vector3>;
   captureTime?: number;
@@ -28,6 +30,7 @@ const rainVertexShader = /* glsl */ `
 
   uniform float uTime;
   uniform float uCalmRadius;
+  uniform float uSeaLoad;
 
   varying float vAlpha;
 
@@ -45,6 +48,9 @@ const rainVertexShader = /* glsl */ `
       horizontal += radial * (1.0-calm) * (uCalmRadius>8.0?4.2:2.8);
       // The singularity organizes the same wind into a slow, broad circulation.
       if(uCalmRadius>8.0) horizontal += vec2(-radial.y,radial.x)*(1.0-calm)*sin(top*0.12+uTime*0.06)*2.0;
+      float edge = distanceFromCore/uCalmRadius;
+      float curtain = smoothstep(0.43,0.82,edge)*(1.0-smoothstep(0.88,1.2,edge));
+      horizontal += radial * 0.55 * curtain * (0.6+uSeaLoad)*min(1.0,uCalmRadius/9.0);
     }
 
     vec3 transformed = vec3(
@@ -320,6 +326,8 @@ export function Storm3D({
   daysSinceStart,
   tier,
   stormIntensity,
+  calmRadius,
+  seaLoad,
   lightningUniform,
   stormLightDirection,
   captureTime,
@@ -333,7 +341,6 @@ export function Storm3D({
   const aquaticColor = useMemo(() => new THREE.Color().setRGB(0.003, 0.019, 0.028), []);
   const rainCount = reducedMotion ? 100 : 1100;
   const sprayCount = reducedMotion ? 30 : 380;
-  const calmRadius = tier === 5 ? 11 : tier === 4 ? 5 : 0;
   const seedOffset = daysSinceStart % 97;
 
   const rainGeometry = useMemo(() => createRainGeometry(rainCount), [rainCount]);
@@ -355,6 +362,7 @@ export function Storm3D({
         uniforms: {
           uTime: { value: 0 },
           uCalmRadius: { value: 0 },
+          uSeaLoad: seaLoad,
           uColor: { value: new THREE.Color('#8fa9c4') },
           uOpacity: { value: 0.46 },
           uLightning: lightningUniform,
@@ -364,7 +372,7 @@ export function Storm3D({
         blending: THREE.NormalBlending,
         toneMapped: true,
       }),
-    [lightningUniform],
+    [lightningUniform, seaLoad],
   );
 
   const sprayMaterial = useMemo(
