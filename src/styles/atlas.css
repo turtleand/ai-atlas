@@ -29,7 +29,8 @@
   cursor: default;
   opacity: 0.65;
 }
-.living-atlas :is(button, a):focus-visible {
+.living-atlas :is(button, a):focus-visible,
+.atlas-directory:focus-visible {
   outline: 2px solid #c8e9cd;
   outline-offset: 2px;
 }
@@ -178,6 +179,9 @@
   scrollbar-width: thin;
   scrollbar-color: #436965 transparent;
 }
+.atlas-directory:focus-visible {
+  outline-offset: -2px;
+}
 .atlas-shore-header {
   display: flex;
   align-items: center;
@@ -272,37 +276,10 @@
   height: 15px;
 }
 .living-atlas .atlas-collection-section h3 button:hover,
-.living-atlas .atlas-collection-section h3 button[aria-pressed="true"] {
+.living-atlas .atlas-collection-section h3 button[aria-current="true"] {
   background: #d2ece416;
 }
 
-.atlas-collection-control {
-  position: relative;
-}
-.atlas-collection {
-  position: absolute;
-  z-index: 16;
-  inset: calc(100% + 5px) -24px auto auto;
-  width: min(310px, calc(100vw - 28px));
-  margin: 0;
-  padding: 16px 19px 11px;
-  max-height: calc(100dvh - 74px);
-  overflow: auto;
-  border: 1px solid #829b93;
-  border-radius: 7px;
-  background: #eae4ce;
-  color: #213732;
-  box-shadow: 0 10px 36px #0418209e;
-  color-scheme: light;
-}
-.atlas-collection h2 {
-  font: 500 28px/1 Georgia, serif;
-  letter-spacing: -0.045em;
-  margin-bottom: 10px;
-}
-.atlas-collection :is(button, a):focus-visible {
-  outline-color: #385e53;
-}
 .living-atlas .atlas-collection-close {
   margin-inline-start: auto;
   flex: none;
@@ -311,25 +288,8 @@
   border-radius: 5px;
   font-size: 24px;
 }
-.living-atlas .atlas-collection-close:hover,
-.living-atlas .atlas-collection-actions button:hover {
+.living-atlas .atlas-collection-close:hover {
   background: #385e5317;
-}
-.living-atlas .atlas-collection-actions button {
-  display: block;
-  width: 100%;
-  padding: 6px 1px;
-  border-top: 1px solid #687d646b;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 730;
-}
-.atlas-collection-actions :is(small, p) {
-  display: block;
-  color: #445f54;
-  font-size: 11px;
-  font-weight: 400;
-  margin-top: 3px;
 }
 .atlas-collection-section {
   margin-top: 11px;
@@ -451,9 +411,6 @@
   }
   .atlas-header-actions {
     gap: 3px;
-  }
-  .atlas-collection {
-    inset-inline-end: -34px;
   }
 }
 @media (max-height: 560px) and (min-width: 761px) {

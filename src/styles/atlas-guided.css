@@ -107,62 +107,6 @@
   color: var(--atlas-muted);
 }
 
-/* The complete map keeps direct access to individual tool markers. */
-.living-atlas .atlas-discovery-label {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  padding: 2px;
-  pointer-events: auto;
-  font-size: 12px;
-  line-height: 1.2;
-}
-.atlas-discovery-label.is-named span {
-  padding: 3px 6px;
-  background: var(--island-label);
-  border: 1px solid color-mix(in srgb, var(--island-accent) 64%, transparent);
-  border-inline-start-width: 2px;
-  border-radius: 4px;
-}
-.living-atlas .atlas-discovery-label.is-category {
-  font: 600 13px/1.12 Georgia, serif;
-}
-.atlas-discovery-label.is-category span {
-  border: 0;
-  background: #102a32ed;
-  color: var(--island-accent);
-}
-.atlas-discovery-label .atlas-glyph {
-  width: 12px;
-  height: 12px;
-  margin-inline-end: 4px;
-  vertical-align: -1px;
-}
-.atlas-discovery-label small {
-  color: var(--atlas-muted);
-  font: 10px system-ui;
-}
-.atlas-discovery-label.is-tool[data-emphasis="muted"] span {
-  border-color: #51717a8a;
-  background: #122b33f0;
-  color: #d3e0da;
-}
-.atlas-discovery-label.is-beacon span {
-  width: 10px;
-  height: 10px;
-  padding: 0;
-  border: 2px solid #d7e2cb;
-  border-radius: 50%;
-  background: var(--island-accent);
-}
-.atlas-tool-leader {
-  color: var(--island-accent);
-}
-.atlas-tool-leader[data-emphasis="muted"],
-.atlas-overview-beacon[data-emphasis="muted"] {
-  opacity: 0.25;
-}
 .atlas-sea-caption {
   position: absolute;
   transform: translate(-50%, -50%);

@@ -170,8 +170,13 @@ it("supports shore taps and ignores drags and multi-touch as selections", () => 
       view.height / 2 + (scene.islands[1].center.y - view.center.y) * view.zoom,
   };
   const event = { ...p, pointerType: "touch", pointerId: 1, button: 0 };
+  fireEvent.click(screen.getByRole("button", { name: "All tools" }));
   fireEvent.pointerDown(viewport, event);
   fireEvent.pointerUp(viewport, event);
+  expect(
+    within(screen.getByRole("complementary", { name: "Selected island tools" }))
+      .getByRole("heading", { name: "Code" }),
+  ).toBeTruthy();
   expect(
     container
       .querySelector(".atlas-discovery")
@@ -390,24 +395,33 @@ describe("Shore Signposts", () => {
     expect(within(map).queryByRole("button", { name: "Recraft" })).toBeNull();
   });
 
-  it("exposes the full map and the directory from the collection menu", () => {
+  it("opens the complete directory directly while keeping the map curated", () => {
     const { container } = mountCatalog();
-    const toolElements = () => container.querySelectorAll(".atlas-discovery .is-tool");
     fireEvent.click(allTools());
-    fireEvent.click(screen.getByRole("button", { name: /Show all tools on the map/ }));
-    expect(toolElements()).toHaveLength(29);
+    const directory = screen.getByRole("complementary", { name: "Tool directory" });
+    expect(within(directory).getByRole("heading", { name: "All tools" })).toBeTruthy();
+    expect(directory.querySelectorAll(".atlas-tool-row")).toHaveLength(29);
+    expect(container.querySelectorAll(".atlas-discovery .is-tool")).toHaveLength(15);
+    expect(allTools().getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("returns to a single island from the map and directory, even for the current island", () => {
+    mountCatalog();
+    const map = screen.getByRole("region", { name: "Interactive island map" });
     fireEvent.click(allTools());
-    fireEvent.click(screen.getByRole("button", { name: /Show featured tools on the map/ }));
-    expect(toolElements()).toHaveLength(15);
+    fireEvent.click(within(map).getByRole("button", { name: /^Images,/ }));
+    const selectedPanel = () =>
+      within(screen.getByRole("complementary", { name: "Selected island tools" }));
+    expect(selectedPanel().getByRole("heading", { name: "Images" })).toBeTruthy();
+    expect(selectedPanel().queryByRole("button", { name: /Cursor/ })).toBeNull();
+    expect(allTools().getAttribute("aria-expanded")).toBe("false");
+
     fireEvent.click(allTools());
-    fireEvent.click(screen.getByRole("button", { name: /Browse the directory/ }));
-    expect(
-      within(screen.getByRole("complementary", { name: "Tool directory" }))
-        .getByRole("heading", { name: /^All tools$/ }),
-    ).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Chatbot tools" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Code tools" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Cursor/ })).toBeTruthy();
+    const code = screen.getByRole("region", { name: "Code tools" });
+    fireEvent.click(within(code).getByRole("button", { name: "Code" }));
+    expect(selectedPanel().getByRole("heading", { name: "Code" })).toBeTruthy();
+    expect(selectedPanel().getByRole("button", { name: /Cursor/ })).toBeTruthy();
+    expect(selectedPanel().queryByRole("button", { name: /Nano Banana/ })).toBeNull();
   });
 });
 

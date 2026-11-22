@@ -7,7 +7,6 @@ import {
   findWaterPath,
   clearSegment,
 } from "./atlas-model";
-import { discoveryLayout } from "./AtlasDiscovery";
 import { fitScene, revealIsland } from "./atlas-camera";
 import { shoreSignpostLayout } from "./shore-signposts";
 import { projection } from "./useAtlas";
@@ -36,57 +35,19 @@ describe("organic discovery", () => {
     }
   });
   it.each([
-    [1424, 612],
-    [1214, 612],
-    [1008, 480],
-    [832, 512],
-  ])("places all names without overlap at %sx%s", (width, height) => {
+    [374, 250],
+    [374, 500],
+    [828, 180],
+  ])("keeps every coast inside the overview at %sx%s", (width, height) => {
     const view = fitScene(scene, width, height);
-    const labels = discoveryLayout(scene, view, false, true);
-    expect(labels.filter((l) => l.tool)).toHaveLength(29);
-    for (const [n, a] of labels.entries()) {
-      expect(a.x - a.w / 2, a.key).toBeGreaterThanOrEqual(0);
-      expect(a.x + a.w / 2, a.key).toBeLessThanOrEqual(width);
-      expect(a.y - a.h / 2, a.key).toBeGreaterThanOrEqual(0);
-      expect(a.y + a.h / 2, a.key).toBeLessThanOrEqual(height);
-      for (const b of labels.slice(n + 1))
-        expect(
-          Math.abs(a.x - b.x) >= (a.w + b.w) / 2 ||
-            Math.abs(a.y - b.y) >= (a.h + b.h) / 2,
-          `${a.key} overlaps ${b.key}`,
-        ).toBe(true);
-    }
-  });
-  it("keeps all category captions inside the phone overview", () => {
-    for (const [width, height] of [
-      [374, 250],
-      [374, 500],
-      [828, 180],
-    ]) {
-      const view = fitScene(scene, width, height);
-      const labels = discoveryLayout(scene, view, false, false, false);
-      expect(labels).toHaveLength(9);
-      for (const island of scene.islands)
-        for (const point of island.coast) {
-          const { x, y } = projection(point, view);
-          expect(x).toBeGreaterThanOrEqual(0);
-          expect(x).toBeLessThanOrEqual(width);
-          expect(y).toBeGreaterThanOrEqual(0);
-          expect(y).toBeLessThanOrEqual(height);
-        }
-      for (const [n, label] of labels.entries()) {
-        for (const other of labels.slice(n + 1))
-          expect(
-            Math.abs(label.x - other.x) >= (label.w + other.w) / 2 ||
-              Math.abs(label.y - other.y) >= (label.h + other.h) / 2,
-            `${label.key} and ${other.key}`,
-          ).toBe(true);
-        expect(label.x - label.w / 2, label.key).toBeGreaterThanOrEqual(0);
-        expect(label.x + label.w / 2, label.key).toBeLessThanOrEqual(width);
-        expect(label.y - label.h / 2, label.key).toBeGreaterThanOrEqual(0);
-        expect(label.y + label.h / 2, label.key).toBeLessThanOrEqual(height);
+    for (const island of scene.islands)
+      for (const point of island.coast) {
+        const { x, y } = projection(point, view);
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(width);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(y).toBeLessThanOrEqual(height);
       }
-    }
   });
   it.each([
     [1118, 630, false, false, 15],

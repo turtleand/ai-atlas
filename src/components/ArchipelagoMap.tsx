@@ -51,11 +51,8 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     y: number;
     moved: boolean;
   } | null>(null);
-  const [expanded, setExpanded] = useState(false);
-  const [collectionOpen, setCollectionOpen] = useState(false);
-  const [showAllTools, setShowAllTools] = useState(false);
-  const collection = useRef<HTMLDivElement>(null);
-  const collectionTrigger = useRef<HTMLButtonElement>(null);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
+  const directoryTrigger = useRef<HTMLButtonElement>(null);
   const directory = useRef<HTMLElement>(null);
   const { reduced, visible } = useMotionPolicy();
   const {
@@ -100,6 +97,8 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const select = (id: string) => {
     const start = performance.now();
 
+    setDirectoryOpen(false);
+    setPreview(null);
     setSelected(id);
     focus(id);
     journey.select(id);
@@ -134,40 +133,25 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     resetView();
   };
   const openDirectory = () => {
-    setCollectionOpen(false);
-    setExpanded(true);
+    setPreview(null);
+    setDirectoryOpen(true);
     requestAnimationFrame(() => directory.current?.focus());
   };
-  const closeDirectory = () => {
-    setExpanded(false);
-    requestAnimationFrame(() => collectionTrigger.current?.focus());
-  };
+  const closeDirectory = useCallback(() => {
+    setDirectoryOpen(false);
+    requestAnimationFrame(() => directoryTrigger.current?.focus());
+  }, []);
   useEffect(() => {
+    if (directory.current) directory.current.scrollTop = 0;
+  }, [directoryOpen]);
+  useEffect(() => {
+    if (!directoryOpen || journal) return;
     const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || journal) return;
-      if (collectionOpen) {
-        setCollectionOpen(false);
-        collectionTrigger.current?.focus();
-      } else if (expanded) {
-        setExpanded(false);
-        collectionTrigger.current?.focus();
-      }
-    };
-    const dismiss = (event: PointerEvent) => {
-      if (
-        collectionOpen &&
-        event.target instanceof Node &&
-        !collection.current?.contains(event.target)
-      )
-        setCollectionOpen(false);
+      if (event.key === "Escape") closeDirectory();
     };
     window.addEventListener("keydown", key);
-    window.addEventListener("pointerdown", dismiss);
-    return () => {
-      window.removeEventListener("keydown", key);
-      window.removeEventListener("pointerdown", dismiss);
-    };
-  }, [collectionOpen, expanded, journal]);
+    return () => window.removeEventListener("keydown", key);
+  }, [closeDirectory, directoryOpen, journal]);
 
   const toolRow = (tool: Tool, categoryId: string) => (
     <button
@@ -257,51 +241,16 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
         </Link>
         <p className="atlas-header-note">Tools explored by Turtleand</p>
         <div className="atlas-header-actions">
-          <div className="atlas-collection-control" ref={collection}>
-            <button
-              type="button"
-              className="atlas-all-collection"
-              ref={collectionTrigger}
-              aria-expanded={collectionOpen}
-              aria-controls="atlas-collection"
-              onClick={() => setCollectionOpen((open) => !open)}
-            >
-              <span aria-hidden="true">▤</span> All tools
-            </button>
-            <div
-              id="atlas-collection"
-              className="atlas-collection"
-              hidden={!collectionOpen}
-            >
-              <h2>All tools</h2>
-              <div className="atlas-collection-actions">
-                <button type="button" onClick={openDirectory}>
-                  <strong>Browse the directory</strong>
-                  <small>Tool names and notes by island.</small>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAllTools((show) => !show);
-                    setCollectionOpen(false);
-                    setPreview(null);
-                    collectionTrigger.current?.focus();
-                  }}
-                >
-                  <strong>
-                    {showAllTools
-                      ? "Show featured tools on the map"
-                      : "Show all tools on the map"}
-                  </strong>
-                  <small>
-                    {showAllTools
-                      ? "Return to a few examples per island."
-                      : "Display the complete tool collection on the map."}
-                  </small>
-                </button>
-              </div>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="atlas-all-collection"
+            ref={directoryTrigger}
+            aria-expanded={directoryOpen}
+            aria-controls="atlas-directory"
+            onClick={directoryOpen ? closeDirectory : openDirectory}
+          >
+            <span aria-hidden="true">▤</span> All tools
+          </button>
           <TurtleandHubLink />
         </div>
       </header>
@@ -310,11 +259,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           <div className="atlas-map-heading">
             <div className="atlas-intro">
               <h1>Explore the islands</h1>
-              <p>
-                {showAllTools
-                  ? "Showing all tools. Drag the map to explore."
-                  : "Choose a tool or explore an island to see how Turtleand used AI."}
-              </p>
+              <p>Choose a tool or explore an island to see how Turtleand used AI.</p>
             </div>
             <AtlasTsunamiLink placement="chart" />
           </div>
@@ -379,7 +324,6 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                 view={view}
                 selected={selected}
                 activeId={activeId}
-                display={showAllTools ? "all" : "featured"}
                 onSelect={select}
                 onTool={openTool}
                 onReveal={reveal}
@@ -395,11 +339,11 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
         <aside
           ref={directory}
           id="atlas-directory"
-          className={`atlas-directory ${expanded ? "is-expanded" : ""}`}
-          aria-label={expanded ? "Tool directory" : "Selected island tools"}
+          className="atlas-directory"
+          aria-label={directoryOpen ? "Tool directory" : "Selected island tools"}
           tabIndex={-1}
         >
-          {expanded ? (
+          {directoryOpen ? (
             <>
               <div className="atlas-shore-header">
                 <div>
@@ -427,8 +371,11 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                     <h3>
                       <button
                         type="button"
-                        aria-pressed={selected === shore.id}
-                        onClick={() => select(shore.id)}
+                        aria-current={selected === shore.id || undefined}
+                        onClick={() => {
+                          select(shore.id);
+                          requestAnimationFrame(() => directory.current?.focus());
+                        }}
                       >
                         <AtlasGlyph kind={shore.landmark} />
                         {shore.category.name}
