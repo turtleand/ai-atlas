@@ -48,15 +48,15 @@ export interface AtlasScene {
 
 // Authored by identity, not catalog order. The gaps are navigable sea, not a grid.
 const geography: Record<string, [number, number, number, number]> = {
-  chatbot: [610, 305, 160, -0.35],
-  research: [280, 680, 142, -0.5],
-  education: [760, 785, 150, 0.5],
-  images: [1245, 275, 155, 0.35],
-  "video-generation": [1720, 585, 166, 2.65],
-  code: [1110, 1120, 173, -0.5],
-  agents: [1745, 1055, 147, -2.65],
-  "local-infrastructure": [1495, 1475, 163, -1.25],
-  "auxiliary-tools": [340, 1280, 129, -0.9],
+  chatbot: [690, 270, 179, -0.3],
+  research: [300, 595, 150, -0.35],
+  education: [980, 620, 154, -0.9],
+  images: [1460, 235, 170, -0.2],
+  "video-generation": [2060, 420, 165, 2.55],
+  code: [1370, 870, 185, -0.56],
+  agents: [2100, 802, 147, -2.57],
+  "local-infrastructure": [1740, 1190, 157, -1.2],
+  "auxiliary-tools": [420, 1000, 125, -0.8],
 };
 export function islandPoint(
   island: Pick<AtlasIsland, "center" | "rotation">,
@@ -189,25 +189,16 @@ export function clearSegment(scene: AtlasScene, a: Point, b: Point) {
 export function createScene(categories: Category[]): AtlasScene {
   let width: number, height: number;
   const fallback: Point[] = [];
+  const authoredCenters = Object.values(geography).map(([x, y]) => ({ x, y }));
   function placement(id: string): [number, number, number, number] {
-    if (geography[id]) {
-      const [x, y, radius, angle] = geography[id];
-      return [x * 1.35, y * 0.8, radius, angle];
-    }
+    const authored = geography[id];
+    if (authored) return authored;
     const seed = hash(id);
     for (let n = 0; ; n++) {
       const a = ((seed % 360) * Math.PI) / 180 + n * 2.39996;
       const r = 1150 + Math.floor(n / 12) * 360;
       const p = { x: 1050 + Math.cos(a) * r, y: 900 + Math.sin(a) * r };
-      if (
-        [
-          ...Object.values(geography).map((v) => ({
-            x: v[0] * 1.35,
-            y: v[1] * 0.8,
-          })),
-          ...fallback,
-        ].every((q) => distance(p, q) > 440)
-      ) {
+      if ([...authoredCenters, ...fallback].every((q) => distance(p, q) > 440)) {
         fallback.push(p);
         return [p.x, p.y, 145, a];
       }

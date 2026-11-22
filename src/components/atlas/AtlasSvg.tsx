@@ -9,6 +9,7 @@ import {
   type AtlasIsland,
 } from "./atlas-model";
 import { AtlasLandmark } from "./AtlasLandmark";
+import { turtleScreenScale } from "./atlas-camera";
 import { projection, type AtlasView, type JourneyDriver } from "./useAtlas";
 
 function IslandArt({
@@ -268,10 +269,7 @@ export function AtlasSvg({
     const update = () => {
       const j = driver.ref.current,
         p = projection(j.position, view);
-      const scale = Math.min(
-        view.zoom * 1.15,
-        Math.max(0.32, view.zoom * 0.85),
-      );
+      const scale = turtleScreenScale(view);
       turtle.current?.setAttribute(
         "transform",
         `translate(${p.x},${p.y}) rotate(${(j.heading * 180) / Math.PI}) scale(${scale})`,
@@ -370,22 +368,24 @@ export function AtlasSvg({
       </g>
       <path
         ref={route}
+        className="atlas-turtle-route"
         d=""
-        stroke="#a3cebc"
-        strokeWidth="1"
+        stroke="#dfdfac"
+        strokeWidth="1.5"
         strokeDasharray="3 8"
         fill="none"
-        opacity=".3"
+        opacity=".54"
       />
       <path
         ref={wake}
+        className="atlas-turtle-wake"
         fill="none"
-        stroke="#a4dbc8"
+        stroke="#dfdfac"
         strokeWidth="3"
-        opacity=".28"
+        opacity=".52"
         strokeLinecap="round"
       />
-      <g ref={turtle}>
+      <g ref={turtle} className="atlas-turtle">
         <TurtleArt />
       </g>
     </svg>
