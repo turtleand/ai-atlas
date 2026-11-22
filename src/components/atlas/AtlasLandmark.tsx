@@ -4,9 +4,11 @@ import type { Landmark } from "./atlas-model";
 export function AtlasLandmark({
   kind,
   accent,
+  studyFolio = false,
 }: {
   kind: Landmark;
   accent: string;
+  studyFolio?: boolean;
 }) {
   const ink = "#203743",
     wall = "#d0d4c2",
@@ -109,6 +111,15 @@ export function AtlasLandmark({
           <path d="M-4-20 24-52 36-45 9-13Z" fill={wall} />
           <ellipse cx="30" cy="-49" rx="9" ry="5" fill="#284d55" />
           <path d="M-10 20V7Q0-5 10 7V24" fill={ink} />
+          {studyFolio && (
+            <>
+              <path
+                d="M14 27 26 24 31 28 42 22 48 31 37 38 30 34 20 38Z"
+                fill={wall}
+              />
+              <path d="M31 28 37 38M20 30l6-2m13 1 4-3" fill="none" />
+            </>
+          )}
         </>
       )}
       {kind === "library" && (
@@ -153,6 +164,35 @@ export function AtlasLandmark({
           <path d="M-17-30 3-49 25-31Z" fill={accent} />
           <path d="M-3-22H12V-8H-3Z" fill="#e5c47b" />
           <path d="M-32 5-29-12-17 8ZM29-2 34-18 45-6Z" fill={accent} />
+        </>
+      )}
+      {kind === "recording" && (
+        <>
+          <path d="M-35 20-9 7 36 16 12 29Z" fill={wall} />
+          <path d="M-35 20 12 29 36 16V25L12 38-35 29Z" fill="#82a296" />
+          <path d="M12 29V38" fill="none" />
+          <path
+            d="M-33-47Q-46-36-33-25M33-47Q46-36 33-25"
+            fill="none"
+            stroke={accent}
+            strokeLinecap="round"
+            strokeWidth="4"
+          />
+          <rect x="-15" y="-66" width="30" height="49" rx="15" fill={accent} />
+          <path
+            d="M-8-53H8M-8-45H8M-8-37H8"
+            fill="none"
+            stroke={ink}
+            strokeLinecap="round"
+            strokeWidth="3"
+          />
+          <path
+            d="M-22-34V-28A22 22 0 0 0 22-28V-34M0-6V22M-13 22H13"
+            fill="none"
+            stroke={wall}
+            strokeLinecap="round"
+            strokeWidth="5"
+          />
         </>
       )}
       {kind === "jetty" && (
@@ -303,8 +343,8 @@ export function AtlasLandmark({
   );
 }
 
-export function AtlasGlyph({ kind }: { kind: Landmark }) {
-  const paths: Record<Landmark, string> = {
+export function AtlasGlyph({ kind }: { kind: Landmark | "tool-arrow" }) {
+  const paths: Record<typeof kind, string> = {
     pavilion: "M2 2h12v8H8l-4 4v-4H2Z",
     pigment: "m8 1 6 7-6 7-6-7Z M8 1v14M2 8h12",
     cinema: "M1 3h14v10H1Z M6 5l5 3-5 3Z",
@@ -313,7 +353,9 @@ export function AtlasGlyph({ kind }: { kind: Landmark }) {
     library: "M8 4 1 2v10l7 2 7-2V2ZM8 4v10",
     utilities: "M2 1h12v14H2ZM5 4h6M5 8h6M5 12h6",
     harbor: "M6 1h4v5H6ZM1 11h4v4H1ZM11 11h4v4h-4ZM8 6v3H3v2M8 9h5v2",
+    recording: "M8 1a2 2 0 0 1 2 2v4a2 2 0 0 1-4 0V3a2 2 0 0 1 2-2ZM3.5 7a4.5 4.5 0 0 0 9 0M8 11.5V15M5.5 15h5",
     jetty: "m1 5 7-4 7 4v7l-7 3-7-3ZM1 5l7 4 7-4M8 9v6",
+    "tool-arrow": "M3 13 13 3M6 3h7v7",
   };
   return (
     <svg className="atlas-glyph" viewBox="0 0 16 16" aria-hidden="true">
