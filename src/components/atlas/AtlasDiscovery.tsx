@@ -271,7 +271,7 @@ export function seaCaptionLayout(
 export function AtlasDiscovery({
   scene,
   view,
-  depth,
+  depth = false,
   activeId,
   selected,
   display,
@@ -283,7 +283,7 @@ export function AtlasDiscovery({
 }: {
   scene: AtlasScene;
   view: AtlasView;
-  depth: boolean;
+  depth?: boolean;
   activeId: string | null;
   selected: string | null;
   display: "featured" | "all";

@@ -6,7 +6,6 @@ import {
   render,
   renderHook,
   screen,
-  waitFor,
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,20 +15,6 @@ import { createScene } from "./atlas-model";
 import { parseToolsYaml } from "../../utils/parseTools";
 import catalog from "../../data/ai-tools.yaml?raw";
 import { useAtlasView, useJourney, useMotionPolicy } from "./useAtlas";
-import type { AtlasThreeProps } from "./AtlasThree";
-const loader = vi.hoisted(() => ({
-  calls: 0,
-  props: null as AtlasThreeProps | null,
-}));
-vi.mock("./AtlasThree", () => {
-  loader.calls++;
-  return {
-    AtlasThree: (props: AtlasThreeProps) => {
-      loader.props = props;
-      return <div data-testid="three-scene" />;
-    },
-  };
-});
 const categories = [
   {
     id: "chatbot",
@@ -122,7 +107,6 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   frames.clear();
-  loader.props = null;
 });
 const mount = () =>
   render(
@@ -226,7 +210,7 @@ it("supports shore taps and ignores drags and multi-touch as selections", () => 
   ).toBe("");
 });
 
-it("preserves navigation destinations and makes the wave a labelled central link", () => {
+it("features Tsunami in the chart heading and footer while keeping the other destinations", () => {
   mount();
   const dock = screen.getByRole("navigation", { name: "Atlas and Turtleand" });
   const links = within(dock).getAllByRole("link");
@@ -236,11 +220,12 @@ it("preserves navigation destinations and makes the wave a labelled central link
     "/tsunami/",
     "/productivity-loop/",
   ]);
-  expect(
-    within(dock)
-      .getByRole("link", { name: "Tsunami" })
-      .classList.contains("atlas-tsunami-link"),
-  ).toBe(true);
+  const chart = screen.getByRole("region", { name: "Interactive island map" });
+  for (const area of [chart, dock]) {
+    expect(
+      within(area).getByRole("link", { name: "Tsunami" }).getAttribute("href"),
+    ).toBe("/tsunami/");
+  }
   expect(
     [...dock.querySelectorAll("svg")].every(
       (svg) => svg.getAttribute("aria-hidden") === "true",
@@ -252,11 +237,15 @@ it("preserves navigation destinations and makes the wave a labelled central link
   );
 });
 describe("shared home interaction contract", () => {
-  it("starts in SVG without loading 3D and opens details immediately", () => {
+  it("keeps the SVG map and direct tool access with the simplified controls", () => {
     mount();
-    expect(loader.calls).toBe(0);
     expect(document.querySelector(".atlas-svg")).toBeTruthy();
     const nav = screen.getByRole("region", { name: "Interactive island map" });
+    expect(
+      within(nav).queryByRole("button", {
+        name: /^(?:2d|3d|zoom (?:in|out)|show all islands)$/i,
+      }),
+    ).toBeNull();
     fireEvent.click(within(nav).getByRole("button", { name: /Code/ }));
     fireEvent.click(within(nav).getByRole("button", { name: "Tool B" }));
     expect(screen.getByRole("dialog", { name: "Tool B" })).toBeTruthy();
@@ -265,48 +254,6 @@ describe("shared home interaction contract", () => {
     ).toBe("https://example.com/b");
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-  });
-  it("keeps 2D usable during preparation, cancels cleanly, and preserves category across switches", async () => {
-    mount();
-    const nav = screen.getByRole("region", { name: "Interactive island map" });
-    fireEvent.click(within(nav).getByRole("button", { name: /Code/ }));
-    fireEvent.click(screen.getByRole("button", { name: "3D" }));
-    await waitFor(() => expect(loader.props).not.toBeNull());
-    expect(document.querySelector(".atlas-svg")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.queryByTestId("three-scene")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "3D" }));
-    await waitFor(() => expect(screen.getByTestId("three-scene")).toBeTruthy());
-    act(() => loader.props!.onReady());
-    expect(document.querySelector(".atlas-svg")).toBeNull();
-    expect(
-      within(nav)
-        .getByRole("button", { name: /Code/ })
-        .getAttribute("aria-pressed"),
-    ).toBe("true");
-    fireEvent.click(screen.getByRole("button", { name: "2D" }));
-    expect(document.querySelector(".atlas-svg")).toBeTruthy();
-    expect(screen.queryByTestId("three-scene")).toBeNull();
-  });
-  it("falls back on failure and retains the selected category", async () => {
-    mount();
-    fireEvent.click(
-      within(
-        screen.getByRole("region", { name: "Interactive island map" }),
-      ).getByRole("button", { name: /Chatbot/ }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "3D" }));
-    await waitFor(() => expect(loader.props).not.toBeNull());
-    act(() => loader.props!.onFail(new Error("test context loss")));
-    expect(document.querySelector(".atlas-svg")).toBeTruthy();
-    expect(screen.getByRole("status").textContent).toContain(
-      "3D is unavailable",
-    );
-    expect(
-      screen
-        .getByRole("button", { name: "Chatbot, 1 tools" })
-        .getAttribute("aria-pressed"),
-    ).toBe("true");
   });
 });
 describe("motion scheduling", () => {
@@ -361,7 +308,7 @@ describe("motion scheduling", () => {
 
 it("pans and pinches the shared view, releases cancelled touches, and ignores navigation buttons", () => {
   const scene = createScene(categories);
-  const { result } = renderHook(() => useAtlasView(scene, null));
+  const { result } = renderHook(() => useAtlasView(scene));
   const target = document.createElement("div");
   const event = (
     pointerId: number,
@@ -407,7 +354,7 @@ describe("Shore Signposts", () => {
       </MemoryRouter>,
     );
   const allTools = () =>
-    screen.getByRole("button", { name: "All 29 tools" });
+    screen.getByRole("button", { name: "All tools" });
 
   it("starts with curated tools and opens a signpost’s notes immediately", () => {
     const { container } = mountCatalog();
@@ -464,14 +411,21 @@ it("interrupts camera travel and preserves manual center and scale through resiz
   const scene = createScene(parseToolsYaml(catalog));
   let camera: ReturnType<typeof useAtlasView>;
   function Harness() {
-    camera = useAtlasView(scene, null);
+    camera = useAtlasView(scene);
     return <div ref={camera.ref} />;
   }
-  render(<Harness />);
+  const { container } = render(<Harness />);
+  const viewport = container.firstElementChild!;
+  const zoomByWheel = (factor: number) =>
+    fireEvent.wheel(viewport, {
+      clientX: 500,
+      clientY: 325,
+      deltaY: -Math.log(factor) * 1000,
+    });
   const overview = camera!.view;
   act(() => camera!.focus(scene.islands[0].id));
   expect(camera!.view).toEqual(overview);
-  act(() => camera!.zoom(3));
+  zoomByWheel(3);
   const zoom = camera!.view.zoom;
   const now = performance.now();
   act(() => camera!.focus(scene.islands[0].id));
@@ -480,7 +434,7 @@ it("interrupts camera travel and preserves manual center and scale through resiz
   act(() => pending.forEach((fn) => fn(now + 100)));
   expect(camera!.view.zoom).toBe(zoom);
   expect(camera!.view.center).not.toEqual(overview.center);
-  act(() => camera!.zoom(1.1));
+  zoomByWheel(1.1);
   expect(frames.size).toBe(0);
   const manual = camera!.view;
   act(() => resize!(700, 450));

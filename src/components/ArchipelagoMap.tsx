@@ -1,12 +1,9 @@
 import {
-  Component,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ComponentType,
-  type ReactNode,
   type CSSProperties,
 } from "react";
 import { Link } from "react-router-dom";
@@ -16,29 +13,14 @@ import { atlasCapture } from "./atlas/capture";
 import { createScene, inside } from "./atlas/atlas-model";
 import { AtlasSvg } from "./atlas/AtlasSvg";
 import { AtlasNavigation } from "./atlas/AtlasNavigation";
+import { AtlasTsunamiLink } from "./atlas/AtlasTsunamiLink";
 import { AtlasDiscovery, type ToolPreview } from "./atlas/AtlasDiscovery";
 import { AtlasGlyph } from "./atlas/AtlasLandmark";
 import { toolNote } from "./atlas/tool-notes";
 import "../styles/atlas-guided.css";
 import { useAtlasView, useJourney, useMotionPolicy } from "./atlas/useAtlas";
-import type { AtlasThreeProps } from "./atlas/AtlasThree";
 import { JournalPanel } from "./JournalPanel";
 
-class SceneBoundary extends Component<
-  { children: ReactNode; onFail: (error?: unknown) => void },
-  { failed: boolean }
-> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  componentDidCatch(error: unknown) {
-    this.props.onFail(error);
-  }
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
 export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const scene = useMemo(() => createScene(categories), [categories]);
   const [preview, setPreview] = useState<ToolPreview>(null);
@@ -75,29 +57,16 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const collection = useRef<HTMLDivElement>(null);
   const collectionTrigger = useRef<HTMLButtonElement>(null);
   const directory = useRef<HTMLElement>(null);
-  const [mode, setMode] = useState<"2d" | "3d">("2d");
-  const [ready, setReady] = useState(false);
-  const [Three, setThree] = useState<ComponentType<AtlasThreeProps> | null>(
-    null,
-  );
-  const [notice, setNotice] = useState("");
-  const [staticQuality, setStaticQuality] = useState(false);
   const { reduced, visible } = useMotionPolicy();
   const {
     ref: containerRef,
     view,
     focus,
     reset: resetView,
-    zoom,
     handlers,
-    depthRef,
     reveal,
-  } = useAtlasView(scene, selected, reduced);
-  const journey = useJourney(
-    scene,
-    !!journal || !visible || staticQuality,
-    reduced,
-  );
+  } = useAtlasView(scene, reduced);
+  const journey = useJourney(scene, !!journal || !visible, reduced);
   const driver = useMemo(
     () => ({ ref: journey.ref, subscribe: journey.subscribe }),
     [journey.ref, journey.subscribe],
@@ -111,44 +80,6 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const journalIsland = scene.islands.find((i) => i.id === journal?.categoryId);
   const historicalJournal = journal?.tool.id === "openclaw";
   const origin = useRef<HTMLElement | null>(null);
-  const depth = mode === "3d" && ready;
-  useEffect(() => {
-    depthRef.current = depth;
-  }, [depth, depthRef]);
-  const onFail = useCallback((error?: unknown) => {
-    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
-      document.documentElement.dataset.atlasError = String(error);
-    setMode("2d");
-    setReady(false);
-    setStaticQuality(false);
-    setNotice("3D is unavailable. You can keep exploring in 2D.");
-  }, []);
-  const activationStart = useRef(0);
-  const onReady = useCallback(() => {
-    setReady(true);
-    if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
-      document.documentElement.dataset.atlas3dActivationMs = String(
-        performance.now() - activationStart.current,
-      );
-  }, []);
-  const onSlow = useCallback(() => {
-    setStaticQuality(true);
-    setNotice("Motion paused to keep the map responsive.");
-  }, []);
-  useEffect(() => {
-    if (mode !== "3d" || Three) return;
-    let cancelled = false;
-    import("./atlas/AtlasThree")
-      .then((module) => {
-        if (!cancelled) setThree(() => module.AtlasThree);
-      })
-      .catch((error) => {
-        if (!cancelled) onFail(error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [mode, Three, onFail]);
   useEffect(() => {
     if (!(import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")) return;
     let last = -1;
@@ -261,9 +192,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     if (!rect) return null;
     const p = {
       x: view.center.x + (clientX - rect.left - view.width / 2) / view.zoom,
-      y:
-        view.center.y +
-        (clientY - rect.top - view.height / 2) / view.zoom / (depth ? 0.72 : 1),
+      y: view.center.y + (clientY - rect.top - view.height / 2) / view.zoom,
     };
     return (
       scene.islands.find((i) =>
@@ -306,16 +235,9 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
       onBlurCapture={() => setFocused(null)}
       className="living-atlas"
       data-variant="signposts"
-      data-mode={depth ? "3d" : "2d"}
       data-reduced-motion={reduced || undefined}
       data-motion={
-        reduced ||
-        !visible ||
-        journal ||
-        staticQuality ||
-        atlasCapture()
-          ? "paused"
-          : "running"
+        reduced || !visible || journal || atlasCapture() ? "paused" : "running"
       }
     >
       <a
@@ -348,14 +270,14 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               aria-controls="atlas-collection"
               onClick={() => setCollectionOpen((open) => !open)}
             >
-              <span aria-hidden="true">▤</span> All {toolCount} tools
+              <span aria-hidden="true">▤</span> All tools
             </button>
             <div
               id="atlas-collection"
               className="atlas-collection"
               hidden={!collectionOpen}
             >
-              <h2>All {toolCount} tools</h2>
+              <h2>All tools</h2>
               <div className="atlas-collection-actions">
                 <button type="button" onClick={openDirectory}>
                   <strong>Browse the directory</strong>
@@ -412,18 +334,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                   : "Choose a tool or explore an island to see how Turtleand used AI."}
               </p>
             </div>
-            <svg
-              className="atlas-chart-compass"
-              viewBox="0 0 48 68"
-              aria-hidden="true"
-            >
-              <text x="24" y="10" textAnchor="middle">
-                N
-              </text>
-              <circle cx="24" cy="39" r="15" />
-              <path d="M24 17 28 35 46 39 28 43 24 61 20 43 2 39 20 35Z" />
-              <path d="M24 17v22l4-4ZM2 39h22l-4 4Z" fill="currentColor" />
-            </svg>
+            <AtlasTsunamiLink placement="chart" />
           </div>
           <div
             ref={containerRef}
@@ -474,43 +385,17 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               tap.current = null;
             }}
           >
-            {!depth && (
-              <AtlasSvg
-                scene={scene}
-                view={view}
-                selected={activeId}
-                driver={driver}
-              />
-            )}
-            {mode === "3d" && Three && (
-              <SceneBoundary onFail={onFail}>
-                <div className={`atlas-three ${ready ? "is-ready" : ""}`}>
-                  <Three
-                    scene={scene}
-                    view={view}
-                    driver={driver}
-                    active={
-                      ready &&
-                      visible &&
-                      !reduced &&
-                      !journal &&
-                      !staticQuality &&
-                      !atlasCapture()
-                    }
-                    selected={activeId}
-                    onReady={onReady}
-                    onFail={onFail}
-                    onSlow={onSlow}
-                  />
-                </div>
-              </SceneBoundary>
-            )}
+            <AtlasSvg
+              scene={scene}
+              view={view}
+              selected={activeId}
+              driver={driver}
+            />
             {view.width > 1 && (
               <AtlasDiscovery
                 scene={scene}
                 view={view}
                 selected={selected}
-                depth={depth}
                 activeId={activeId}
                 display={showAllTools ? "all" : "featured"}
                 onSelect={select}
@@ -524,65 +409,6 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
               <p className="atlas-empty">New shores are being charted.</p>
             )}
           </div>
-          <div className="atlas-map-footer">
-            <button className="atlas-overview" onClick={reset}>
-              Show all islands
-            </button>
-            <div className="atlas-zoom">
-              <button aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>
-                −
-              </button>
-              <button aria-label="Zoom in" onClick={() => zoom(1.2)}>
-                +
-              </button>
-            </div>
-            <div className="atlas-controls">
-              <div
-                className="atlas-mode-switch"
-                role="group"
-                aria-label="Map view"
-              >
-                <button
-                  aria-pressed={mode === "2d"}
-                  onClick={() => {
-                    setMode("2d");
-                    setReady(false);
-                    setStaticQuality(false);
-                    setNotice("");
-                  }}
-                >
-                  2D
-                </button>
-                <button
-                  aria-pressed={mode === "3d"}
-                  onClick={() => {
-                    activationStart.current = performance.now();
-                    setMode("3d");
-                    setNotice("");
-                  }}
-                >
-                  3D
-                </button>
-              </div>
-            </div>
-          </div>
-          {((mode === "3d" && !ready) || notice) && (
-            <div role="status" className="atlas-notice">
-              {notice || (
-                <>
-                  Preparing 3D. Keep exploring.
-                  <button
-                    onClick={() => {
-                      setMode("2d");
-                      setReady(false);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </>
-              )}
-            </div>
-          )}
         </section>
         <aside
           ref={directory}
