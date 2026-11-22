@@ -6,58 +6,86 @@ Canonical: https://atlas.turtleand.com/
 
 ## Explore
 
-- [AI tool map](https://atlas.turtleand.com/): Browse AI tools by category and use case.
 - [AI Tsunami Tracker](https://atlas.turtleand.com/tsunami/): Assess readiness across AI usage, automation, adaptability, independence, and systems thinking.
+- [AI tool map](https://atlas.turtleand.com/islands/): Browse AI tools by category and use case.
 - [AI Impact Map](https://atlas.turtleand.com/ai-impact-map/): Explore how AI pressure reaches industries and roles unevenly.
 - [The Turtleand Loop](https://atlas.turtleand.com/productivity-loop/): Use Learn, Apply, Position, Adapt to choose the next compounding action.
 
 ## Tools
 
-### Chatbot
-- [ChatGPT](https://atlas.turtleand.com/#chatgpt): OpenAI's conversational AI
-- [Claude](https://atlas.turtleand.com/#claude): Anthropic's AI assistant
-- [Grok](https://atlas.turtleand.com/#grok): xAI's chatbot
-- [Gemini](https://atlas.turtleand.com/#gemini): Google's AI assistant
-- [Sesame](https://atlas.turtleand.com/#sesame): Voice-based AI companion
+Each entry links to the tool's website. The [structured catalog](https://atlas.turtleand.com/ai-tools.yaml) includes tool statuses and use notes.
 
-### Images
-- [Nano Banana](https://atlas.turtleand.com/#nano-banana): AI image generation
-- [ChatGPT Image](https://atlas.turtleand.com/#chatgpt-image): OpenAI's image generation in ChatGPT
-- [Recraft](https://atlas.turtleand.com/#recraft): AI image generation and design
-- [Adobe Express](https://atlas.turtleand.com/#adobe-express): AI background removal
-- [Gemini Drawing](https://atlas.turtleand.com/#gemini-drawing): Collaborative AI drawing
+### Active
 
-### Video Generation
-- [Sora](https://atlas.turtleand.com/#sora): OpenAI's text-to-video model
-- [VEO 3](https://atlas.turtleand.com/#veo-3): Google's AI video generation
-- [Hailuo Minimax](https://atlas.turtleand.com/#hailuo-minimax): AI video generation
+#### Chatbot
+- [ChatGPT](https://chat.openai.com/) (OpenAI's conversational AI)
+- [Gemini](https://gemini.google.com/) (Google's AI assistant)
 
-### Code
-- [GitHub Copilot](https://atlas.turtleand.com/#github-copilot): AI pair programmer
-- [Claude Code](https://atlas.turtleand.com/#claude-code): AI coding assistant in terminal
-- [Cursor](https://atlas.turtleand.com/#cursor): AI-first code editor
-- [Sourcegraph DeepSearch](https://atlas.turtleand.com/#sourcegraph-deepsearch): AI-powered semantic code search
-- [Sourcegraph AMP](https://atlas.turtleand.com/#sourcegraph-amp): Agentic coding with autonomous workflows
-- [OpenAI Codex](https://atlas.turtleand.com/#openai-codex): Code generation model powering Copilot
+#### Agents and Code
+- [OpenAI Codex](https://openai.com/codex/) (OpenAI’s coding agent.) [Turtleand repositories](https://github.com/turtleand)
+- [Claude Code](https://claude.ai/) (AI coding assistant in terminal)
+- [ChatGPT Dots](https://chatgpt.com/get-dot/) (An always-on agent in ChatGPT.)
+- [ChatGPT Docs](https://openai.com/business/plugins/documents/) (Create and edit documents with ChatGPT.)
 
-### Research
-- [ChatGPT Deep Search](https://atlas.turtleand.com/#chatgpt-deep-search): Advanced AI research
-- [Perplexity Comet](https://atlas.turtleand.com/#perplexity-comet): AI-powered desktop assistant
+#### Images
+- [ChatGPT Image](https://chat.openai.com/) (OpenAI's image generation in ChatGPT)
 
-### Education
-- [NotebookLM](https://atlas.turtleand.com/#notebooklm): AI-powered learning notebook
-- [Gamma](https://atlas.turtleand.com/#gamma): AI presentation creation
+#### Research and Education
+- [NotebookLM](https://notebooklm.google/) (AI-powered learning notebook)
 
-### Local & Infrastructure
-- [llama.cpp](https://atlas.turtleand.com/#llama-cpp): Local LLM inference engine
-- [Hugging Face](https://atlas.turtleand.com/#hugging-face): Model repository & community hub
+#### Local & Infrastructure
+- [Hugging Face](https://huggingface.co/) (Model repository & community hub)
 
-### Agents
-- [Hermes Agent](https://atlas.turtleand.com/#hermes-agent): Open-source AI agent framework with memory, skills, tools, messaging, and scheduled tasks
-- [OpenClaw](https://atlas.turtleand.com/#openclaw): Persistent AI agent platform
+### Experimental
 
-### Auxiliary Tools
-- [ntfy](https://atlas.turtleand.com/#ntfy): Push notifications for AI agents
+#### Agents and Code
+- [OpenCode](https://opencode.ai/) (Open-source AI coding agent.)
+- [Orca Orchestrator](https://github.com/stablyai/orca) (Runs coding agents in parallel Git worktrees.)
+- [Hermes Agent](https://github.com/NousResearch/hermes-agent) (Open-source AI agent framework with memory, skills, tools, messaging, and scheduled tasks)
+
+#### Voice
+- [ElevenLabs](https://elevenlabs.io/) (AI voice and audio tools.)
+
+#### Local & Infrastructure
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) (Local LLM inference engine)
+
+### Archive
+
+#### Chatbot
+- [Grok](https://grok.x.ai/) (xAI's chatbot)
+
+#### Agents and Code
+- [Cursor](https://cursor.sh/) (AI-first code editor)
+- [GitHub Copilot](https://github.com/features/copilot) (AI pair programmer)
+- [Sourcegraph](https://sourcegraph.com/) (Code search and navigation.)
+- [Sourcegraph DeepSearch](https://sourcegraph.com/) (AI-powered semantic code search)
+- [Sourcegraph AMP](https://ampcode.com/) (Agentic coding with autonomous workflows)
+- [OpenClaw](https://github.com/openclaw/openclaw) (Persistent AI agent platform)
+
+#### Images
+- [Nano Banana](https://nanobanana.com/) (AI image generation)
+- [Gemini Drawing](https://gemini.google.com/) (Collaborative AI drawing)
+- [Recraft](https://www.recraft.ai/) (AI image generation and design)
+- [Adobe Express](https://www.adobe.com/express/feature/image/remove-background) (AI background removal)
+
+#### Video Generation
+- [Sora](https://help.openai.com/en/articles/20001152-what-to-know-about-the-sora-discontinuation) (OpenAI's text-to-video model)
+- [Veo 3](https://deepmind.google/technologies/veo/) (Google's AI video generation)
+- [Hailuo MiniMax](https://hailuoai.video/) (AI video generation)
+
+#### Research and Education
+- [Gamma](https://gamma.app/) (AI presentation creation)
+- [Perplexity Comet](https://comet.perplexity.ai/) (AI-powered desktop assistant)
+- [ChatGPT Deep Search](https://chat.openai.com/) (Advanced AI research)
+
+#### Voice
+- [Sesame](https://www.sesame.com/) (Voice-based AI companion)
+
+#### Local & Infrastructure
+- [Google AI Studio](https://aistudio.google.com/) (API key management and model playground for Gemini)
+
+#### Auxiliary Tools
+- [ntfy](https://ntfy.sh/) (Push notifications for AI agents)
 
 ## About
 Curated by Turtleand, exploring how humans and technology evolve together.

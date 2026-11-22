@@ -128,7 +128,11 @@ function IslandArt({
         );
       })}
       <g transform={`translate(${c.x},${c.y - 13}) scale(1.18)`}>
-        <AtlasLandmark kind={island.landmark} accent={accent} />
+        <AtlasLandmark
+          kind={island.landmark}
+          accent={accent}
+          studyFolio={island.category.name === "Research and Education"}
+        />
       </g>
       <g
         transform={`translate(${island.jetty.x},${island.jetty.y}) rotate(${(island.rotation * 180) / Math.PI - 8})`}

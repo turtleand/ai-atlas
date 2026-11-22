@@ -12,6 +12,7 @@ const featuredToolIds: Record<string, readonly string[]> = {
   education: ["notebooklm", "gamma"],
   "local-infrastructure": ["llama-cpp", "hugging-face"],
   agents: ["hermes-agent"],
+  voice: ["elevenlabs"],
   "auxiliary-tools": ["ntfy"],
 };
 
@@ -27,6 +28,7 @@ const phoneOrder = [
   "education",
   "images",
   "agents",
+  "voice",
   "research",
 ];
 const phoneSides: Record<string, "north" | "west" | "south" | "east"> = {
@@ -35,6 +37,7 @@ const phoneSides: Record<string, "north" | "west" | "south" | "east"> = {
   "video-generation": "north",
   research: "south",
   agents: "east",
+  voice: "east",
 };
 const shifts = [0, -18, 18, -36, 36, -54, 54, -72, 72, -96, 96];
 
@@ -94,6 +97,7 @@ export function shoreSignpostLayout(
   frame: AtlasView,
   depth: boolean,
   compact: boolean,
+  experimentalFallback?: ReadonlySet<string>,
 ) {
   if (frame.width < 80 || frame.height < 54) return [];
   const shores = scene.islands.map((island) => {
@@ -121,13 +125,16 @@ export function shoreSignpostLayout(
       a.island.id.localeCompare(b.island.id),
   );
   const signs = ordered.map(({ island, coast, bounds }) => {
-    const featured = (featuredToolIds[island.id] ?? []).flatMap((id) => {
-      const tool = island.category.tools.find((entry) => entry.id === id);
-      return tool ? [tool] : [];
-    });
-    const tools = (
-      featured.length ? featured : island.category.tools.slice(0, 1)
-    ).slice(0, compact ? 1 : 2);
+    const toolLimit = compact ? 1 : 2;
+    let tools = island.category.tools.slice(0, toolLimit);
+    if (!experimentalFallback) {
+      const featured = (featuredToolIds[island.id] ?? []).flatMap((id) => {
+        const tool = island.category.tools.find((entry) => entry.id === id);
+        return tool ? [tool] : [];
+      });
+      tools = featured.length ? featured.slice(0, toolLimit) : tools.slice(0, 1);
+    }
+    const showStatus = experimentalFallback?.has(island.id);
     const titleSize = compact ? 9.5 : 10.5;
     const toolSize = compact ? 11 : 12;
     const titlePadding = compact ? 28 : 42;
@@ -135,6 +142,7 @@ export function shoreSignpostLayout(
     const textWidths = [
       textWidth(island.category.name, titleSize) + titlePadding,
       ...tools.map((tool) => textWidth(tool.name, toolSize) + toolPadding),
+      ...(showStatus ? [textWidth("Experimental", 10) + 18] : []),
     ];
     const w = Math.min(
       compact ? 142 : 220,
@@ -144,6 +152,7 @@ export function shoreSignpostLayout(
     const h =
       (compact ? 20 : 24) +
       tools.length * 24 +
+      (showStatus ? 18 : 0) +
       4 +
       textWidths.filter((width) => width > w).length * 12;
     const xMin = w / 2 + 6,

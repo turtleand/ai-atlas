@@ -53,15 +53,25 @@
 }
 .living-atlas .atlas-signpost-tool {
   justify-content: space-between;
+  gap: 3px;
+  padding-inline: 6px;
   border-top: 1px solid #9cb9a847;
 }
-.atlas-signpost-tool [aria-hidden="true"] {
+.atlas-signpost-tool .atlas-glyph {
+  flex: none;
+  width: 10px;
+  height: 10px;
   color: var(--island-accent);
-  font-size: 12px;
-  font-weight: 500;
 }
 .living-atlas .atlas-signpost button:hover {
   background: #28434b;
+}
+.atlas-signpost-status {
+  padding: 2px 6px 3px;
+  border-top: 1px solid var(--atlas-line);
+  background: #233633;
+  color: var(--atlas-gold);
+  font: 600 10px/1.25 system-ui, sans-serif;
 }
 .atlas-signpost-leader {
   color: var(--island-accent);

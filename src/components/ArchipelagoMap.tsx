@@ -7,9 +7,10 @@ import {
   type CSSProperties,
 } from "react";
 import { Link } from "react-router-dom";
-import type { Category, Tool } from "../utils/parseTools";
+import { getToolStatus, type Category, type Tool } from "../utils/parseTools";
 import { atlasCapture } from "./atlas/capture";
-import { createScene, inside } from "./atlas/atlas-model";
+import { createAtlasCatalog } from "./atlas/atlas-catalog";
+import { getAtlasIslandStyle, inside } from "./atlas/atlas-model";
 import { AtlasSvg } from "./atlas/AtlasSvg";
 import { AtlasNavigation } from "./atlas/AtlasNavigation";
 import { AtlasTsunamiLink } from "./atlas/AtlasTsunamiLink";
@@ -21,8 +22,20 @@ import { useAtlasView, useJourney, useMotionPolicy } from "./atlas/useAtlas";
 import { JournalPanel } from "./JournalPanel";
 import { TurtleandHubLink } from "./TurtleandHubLink";
 
+const directoryStatuses = ["active", "experimental"] as const;
+type DirectoryStatus = (typeof directoryStatuses)[number];
+type SidebarView = "island" | "directory" | "archive";
+const sidebarLabels: Record<SidebarView, string> = {
+  island: "Selected island tools",
+  directory: "Tool directory",
+  archive: "Tool archive",
+};
+
 export function ArchipelagoMap({ categories }: { categories: Category[] }) {
-  const scene = useMemo(() => createScene(categories), [categories]);
+  const { scene, collection, experimentalFallback } = useMemo(
+    () => createAtlasCatalog(categories),
+    [categories],
+  );
   const [preview, setPreview] = useState<ToolPreview>(null);
   const defaultIsland =
     scene.islands.find((island) => island.id === "images") ?? scene.islands[0];
@@ -38,9 +51,11 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     categoryId: string;
   } | null>(() => {
     const capture = atlasCapture();
-    const island = scene.islands.find((i) => i.id === capture?.selection);
-    const tool = island?.category.tools.find((t) => t.id === capture?.tool);
-    return island && tool ? { tool, categoryId: island.id } : null;
+    const category = categories.find((entry) => entry.id === capture?.selection);
+    const tool = category?.tools.find(
+      (entry) => entry.id === capture?.tool && getToolStatus(entry) !== "pending",
+    );
+    return category && tool ? { tool, categoryId: category.id } : null;
   });
   const [hovered, setHovered] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
@@ -51,9 +66,14 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     y: number;
     moved: boolean;
   } | null>(null);
-  const [directoryOpen, setDirectoryOpen] = useState(false);
+  const [sidebarView, setSidebarView] = useState<SidebarView>("island");
+  const [directoryStatus, setDirectoryStatus] = useState<DirectoryStatus>("active");
   const directoryTrigger = useRef<HTMLButtonElement>(null);
+  const archiveTrigger = useRef<HTMLButtonElement>(null);
+  const atlas = useRef<HTMLElement>(null);
   const directory = useRef<HTMLElement>(null);
+  const islandScroll = useRef(0);
+  const archiveReturnScroll = useRef({ atlas: 0, directory: 0 });
   const { reduced, visible } = useMotionPolicy();
   const {
     ref: containerRef,
@@ -70,7 +90,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   );
   const selectedIsland = scene.islands.find((i) => i.id === selected);
   const sidebarIsland = selectedIsland ?? defaultIsland;
-  const journalIsland = scene.islands.find((i) => i.id === journal?.categoryId);
+  const journalCategory = categories.find(({ id }) => id === journal?.categoryId);
   const historicalJournal = journal?.tool.id === "openclaw";
   const origin = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -94,10 +114,13 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     update();
     return driver.subscribe(update);
   }, [driver]);
-  const select = (id: string) => {
+  const select = (id: string, keepDirectory = false) => {
     const start = performance.now();
 
-    setDirectoryOpen(false);
+    if (!keepDirectory) {
+      setSidebarView("island");
+      if (directory.current) directory.current.scrollTop = 0;
+    }
     setPreview(null);
     setSelected(id);
     focus(id);
@@ -113,8 +136,10 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     const start = performance.now();
     origin.current = trigger ?? (document.activeElement as HTMLElement);
     setPreview(null);
-    setSelected(categoryId);
-    journey.select(categoryId);
+    if (getToolStatus(tool) !== "archive") {
+      setSelected(categoryId);
+      journey.select(categoryId);
+    }
     setJournal({ tool, categoryId });
     if (import.meta.env.DEV || import.meta.env.VITE_ATLAS_QA === "1")
       requestAnimationFrame(() => {
@@ -133,25 +158,61 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     resetView();
   };
   const openDirectory = () => {
+    if (sidebarView === "island") {
+      islandScroll.current = directory.current?.scrollTop ?? 0;
+    }
     setPreview(null);
-    setDirectoryOpen(true);
+    setDirectoryStatus("active");
+    setSidebarView("directory");
+    if (directory.current) directory.current.scrollTop = 0;
     requestAnimationFrame(() => directory.current?.focus());
   };
   const closeDirectory = useCallback(() => {
-    setDirectoryOpen(false);
-    requestAnimationFrame(() => directoryTrigger.current?.focus());
+    setSidebarView("island");
+    requestAnimationFrame(() => {
+      if (directory.current) directory.current.scrollTop = islandScroll.current;
+      directoryTrigger.current?.focus();
+    });
   }, []);
-  useEffect(() => {
+  const changeDirectoryStatus = (status: DirectoryStatus) => {
+    if (status === directoryStatus) return;
+    setDirectoryStatus(status);
     if (directory.current) directory.current.scrollTop = 0;
-  }, [directoryOpen]);
+  };
+  const openArchive = () => {
+    archiveReturnScroll.current = {
+      atlas: atlas.current?.scrollTop ?? 0,
+      directory: directory.current?.scrollTop ?? 0,
+    };
+    setPreview(null);
+    setSidebarView("archive");
+    if (directory.current) directory.current.scrollTop = 0;
+    requestAnimationFrame(() => directory.current?.focus());
+  };
+  const closeArchive = useCallback(() => {
+    setSidebarView("directory");
+    requestAnimationFrame(() => {
+      if (atlas.current) atlas.current.scrollTop = archiveReturnScroll.current.atlas;
+      if (directory.current) directory.current.scrollTop = archiveReturnScroll.current.directory;
+      archiveTrigger.current?.focus({ preventScroll: true });
+      archiveTrigger.current?.scrollIntoView?.({ block: "nearest" });
+    });
+  }, []);
+  const toggleDirectory = () => {
+    if (sidebarView === "archive") closeArchive();
+    else if (sidebarView === "directory") closeDirectory();
+    else openDirectory();
+  };
   useEffect(() => {
-    if (!directoryOpen || journal) return;
+    if (sidebarView === "island" || journal) return;
     const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeDirectory();
+      if (event.key !== "Escape") return;
+      if (sidebarView === "archive") closeArchive();
+      else closeDirectory();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [closeDirectory, directoryOpen, journal]);
+  }, [closeArchive, closeDirectory, journal, sidebarView]);
 
   const toolRow = (tool: Tool, categoryId: string) => (
     <button
@@ -164,9 +225,44 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
         {tool.name}
         <small>{toolNote(tool)}</small>
       </span>
-      <span aria-hidden="true">↗</span>
+      <AtlasGlyph kind="tool-arrow" />
     </button>
   );
+  const collectionSections = (groups: Category[], archived = false) =>
+    groups.map((category) => {
+      const { accent, landmark } = getAtlasIslandStyle(category.id);
+      return (
+        <section
+          className="atlas-collection-section"
+          key={category.id}
+          aria-label={`${category.name} tools`}
+          data-island={archived ? undefined : category.id}
+          style={{ "--island-accent": accent } as CSSProperties}
+        >
+          {archived ? (
+            <h3 className="atlas-archive-category">
+              <AtlasGlyph kind={landmark} />
+              {category.name}
+            </h3>
+          ) : (
+            <h3>
+              <button
+                type="button"
+                aria-current={selected === category.id || undefined}
+                onClick={() => {
+                  select(category.id, directoryStatus === "experimental");
+                  requestAnimationFrame(() => directory.current?.focus());
+                }}
+              >
+                <AtlasGlyph kind={landmark} />
+                {category.name}
+              </button>
+            </h3>
+          )}
+          {category.tools.map((tool) => toolRow(tool, category.id))}
+        </section>
+      );
+    });
   const islandAt = (clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return null;
@@ -188,6 +284,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   };
   return (
     <main
+      ref={atlas}
       onPointerMove={(event) => {
         if (event.pointerType === "touch" || event.buttons) return;
         const el = event.target as Element;
@@ -230,7 +327,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
       <header className="atlas-header">
         <Link
           className="atlas-brand"
-          to="/"
+          to="/islands/"
           onClick={(event) => {
             event.preventDefault();
             reset();
@@ -245,11 +342,11 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
             type="button"
             className="atlas-all-collection"
             ref={directoryTrigger}
-            aria-expanded={directoryOpen}
+            aria-expanded={sidebarView !== "island"}
             aria-controls="atlas-directory"
-            onClick={directoryOpen ? closeDirectory : openDirectory}
+            onClick={toggleDirectory}
           >
-            <span aria-hidden="true">▤</span> All tools
+            <span aria-hidden="true">▤</span> Tools
           </button>
           <TurtleandHubLink />
         </div>
@@ -329,6 +426,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                 onReveal={reveal}
                 preview={preview}
                 onPreview={setPreview}
+                experimentalFallback={experimentalFallback}
               />
             )}
             {!scene.islands.length && (
@@ -340,15 +438,39 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           ref={directory}
           id="atlas-directory"
           className="atlas-directory"
-          aria-label={directoryOpen ? "Tool directory" : "Selected island tools"}
+          aria-label={sidebarLabels[sidebarView]}
           tabIndex={-1}
         >
-          {directoryOpen ? (
+          {sidebarView === "archive" && (
             <>
               <div className="atlas-shore-header">
                 <div>
                   <p>AI Atlas</p>
-                  <h2>All tools</h2>
+                  <h2>Archive</h2>
+                </div>
+                <button
+                  type="button"
+                  className="atlas-collection-close"
+                  aria-label="Close archive"
+                  onClick={closeArchive}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="atlas-collection-tools">
+                {collectionSections(collection.archive, true)}
+                {!collection.archive.length && (
+                  <p className="atlas-directory-empty">No archived tools.</p>
+                )}
+              </div>
+            </>
+          )}
+          {sidebarView === "directory" && (
+            <>
+              <div className="atlas-shore-header">
+                <div>
+                  <p>AI Atlas</p>
+                  <h2>Tools</h2>
                 </div>
                 <button
                   type="button"
@@ -359,59 +481,67 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
                   ×
                 </button>
               </div>
-              <div className="atlas-collection-tools">
-                {scene.islands.map((shore) => (
-                  <section
-                    className="atlas-collection-section"
-                    key={shore.id}
-                    aria-label={`${shore.category.name} tools`}
-                    data-island={shore.id}
-                    style={{ "--island-accent": shore.accent } as CSSProperties}
+              <div className="atlas-directory-controls">
+                <div
+                  className="atlas-directory-tabs"
+                  role="group"
+                  aria-label="Directory tool status"
+                >
+                  {directoryStatuses.map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      aria-pressed={directoryStatus === status}
+                      onClick={() => changeDirectoryStatus(status)}
+                    >
+                      {status === "active" ? "Active" : "Experimental"}
+                    </button>
+                  ))}
+                </div>
+                <div className="atlas-directory-actions">
+                  <button
+                    type="button"
+                    className="atlas-directory-archive"
+                    ref={archiveTrigger}
+                    onClick={openArchive}
                   >
-                    <h3>
-                      <button
-                        type="button"
-                        aria-current={selected === shore.id || undefined}
-                        onClick={() => {
-                          select(shore.id);
-                          requestAnimationFrame(() => directory.current?.focus());
-                        }}
-                      >
-                        <AtlasGlyph kind={shore.landmark} />
-                        {shore.category.name}
-                      </button>
-                    </h3>
-                    {shore.category.tools.map((tool) => toolRow(tool, shore.id))}
-                  </section>
-                ))}
+                    Archive
+                  </button>
+                </div>
+              </div>
+              <div className="atlas-collection-tools">
+                {collectionSections(collection[directoryStatus])}
+                {!collection[directoryStatus].length && (
+                  <p className="atlas-directory-empty">No {directoryStatus} tools.</p>
+                )}
               </div>
             </>
-          ) : (
-            sidebarIsland && (
-              <div
-                data-island={sidebarIsland.id}
-                style={{ "--island-accent": sidebarIsland.accent } as CSSProperties}
-              >
-                <div className="atlas-shore-header">
-                  <div className="atlas-shore-icon">
-                    <AtlasGlyph kind={sidebarIsland.landmark} />
-                  </div>
-                  <div>
-                    <p>{selectedIsland ? "Selected island" : "From the collection"}</p>
-                    <h2 aria-live="polite">{sidebarIsland.category.name}</h2>
-                    <small>
-                      {sidebarIsland.category.tools.length}{" "}
-                      {sidebarIsland.category.tools.length === 1 ? "tool" : "tools"} explored
-                    </small>
-                  </div>
+          )}
+          {sidebarView === "island" && sidebarIsland && (
+            <div
+              data-island={sidebarIsland.id}
+              style={{ "--island-accent": sidebarIsland.accent } as CSSProperties}
+            >
+              <div className="atlas-shore-header">
+                <div className="atlas-shore-icon">
+                  <AtlasGlyph kind={sidebarIsland.landmark} />
                 </div>
-                <div className="atlas-shore-tools">
-                  {sidebarIsland.category.tools.map((tool) =>
-                    toolRow(tool, sidebarIsland.id),
-                  )}
+                <div>
+                  <p>{selectedIsland ? "Selected island" : "From the collection"}</p>
+                  <h2 aria-live="polite">{sidebarIsland.category.name}</h2>
+                  <small>
+                    {sidebarIsland.category.tools.length}{" "}
+                    {experimentalFallback.has(sidebarIsland.id) ? "experimental" : "active"}{" "}
+                    {sidebarIsland.category.tools.length === 1 ? "tool" : "tools"}
+                  </small>
                 </div>
               </div>
-            )
+              <div className="atlas-shore-tools">
+                {sidebarIsland.category.tools.map((tool) =>
+                  toolRow(tool, sidebarIsland.id),
+                )}
+              </div>
+            </div>
           )}
         </aside>
       </div>
@@ -427,7 +557,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           <p>{toolNote(preview.tool)}</p>
         </div>
       )}
-      {journal && journalIsland && (
+      {journal && journalCategory && (
         <JournalPanel
           toolName={journal.tool.name}
           toolDescription={
@@ -439,8 +569,8 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
           toolUsage={historicalJournal ? undefined : journal.tool.usage}
           toolRelated={journal.tool.related}
           toolTags={historicalJournal ? undefined : journal.tool.tags}
-          categoryName={journalIsland.category.name}
-          categoryColor={journalIsland.accent}
+          categoryName={journalCategory.name}
+          categoryColor={getAtlasIslandStyle(journalCategory.id).accent}
           onClose={closeTool}
         />
       )}

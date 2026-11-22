@@ -11,7 +11,7 @@ interface RouteMetadataEntry {
   schemaType: string;
 }
 
-const routeMetadata = routeMetadataData as Record<string, RouteMetadataEntry>;
+const routeMetadata = routeMetadataData as Record<string, RouteMetadataEntry | string | undefined>;
 const socialImage = 'https://atlas.turtleand.com/social-card.png';
 
 function normalizePathname(pathname: string) {
@@ -73,7 +73,9 @@ export function RouteMetadata() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const metadata = routeMetadata[normalizePathname(pathname)] ?? null;
+    const route = routeMetadata[normalizePathname(pathname)];
+    const entry = typeof route === 'string' ? routeMetadata[route] : route;
+    const metadata = typeof entry === 'object' ? entry : null;
     const title = metadata?.title ?? 'Page Not Found | Turtleand AI Atlas';
     const description = metadata?.description ?? 'The requested AI Atlas page could not be found.';
     const canonical = metadata?.canonical ?? null;
