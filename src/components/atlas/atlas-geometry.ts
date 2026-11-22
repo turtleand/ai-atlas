@@ -193,6 +193,18 @@ export function buildAtlasGeometry(scene: AtlasScene) {
         box(0, 2, 31, 96, 4, 12, "#baaa7e");
         for (const x of [-33, 33]) roof(x, 13, 28, 15, 26, accent, 3);
         break;
+      case "recording":
+        box(0, 5, 0, 49, 10, 34, cream);
+        box(0, 18, 0, 4, 28, 4, dark);
+        box(0, 32, 0, 38, 4, 4, dark);
+        for (const x of [-18, 18]) box(x, 40, 0, 4, 18, 4, dark);
+        add(new THREE.CapsuleGeometry(13, 25, 4, 10), accent, [
+          c.x,
+          base + 55,
+          c.y,
+        ]);
+        for (const y of [49, 55, 61]) box(0, y, 13, 14, 2, 2, dark);
+        break;
       case "jetty":
         box(-13, 12, -4, 35, 24, 32, cream);
         roof(-13, 33, -4, 33, 18, accent);

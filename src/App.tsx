@@ -1,5 +1,5 @@
 import { useMemo, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { parseToolsYaml } from './utils/parseTools.ts';
 import { ArchipelagoMap } from './components/ArchipelagoMap.tsx';
 import { NotFoundPage } from './components/NotFoundPage.tsx';
@@ -26,7 +26,8 @@ export default function App() {
     <BrowserRouter>
       <RouteMetadata />
       <Routes>
-        <Route path="/" element={<ArchipelagoMap categories={categories} />} />
+        <Route path="/" element={<Navigate to="/tsunami/" replace />} />
+        <Route path="/islands/" element={<ArchipelagoMap categories={categories} />} />
         <Route
           path="/productivity-loop"
           element={

@@ -24,11 +24,7 @@ export function projection(point: Point, view: AtlasView, depth = false) {
       (point.y - view.center.y) * view.zoom * (depth ? 0.72 : 1),
   };
 }
-export function useAtlasView(
-  scene: AtlasScene,
-  _selected: string | null,
-  reduced = false,
-) {
+export function useAtlasView(scene: AtlasScene, reduced = false) {
   const ref = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<AtlasView>({
     center: { x: scene.width / 2, y: scene.height / 2 },
@@ -38,9 +34,7 @@ export function useAtlasView(
   });
   const viewRef = useRef(view),
     intent = useRef<ViewIntent>("overview"),
-    all = useRef(false),
     cameraFrame = useRef(0);
-  const depthRef = useRef(false);
   useLayoutEffect(() => {
     viewRef.current = view;
   });
@@ -62,7 +56,7 @@ export function useAtlasView(
       setView((v) =>
         intent.current === "manual" && v.width > 1
           ? { ...v, width, height }
-          : fitScene(scene, width, height, all.current),
+          : fitScene(scene, width, height),
       );
     });
     observer.observe(el);
@@ -78,8 +72,7 @@ export function useAtlasView(
   const reset = useCallback(() => {
     cancelCamera();
     intent.current = "overview";
-    all.current = true;
-    setView((v) => fitScene(scene, v.width, v.height, true));
+    setView((v) => fitScene(scene, v.width, v.height));
   }, [scene, cancelCamera]);
   const panTo = useCallback(
     (target: Point) => {
@@ -115,10 +108,11 @@ export function useAtlasView(
   const focus = useCallback(
     (id: string) => {
       cancelCamera();
+      if (intent.current === "overview") return;
       const island = scene.islands.find((i) => i.id === id);
       if (!island) return;
       const current = viewRef.current;
-      const target = revealIsland(current, island, depthRef.current);
+      const target = revealIsland(current, island, false);
       if (
         Math.hypot(target.x - current.center.x, target.y - current.center.y) <
         0.1
@@ -131,7 +125,7 @@ export function useAtlasView(
   const reveal = useCallback(
     (point: Point) => {
       const v = viewRef.current,
-        p = projection(point, v, depthRef.current);
+        p = projection(point, v);
       const x =
         p.x < 90 ? p.x - 90 : p.x > v.width - 90 ? p.x - v.width + 90 : 0;
       const y =
@@ -139,20 +133,10 @@ export function useAtlasView(
       if (x || y)
         panTo({
           x: v.center.x + x / v.zoom,
-          y: v.center.y + y / v.zoom / (depthRef.current ? 0.72 : 1),
+          y: v.center.y + y / v.zoom,
         });
     },
     [panTo],
-  );
-  const zoom = useCallback(
-    (factor: number) => {
-      manual();
-      setView((v) => ({
-        ...v,
-        zoom: Math.max(0.12, Math.min(2.4, v.zoom * factor)),
-      }));
-    },
-    [manual],
   );
   const pointers = useRef(new Map<number, Point>());
   const previous = useRef<{ mid: Point; span: number } | null>(null);
@@ -169,9 +153,7 @@ export function useAtlasView(
           Math.min(2.4, v.zoom * Math.exp(-e.deltaY * 0.001)),
         );
         const x = e.clientX - rect.left - v.width / 2,
-          y =
-            (e.clientY - rect.top - v.height / 2) /
-            (depthRef.current ? 0.72 : 1);
+          y = e.clientY - rect.top - v.height / 2;
         return {
           ...v,
           zoom: scale,
@@ -212,9 +194,7 @@ export function useAtlasView(
             ),
             center: {
               x: v.center.x - (mid.x - last.mid.x) / v.zoom,
-              y:
-                v.center.y -
-                (mid.y - last.mid.y) / v.zoom / (depthRef.current ? 0.72 : 1),
+              y: v.center.y - (mid.y - last.mid.y) / v.zoom,
             },
           }));
         previous.current = { mid, span };
@@ -223,9 +203,7 @@ export function useAtlasView(
           ...v,
           center: {
             x: v.center.x - (e.clientX - old.x) / v.zoom,
-            y:
-              v.center.y -
-              (e.clientY - old.y) / v.zoom / (depthRef.current ? 0.72 : 1),
+            y: v.center.y - (e.clientY - old.y) / v.zoom,
           },
         }));
     },
@@ -244,9 +222,7 @@ export function useAtlasView(
     view,
     focus,
     reset,
-    zoom,
     handlers,
-    depthRef,
     reveal,
   };
 }

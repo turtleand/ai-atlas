@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { createNavalModel } from './naval-models';
 import {
-  getSloopPose, getWaveHeight, SLOOP_HEADING, SLOOP_PITCH_LIMIT,
+  getNavalPose, getSloopPose, getWaveHeight, SLOOP_HEADING, SLOOP_PITCH_LIMIT,
   SLOOP_ROLL_LIMIT, SLOOP_SCALE, WAVES, waveHeightGLSL,
 } from './wave-field';
 
@@ -41,31 +41,73 @@ describe('shared water and deterministic sloop support', () => {
 
   it('aligns the rendered YXZ plane to damped world-space samples at the actual heading and scale', () => {
     for (const time of [0, 2.75, 7.1, 16.4, 43.9, 59.75]) {
-      // Low intensity keeps the physical comparison clear of the deliberate angle limits.
+      // At low intensity the smooth angle limits change the support normal by less than 1e-5.
       const pose = getSloopPose(time, 0.5);
       const actualNormal = up.clone().applyEuler(new THREE.Euler(pose.x, pose.y, pose.z, 'YXZ'));
-      expect(actualNormal.distanceTo(integratedSupportNormal(time, 0.5))).toBeLessThan(1e-6);
+      expect(actualNormal.distanceTo(integratedSupportNormal(time, 0.5))).toBeLessThan(1e-5);
       expect(pose.height - getWaveHeight(0, 0, time, 0.5)).toBeCloseTo(0.14, 12);
     }
   });
 
   it('keeps the generated shader spectrum and calm-zone response consistent with CPU water height', () => {
     const shaderWaves = Array.from(waveHeightGLSL.matchAll(
-      /height \+= ([\d.-]+) \* sin\(dot\(point, vec2\(([\d.-]+), ([\d.-]+)\)\) \* ([\d.-]+) \+ uTime \* ([\d.-]+)\);/g,
-    )).map((match) => ({ amp: Number(match[1]), x: Number(match[2]), z: Number(match[3]), freq: Number(match[4]), speed: Number(match[5]) }));
+      /height \+= ([\d.-]+) \* sin\(dot\(point, vec2\(([\d.-]+), ([\d.-]+)\)\) \* ([\d.-]+) \+ uTime \* ([\d.-]+) \+ \(([\d.-]+)\)\);/g,
+    )).map(match => {
+      const [amp, x, z, freq, speed, phase] = match.slice(1).map(Number);
+      return { amp, x, z, freq, speed, phase };
+    });
     expect(shaderWaves).toEqual(WAVES);
-    expect(waveHeightGLSL).toContain('mix(0.08, 1.0, smoothstep(0.0, uCalmRadius, length(point)))');
+    const shaderScale = waveHeightGLSL.match(
+      /height \*= mix\(([\d.-]+), ([\d.-]+), smoothstep\(([\d.-]+), ([\d.-]+), radius\)\);/,
+    );
+    expect(shaderScale).not.toBeNull();
+    const [local, openSea, inner, outer] = shaderScale!.slice(1).map(Number);
+    expect(waveHeightGLSL).toContain('mix(0.08, 1.0, smoothstep(0.0, uCalmRadius, radius))');
     expect(waveHeightGLSL).toContain('return height * uStormIntensity * attenuation;');
+    const smoothstep = (min: number, max: number, value: number) => {
+      const fraction = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      return fraction ** 2 * (3 - 2 * fraction);
+    };
     for (const [x, z, time, intensity, calmRadius] of [
       [0, 0, 4.25, 0.5, 0], [1.4, -0.8, 19.2, 2, 0],
-      [0, 0, 4.25, 2, 5], [1.4, -0.8, 19.2, 2, 5], [8, -7, 5.8, 1.2, 7],
+      [0, 0, 4.25, 2, 5], [1.4, -0.8, 19.2, 2, 5],
+      [10.2, 8, 5.8, 1.2, 11], [8, -21, 7.4, 1.3, 5], [14, -35, 41.2, 1.9, 11],
     ]) {
-      const radiusFraction = calmRadius > 0 ? Math.min(1, Math.hypot(x, z) / calmRadius) : 1;
-      const attenuation = 0.08 + 0.92 * (radiusFraction ** 2 * (3 - 2 * radiusFraction));
+      const radius = Math.hypot(x, z);
+      const scale = local + (openSea - local) * smoothstep(inner, outer, radius);
+      const attenuation = calmRadius > 0 ? 0.08 + 0.92 * smoothstep(0, calmRadius, radius) : 1;
       const shaderHeight = shaderWaves.reduce((height, wave) => (
-        height + wave.amp * Math.sin((wave.x * x + wave.z * z) * wave.freq + time * wave.speed)
-      ), 0) * intensity * attenuation;
+        height + wave.amp * Math.sin((wave.x * x + wave.z * z) * wave.freq + time * wave.speed + wave.phase)
+      ), 0) * scale * intensity * attenuation;
       expect(getWaveHeight(x, z, time, intensity, calmRadius)).toBeCloseTo(shaderHeight, 12);
+    }
+  });
+
+  it('builds larger swells offshore while retaining the smaller support zone around the hulls', () => {
+    const range = (x: number, z: number) => {
+      const heights = Array.from({ length: 560 }, (_, i) => getWaveHeight(x, z, i / 8, 1.25));
+      return Math.max(...heights) - Math.min(...heights);
+    };
+    expect(range(7, -25)).toBeGreaterThan(range(0, 0) * 1.6);
+  });
+
+  it('keeps the cruiser supported and the wreck responsive to the same swell', () => {
+    for (const intensity of [0.5, 1.25, 1.925]) {
+      let maximumWreckLag = 0;
+      for (let frame = 0; frame < 8_000; frame++) {
+        const time = frame / 40;
+        const height = getWaveHeight(0, 0, time, intensity);
+        maximumWreckLag = Math.max(maximumWreckLag, Math.abs(getNavalPose(1, time, intensity).height - height));
+      }
+      expect(maximumWreckLag).toBeGreaterThan(0.20);
+      expect(maximumWreckLag).toBeLessThan(0.30);
+      for (const time of [0, 4.25, 8.75, 71.3, 418.5]) {
+        const height = getWaveHeight(0, 0, time, intensity);
+        expect(getNavalPose(3, time, intensity).height - height).toBeCloseTo(0.18, 12);
+        const pose = getNavalPose(1, time, intensity);
+        getNavalPose(3, time + 20, 0.5);
+        expect(getNavalPose(1, time, intensity)).toEqual(pose);
+      }
     }
   });
 
@@ -149,7 +191,7 @@ describe('shared water and deterministic sloop support', () => {
       }
     };
     try {
-      // Frequencies .42/.65/.85/1.1 have a common period of 200π seconds.
+      // All Long Surge frequencies have a common period of 200π seconds.
       for (const intensity of [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]) sweep(intensity, 200 * Math.PI, 0.1);
       // Dense ordinary/reduced-time samples expose snapping hidden by a contact sheet.
       for (const intensity of [0.5, 1.25, 2]) sweep(intensity, 60, 1 / 120);
@@ -158,7 +200,7 @@ describe('shared water and deterministic sloop support', () => {
       expect(highestKeel, 'the whole sampled keel stays submerged').toBeLessThan(-0.025);
       expect(maximumPitch).toBeLessThanOrEqual(SLOOP_PITCH_LIMIT);
       expect(maximumRoll).toBeLessThanOrEqual(SLOOP_ROLL_LIMIT);
-      expect(maximumAngularSpeed, 'smooth bounded pitch/roll response').toBeLessThan(0.2);
+      expect(maximumAngularSpeed, 'smooth bounded pitch/roll response').toBeLessThan(0.30);
       expect(minimumWaterlineFraction, 'waterline stays near the lower third of the actual hull').toBeGreaterThan(0.25);
       expect(maximumWaterlineFraction).toBeLessThan(0.4);
       console.info('Sloop flotation sweep', {

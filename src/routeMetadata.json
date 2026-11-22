@@ -1,8 +1,9 @@
 {
-  "/": {
+  "/": "/tsunami",
+  "/islands": {
     "title": "Turtleand AI Atlas",
     "description": "A public map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment.",
-    "canonical": "https://atlas.turtleand.com/",
+    "canonical": "https://atlas.turtleand.com/islands/",
     "heading": "Turtleand AI Atlas",
     "summary": "A map of AI tools, categories, trade-offs, and impact signals for navigating the AI landscape with clearer judgment.",
     "schemaType": "WebSite"

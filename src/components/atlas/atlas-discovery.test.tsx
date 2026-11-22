@@ -1,28 +1,32 @@
 import { describe, it, expect } from "vitest";
 import { parseToolsYaml } from "../../utils/parseTools";
 import data from "../../data/ai-tools.yaml?raw";
+import { createAtlasCatalog } from "./atlas-catalog";
 import {
   createScene,
   isWater,
   findWaterPath,
   clearSegment,
 } from "./atlas-model";
-import { discoveryLayout } from "./AtlasDiscovery";
 import { fitScene, revealIsland } from "./atlas-camera";
-const categories = parseToolsYaml(data);
-const scene = createScene(categories);
+import { shoreSignpostLayout } from "./shore-signposts";
+import { projection } from "./useAtlas";
+const rawCategories = parseToolsYaml(data);
+const { scene, experimentalFallback } = createAtlasCatalog(rawCategories);
+const categories = scene.islands.map((island) => island.category);
 describe("organic discovery", () => {
   it("keeps every authored footprint and tool anchor stable across catalog order", () => {
     const reversed = createScene([...categories].reverse());
-    for (const i of scene.islands)
+    for (const i of scene.islands) {
       expect(reversed.islands.find((j) => j.id === i.id)).toEqual(i);
-    expect(scene.islands.flatMap((i) => i.tools)).toHaveLength(29);
+      expect(i.tools.map(({ tool }) => tool)).toEqual(i.category.tools);
+    }
     const extra = { id: "new-space", name: "New space", tools: [] };
     expect(createScene([...categories, extra])).toEqual(
       createScene([...categories, extra]),
     );
   });
-  it("keeps all 81 docking routes collision free after rotating shores", () => {
+  it("keeps every pair of docks connected by collision-free routes after rotating shores", () => {
     for (const a of scene.islands) {
       expect(isWater(scene, a.dock), a.id).toBe(true);
       for (const b of scene.islands) {
@@ -34,54 +38,62 @@ describe("organic discovery", () => {
     }
   });
   it.each([
-    [1424, 612],
-    [1214, 612],
-    [1008, 480],
-    [832, 512],
-  ])("places all names without overlap at %sx%s", (width, height) => {
+    [374, 250],
+    [374, 500],
+    [828, 180],
+  ])("keeps every coast inside the overview at %sx%s", (width, height) => {
     const view = fitScene(scene, width, height);
-    const labels = discoveryLayout(scene, view, false, true);
-    expect(labels.filter((l) => l.tool)).toHaveLength(29);
-    for (const [n, a] of labels.entries()) {
-      expect(a.x - a.w / 2, a.key).toBeGreaterThanOrEqual(0);
-      expect(a.x + a.w / 2, a.key).toBeLessThanOrEqual(width);
-      expect(a.y - a.h / 2, a.key).toBeGreaterThanOrEqual(0);
-      expect(a.y + a.h / 2, a.key).toBeLessThanOrEqual(height);
-      for (const b of labels.slice(n + 1))
-        expect(
-          Math.abs(a.x - b.x) >= (a.w + b.w) / 2 ||
-            Math.abs(a.y - b.y) >= (a.h + b.h) / 2,
-          `${a.key} overlaps ${b.key}`,
-        ).toBe(true);
-    }
-  });
-  it("keeps all category captions inside the phone overview", () => {
-    for (const [width, height] of [
-      [374, 250],
-      [374, 500],
-      [828, 180],
-    ]) {
-      const labels = discoveryLayout(
-        scene,
-        fitScene(scene, width, height, true),
-        false,
-        false,
-        false,
-      );
-      expect(labels).toHaveLength(9);
-      for (const [n, label] of labels.entries()) {
-        for (const other of labels.slice(n + 1))
-          expect(
-            Math.abs(label.x - other.x) >= (label.w + other.w) / 2 ||
-              Math.abs(label.y - other.y) >= (label.h + other.h) / 2,
-            `${label.key} and ${other.key}`,
-          ).toBe(true);
-        expect(label.x - label.w / 2, label.key).toBeGreaterThanOrEqual(0);
-        expect(label.x + label.w / 2, label.key).toBeLessThanOrEqual(width);
-        expect(label.y - label.h / 2, label.key).toBeGreaterThanOrEqual(0);
-        expect(label.y + label.h / 2, label.key).toBeLessThanOrEqual(height);
+    for (const island of scene.islands)
+      for (const point of island.coast) {
+        const { x, y } = projection(point, view);
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(width);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(y).toBeLessThanOrEqual(height);
       }
-    }
+  });
+  it.each([
+    [1118, 630, false, false],
+    [1118, 630, true, false],
+    [390, 335, false, true],
+    [320, 307, false, true],
+    [320, 270, false, true],
+  ])(
+    "fits the curated signposts at %sx%s with depth %s",
+    (width, height, depth, compact) => {
+      const signs = shoreSignpostLayout(
+        scene,
+        fitScene(scene, width, height),
+        depth,
+        compact,
+        experimentalFallback,
+      );
+      expect(signs).toHaveLength(categories.length);
+      expect(
+        signs
+          .find((sign) => sign.island.id === "code")
+          ?.tools.map((tool) => tool.id),
+      ).toEqual(compact ? ["openai-codex"] : ["openai-codex", "claude-code"]);
+      for (const [index, sign] of signs.entries()) {
+        expect(sign.tools).toEqual(sign.island.category.tools.slice(0, compact ? 1 : 2));
+        expect(sign.x - sign.w / 2).toBeGreaterThanOrEqual(0);
+        expect(sign.x + sign.w / 2).toBeLessThanOrEqual(width);
+        expect(sign.y - sign.h / 2).toBeGreaterThanOrEqual(0);
+        expect(sign.y + sign.h / 2).toBeLessThanOrEqual(height);
+        for (const other of signs.slice(index + 1))
+          expect(
+            Math.abs(sign.x - other.x) >= (sign.w + other.w) / 2 ||
+              Math.abs(sign.y - other.y) >= (sign.h + other.h) / 2,
+            `${sign.island.id} overlaps ${other.island.id}`,
+          ).toBe(true);
+      }
+    },
+  );
+  it("retains authored features when no curated scope is provided", () => {
+    const images = rawCategories.find((category) => category.id === "images")!;
+    const chart = createScene([images]);
+    const [sign] = shoreSignpostLayout(chart, fitScene(chart, 800, 500), false, false);
+    expect(sign.tools.map((tool) => tool.id)).toEqual(["nano-banana", "recraft"]);
   });
   it("keeps visible selections still and pans clipped coastlines without zoom", () => {
     const overview = fitScene(scene, 1200, 700);

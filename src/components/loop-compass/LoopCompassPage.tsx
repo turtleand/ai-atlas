@@ -14,7 +14,7 @@ export function LoopCompassPage() {
       <div className="loop-compass-page">
         <header className="loop-compass-header">
           <nav aria-label="Loop navigation">
-            <Link to="/" className="loop-back-link">Back to Atlas</Link>
+            <Link to="/islands/" className="loop-back-link">Back to Atlas</Link>
           </nav>
 
           <p className="loop-overline">Turtleand operating loop</p>
