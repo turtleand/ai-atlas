@@ -3,13 +3,14 @@ import type { RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createNavalModel } from './naval-models';
+import type { NavalModel } from './naval-models';
 import { createCosmicModel } from './cosmic-models';
-import { getSloopPose, getWaveHeight, SLOOP_SCALE } from './wave-field';
+import { getNavalPose, getSloopPose, SLOOP_SCALE } from './wave-field';
 import { warmShipModel } from './ship-preparation';
 import type { ShipPreparationRenderer } from './ship-preparation';
 
 type ShipTier = 1 | 2 | 3 | 4 | 5;
-type ShipModel = ReturnType<typeof createCosmicModel>;
+type ShipModel = ReturnType<typeof createCosmicModel> & Pick<NavalModel, 'floatDebris'>;
 
 interface ShipPreparation {
   renderer: ShipPreparationRenderer;
@@ -244,16 +245,12 @@ export function Ship3D({tier,stormIntensity,timeUniform,captureTime,reducedMotio
       pose.rotation.set(sloop.x,sloop.y,sloop.z,'YXZ');
       // Keep the waterline fixed during entry. No scale or sinking reveal on the sloop.
       pose.scale.setScalar(SLOOP_SCALE);
-    } else if(tier<=3) {
-      const wave=getWaveHeight(0,0,time,stormIntensity);
-      const dx=getWaveHeight(0.65,0,time,stormIntensity)-getWaveHeight(-0.65,0,time,stormIntensity);
-      const dz=getWaveHeight(0,0.8,time,stormIntensity)-getWaveHeight(0,-0.8,time,stormIntensity);
-      // The broken mass responds late to swell, exposing and swallowing timber.
-      // Its supporting fragments retain their independent authored motion.
-      const heave=tier===1?getWaveHeight(0,0,time-0.75,stormIntensity)*0.86-0.10:wave+0.18;
-      pose.position.set(0,heave,0);
-      pose.rotation.set(-Math.atan2(dz,1.6)*(tier===1?1.2:0.45),tier===1?-0.4:-0.52,Math.atan2(dx,1.3)*(tier===1?1.2:0.45),'YXZ');
+    } else if(tier===1 || tier===3) {
+      const naval=getNavalPose(tier,time,stormIntensity);
+      pose.position.set(0,naval.height,0);
+      pose.rotation.set(naval.x,naval.y,naval.z,'YXZ');
       pose.scale.setScalar(tier===1?2.016:1.8);
+      model.current.floatDebris?.(pose,time,stormIntensity);
     } else {
       pose.position.set(0,(tier===4?2:3.5)+Math.sin(time*(tier===4?0.25:0.15))*(tier===4?0.08:0.04),0);
       pose.rotation.set(0,0,0);

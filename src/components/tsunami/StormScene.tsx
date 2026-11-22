@@ -10,6 +10,7 @@ import { SceneEnvironment } from './SceneEnvironment';
 import { Storm3D } from './Storm3D';
 import { LightningHeadlines } from './LightningHeadlines';
 import { useSceneCaptureOptions, usePageVisible, useReducedMotion } from './scene-utils';
+import { getWaveHeight } from './wave-field';
 
 /*
  * Known ship extents per tier (at 1.8x group scale).
@@ -111,11 +112,25 @@ function CameraController({
   return null;
 }
 
-function SceneTime({ timeUniform, captureTime, reducedMotion }: {
-  timeUniform: THREE.IUniform<number>; captureTime?: number; reducedMotion: boolean;
+function SceneTime({ timeUniform, seaLoad, captureTime, reducedMotion, calmRadius, stormIntensity }: {
+  timeUniform: THREE.IUniform<number>;
+  seaLoad: THREE.IUniform<number>;
+  captureTime?: number;
+  reducedMotion: boolean;
+  calmRadius: number;
+  stormIntensity: number;
 }) {
   useFrame((_state, delta) => {
     timeUniform.value = captureTime ?? timeUniform.value + Math.min(delta, 0.05) * (reducedMotion ? 0.25 : 1);
+    if (calmRadius === 0) {
+      seaLoad.value = 0;
+      return;
+    }
+    // Sample the incoming swell outside the calm eye before it is attenuated.
+    const time = timeUniform.value;
+    const primary = getWaveHeight(calmRadius * 0.28, -calmRadius, time, stormIntensity);
+    const secondary = getWaveHeight(-calmRadius * 0.91, -calmRadius * 0.61, time, stormIntensity);
+    seaLoad.value = THREE.MathUtils.smoothstep(primary * 0.68 + secondary * 0.32, -0.4, 1.65);
   }, -2);
   return null;
 }
@@ -259,7 +274,10 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
   const timeUniform = useMemo<THREE.IUniform<number>>(() => ({ value: capture.time ?? 0 }), [capture.time]);
   const sceneWavePercent = capture.wavePercent ?? wavePercent;
   const stormIntensity = 0.5 + sceneWavePercent * 0.015;
+  const calmRadius = tier === 5 ? 11 : tier === 4 ? 5 : 0;
+  const seaLoad = useMemo<THREE.IUniform<number>>(() => ({ value: 0 }), []);
   const lightningUniform = useMemo<THREE.IUniform<number>>(() => ({ value: 0 }), []);
+  const stormLightDirection = useMemo<THREE.IUniform<THREE.Vector3>>(() => ({ value: new THREE.Vector3(0, 1, 0) }), []);
   const [showHint, setShowHint] = useState(false);
   const hintTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -324,33 +342,37 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
         
         {/* Auto-fit camera to ship bounds on tier change */}
         <SceneEnvironment />
-        <SceneTime timeUniform={timeUniform} captureTime={captureTime} reducedMotion={reducedMotion} />
+        <SceneTime timeUniform={timeUniform} seaLoad={seaLoad} captureTime={captureTime} reducedMotion={reducedMotion}
+          calmRadius={calmRadius} stormIntensity={stormIntensity} />
         <CameraController tier={tier} isMobile={isMobile} controlsRef={controlsRef} />
         {import.meta.env.DEV && <SceneTelemetry tier={tier} controlsRef={controlsRef} wavePercent={sceneWavePercent} quality={capture.lowQuality ? 'low' : 'default'} reducedMotion={reducedMotion} />}
         
         <ambientLight intensity={capture.lighting === 'neutral' ? 1.1 : 0.30} />
-        <hemisphereLight args={['#637da3', '#020914', 0.72]} />
-        <directionalLight position={[8, 14, 6]} intensity={1.9} color="#d4e0e8"
+        <hemisphereLight args={['#8bacc9', '#090f17', 0.8]} />
+        <directionalLight position={[8, 14, 6]} intensity={1.52} color="#d9e7f0"
           castShadow={!capture.lowQuality} shadow-mapSize={[1024,1024]}
           shadow-camera-left={-7.5} shadow-camera-right={7.5}
           shadow-camera-top={9} shadow-camera-bottom={-6}
           shadow-camera-near={0.5} shadow-camera-far={40}
           shadow-bias={-0.0002} shadow-normalBias={0.018}/>
-        <directionalLight position={[-10, 7, -8]} intensity={1.15} color="#82b8c9" />
-        <pointLight position={[0, 4, 5]} intensity={3.5} color="#84b7d8" distance={26} />
+        <directionalLight position={[-10, 7, -8]} intensity={tier === 2 ? 1.85 : 1.6} color="#a3c5de" />
+        <pointLight position={[0, 4, 5]} intensity={2.8} color="#91adc8" distance={26} />
         
         <Suspense fallback={null}>
           <Ocean3D
             wavePercent={sceneWavePercent}
             tier={tier}
-            calmRadius={tier === 5 ? 11 : tier === 4 ? 5 : undefined}
+            calmRadius={calmRadius}
+            seaLoad={seaLoad}
             lowQuality={capture.lowQuality}
             lightningUniform={lightningUniform}
+            stormLightDirection={stormLightDirection}
             captureTime={captureTime}
             timeUniform={timeUniform}
             reducedMotion={reducedMotion}
           />
-          <WaterContact tier={tier} timeUniform={timeUniform} lightningUniform={lightningUniform} stormIntensity={stormIntensity}/>
+          <WaterContact tier={tier} timeUniform={timeUniform} lightningUniform={lightningUniform}
+            stormIntensity={stormIntensity} />
           <Ship3D
             tier={tier as 1 | 2 | 3 | 4 | 5}
             score={score}
@@ -365,7 +387,10 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
             stormIntensity={stormIntensity}
             lighting={capture.lighting}
             tier={tier}
+            calmRadius={calmRadius}
+            seaLoad={seaLoad}
             lightningUniform={lightningUniform}
+            stormLightDirection={stormLightDirection}
             captureTime={captureTime}
             timeUniform={timeUniform}
             reducedMotion={reducedMotion}

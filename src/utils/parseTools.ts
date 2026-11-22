@@ -5,11 +5,15 @@ export interface RelatedLink {
   url: string;
 }
 
+const toolStatuses = ['active', 'experimental', 'archive', 'pending'] as const;
+export type ToolStatus = (typeof toolStatuses)[number];
+
 export interface Tool {
   id: string;
   name: string;
   url: string;
   description: string;
+  status?: ToolStatus;
   usage?: string;
   related?: RelatedLink[];
   tags?: string[];
@@ -25,12 +29,14 @@ interface YAMLTool {
   name: string;
   url: string;
   description: string;
+  status?: ToolStatus;
   usage?: string;
   related?: RelatedLink[];
   tags?: string[];
 }
 
 interface YAMLCategory {
+  id?: string;
   name: string;
   tools: YAMLTool[];
 }
@@ -43,21 +49,31 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+export function getToolStatus(tool: Tool): ToolStatus {
+  return tool.status ?? 'active';
+}
+
 export function parseToolsYaml(yamlContent: string): Category[] {
   const data: YAMLData = YAML.parse(yamlContent);
-  
+
   return data.categories.map(cat => ({
-    id: slugify(cat.name),
+    id: cat.id ?? slugify(cat.name),
     name: cat.name,
-    tools: cat.tools.map(tool => ({
-      id: slugify(tool.name),
-      name: tool.name,
-      url: tool.url,
-      description: tool.description,
-      usage: tool.usage?.trim(),
-      related: tool.related,
-      tags: tool.tags,
-    })),
+    tools: cat.tools.map(tool => {
+      if (tool.status !== undefined && !toolStatuses.includes(tool.status)) {
+        throw new Error(`Unrecognized status for ${tool.name}: ${tool.status}`);
+      }
+      return {
+        id: slugify(tool.name),
+        name: tool.name,
+        url: tool.url,
+        description: tool.description,
+        status: tool.status,
+        usage: tool.usage?.trim(),
+        related: tool.related,
+        tags: tool.tags,
+      };
+    }),
   })).filter(c => c.tools.length > 0);
 }
 

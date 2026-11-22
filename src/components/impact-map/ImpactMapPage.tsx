@@ -328,7 +328,7 @@ function ImpactHeader() {
       </div>
 
       <div className="impact-header-actions">
-        <Link to="/" className="impact-map-back">
+        <Link to="/islands/" className="impact-map-back">
           Back to Atlas
         </Link>
       </div>

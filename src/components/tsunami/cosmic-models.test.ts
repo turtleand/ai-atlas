@@ -79,17 +79,17 @@ describe('cosmic scene construction and motion contracts', () => {
       const locked = rings.map(ring => ring.quaternion.clone());
       model.update(20000, 0.2);
       rings.forEach((ring, i) => expect(ring.quaternion.angleTo(locked[i])).toBeLessThan(1e-7));
-      for (const sceneTime of [0, 100, 2000, 20000]) {
-        model.update(sceneTime);
+      for (const entryTime of [0, 100, 2000, 20000]) {
+        model.update(entryTime + 1.25);
         const targets = rings.map(ring => ring.quaternion.clone());
-        model.update(sceneTime, 0.75);
+        model.update(entryTime + 0.75, 0.75);
         rings.forEach((ring, i) => {
           const wholeArc = locked[i].angleTo(targets[i]);
           expect(wholeArc).toBeLessThanOrEqual(Math.PI);
           expect(locked[i].angleTo(ring.quaternion)).toBeCloseTo(wholeArc / 2, 6);
           expect(ring.quaternion.angleTo(targets[i])).toBeCloseTo(wholeArc / 2, 6);
         });
-        model.update(sceneTime, 1.25);
+        model.update(entryTime + 1.25, 1.25);
         rings.forEach((ring, i) => expect(ring.quaternion.angleTo(targets[i])).toBeLessThan(1e-7));
       }
     } finally {
@@ -106,6 +106,64 @@ describe('cosmic scene construction and motion contracts', () => {
       expect(motionState(model.root)).toEqual(ordinary);
       model.update(9876, 0.6);
       expect(motionState(model.root)).toEqual(ordinary);
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it('keeps all three T4 gyros moving after a deterministic entry lock', () => {
+    const model = createCosmicModel(4);
+    try {
+      const rings = gyros(model.root);
+      model.update(4.25, 0);
+      const locked = rings.map(ring => ring.quaternion.clone());
+      model.update(7300, 0.15);
+      rings.forEach((ring, i) => expect(ring.quaternion.angleTo(locked[i])).toBeLessThan(1e-7));
+      model.update(4.25);
+      const start = rings.map(ring => ring.quaternion.clone());
+      const state = motionState(model.root);
+      model.update(5.45);
+      rings.forEach((ring, i) => expect(ring.quaternion.angleTo(start[i])).toBeGreaterThan(0.1));
+      model.update(7);
+      model.update(4.25);
+      expect(motionState(model.root)).toEqual(state);
+      // Late entries may approach the antipode of the locked orientation.
+      for (const entryTime of [20, 105, 731, 4201, 12799]) {
+        model.update(entryTime, 0);
+        const previous = rings.map(ring => ring.quaternion.clone());
+        for (let frame = 1; frame <= 120; frame++) {
+          const age = frame / 60;
+          model.update(entryTime + age, age);
+          rings.forEach((ring, i) => {
+            expect(ring.quaternion.angleTo(previous[i])).toBeLessThan(0.1);
+            previous[i].copy(ring.quaternion);
+          });
+        }
+      }
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it('counter-rotates the T5 constellation and cage without moving the water attachments', () => {
+    const model = createCosmicModel(5);
+    try {
+      const cage = model.root.getObjectByName('five indexed cage rings with inset channels')!.parent!;
+      const constellation = model.root.getObjectByName('four connected three-node constellations')!.parent!;
+      const anchors = model.root.getObjectByName('six ocean pillars and an ascending sky connection')!;
+      model.update(4.25);
+      const initial = motionState(model.root);
+      const anchored = anchors.matrixWorld.elements.slice();
+      const cageYaw = cage.rotation.y;
+      const constellationYaw = constellation.rotation.y;
+      model.update(6.8, 0);
+      const next = motionState(model.root);
+      expect(anchors.matrixWorld.elements).toEqual(anchored);
+      expect(cage.rotation.y).toBeGreaterThan(cageYaw + 0.3);
+      expect(constellation.rotation.y).toBeLessThan(constellationYaw - 0.2);
+      expect(next).not.toEqual(initial);
+      model.update(4.25);
+      expect(motionState(model.root)).toEqual(initial);
     } finally {
       model.dispose();
     }
