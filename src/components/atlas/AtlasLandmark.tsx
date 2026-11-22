@@ -343,8 +343,8 @@ export function AtlasLandmark({
   );
 }
 
-export function AtlasGlyph({ kind }: { kind: Landmark }) {
-  const paths: Record<Landmark, string> = {
+export function AtlasGlyph({ kind }: { kind: Landmark | "tool-arrow" }) {
+  const paths: Record<typeof kind, string> = {
     pavilion: "M2 2h12v8H8l-4 4v-4H2Z",
     pigment: "m8 1 6 7-6 7-6-7Z M8 1v14M2 8h12",
     cinema: "M1 3h14v10H1Z M6 5l5 3-5 3Z",
@@ -355,6 +355,7 @@ export function AtlasGlyph({ kind }: { kind: Landmark }) {
     harbor: "M6 1h4v5H6ZM1 11h4v4H1ZM11 11h4v4h-4ZM8 6v3H3v2M8 9h5v2",
     recording: "M8 1a2 2 0 0 1 2 2v4a2 2 0 0 1-4 0V3a2 2 0 0 1 2-2ZM3.5 7a4.5 4.5 0 0 0 9 0M8 11.5V15M5.5 15h5",
     jetty: "m1 5 7-4 7 4v7l-7 3-7-3ZM1 5l7 4 7-4M8 9v6",
+    "tool-arrow": "M3 13 13 3M6 3h7v7",
   };
   return (
     <svg className="atlas-glyph" viewBox="0 0 16 16" aria-hidden="true">

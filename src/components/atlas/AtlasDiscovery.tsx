@@ -273,7 +273,7 @@ export function AtlasDiscovery({
                 aria-label={tool.name}
               >
                 <span>{tool.name}</span>
-                <span aria-hidden="true">↗</span>
+                <AtlasGlyph kind="tool-arrow" />
               </button>
             ))}
             {experimental && <p className="atlas-signpost-status">Experimental</p>}

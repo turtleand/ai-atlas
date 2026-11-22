@@ -70,9 +70,10 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const [directoryStatus, setDirectoryStatus] = useState<DirectoryStatus>("active");
   const directoryTrigger = useRef<HTMLButtonElement>(null);
   const archiveTrigger = useRef<HTMLButtonElement>(null);
+  const atlas = useRef<HTMLElement>(null);
   const directory = useRef<HTMLElement>(null);
   const islandScroll = useRef(0);
-  const directoryScroll = useRef(0);
+  const archiveReturnScroll = useRef({ atlas: 0, directory: 0 });
   const { reduced, visible } = useMotionPolicy();
   const {
     ref: containerRef,
@@ -179,7 +180,10 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
     if (directory.current) directory.current.scrollTop = 0;
   };
   const openArchive = () => {
-    directoryScroll.current = directory.current?.scrollTop ?? 0;
+    archiveReturnScroll.current = {
+      atlas: atlas.current?.scrollTop ?? 0,
+      directory: directory.current?.scrollTop ?? 0,
+    };
     setPreview(null);
     setSidebarView("archive");
     if (directory.current) directory.current.scrollTop = 0;
@@ -188,7 +192,8 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   const closeArchive = useCallback(() => {
     setSidebarView("directory");
     requestAnimationFrame(() => {
-      if (directory.current) directory.current.scrollTop = directoryScroll.current;
+      if (atlas.current) atlas.current.scrollTop = archiveReturnScroll.current.atlas;
+      if (directory.current) directory.current.scrollTop = archiveReturnScroll.current.directory;
       archiveTrigger.current?.focus({ preventScroll: true });
       archiveTrigger.current?.scrollIntoView?.({ block: "nearest" });
     });
@@ -220,7 +225,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
         {tool.name}
         <small>{toolNote(tool)}</small>
       </span>
-      <span aria-hidden="true">↗</span>
+      <AtlasGlyph kind="tool-arrow" />
     </button>
   );
   const collectionSections = (groups: Category[], archived = false) =>
@@ -279,6 +284,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
   };
   return (
     <main
+      ref={atlas}
       onPointerMove={(event) => {
         if (event.pointerType === "touch" || event.buttons) return;
         const el = event.target as Element;

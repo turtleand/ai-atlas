@@ -53,12 +53,15 @@
 }
 .living-atlas .atlas-signpost-tool {
   justify-content: space-between;
+  gap: 3px;
+  padding-inline: 6px;
   border-top: 1px solid #9cb9a847;
 }
-.atlas-signpost-tool [aria-hidden="true"] {
+.atlas-signpost-tool .atlas-glyph {
+  flex: none;
+  width: 10px;
+  height: 10px;
   color: var(--island-accent);
-  font-size: 12px;
-  font-weight: 500;
 }
 .living-atlas .atlas-signpost button:hover {
   background: #28434b;
