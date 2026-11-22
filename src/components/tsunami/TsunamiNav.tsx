@@ -6,7 +6,7 @@ export const TsunamiNav: React.FC = () => {
     <nav className="tsunami-nav" aria-label="Tsunami navigation">
       <h1><span className="tsunami-nav-wave" aria-hidden="true">🌊</span> AI Tsunami Tracker</h1>
       <div className="tsunami-nav-actions">
-        <Link to="/" className="tsunami-islands-link">
+        <Link to="/islands/" className="tsunami-islands-link">
           <span className="tsunami-islands-back" aria-hidden="true">←</span>
           <svg viewBox="0 0 38 28" aria-hidden="true" focusable="false">
             <path d="M3 20q0-3 6-5l6-2 4-3q3-2 7 0l4 3q6 2 5 5-1 5-12 6l-11-1q-9 0-9-3Z" fill="#36746d" />

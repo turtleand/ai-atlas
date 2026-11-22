@@ -327,7 +327,7 @@ export function ArchipelagoMap({ categories }: { categories: Category[] }) {
       <header className="atlas-header">
         <Link
           className="atlas-brand"
-          to="/"
+          to="/islands/"
           onClick={(event) => {
             event.preventDefault();
             reset();
