@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { TsunamiNav } from './TsunamiNav';
-import { StormScene } from './StormScene';
+import { StormScenePanel } from './StormScenePanel';
 import { ScoreDisplay } from './ScoreDisplay';
 import { TierPreview } from './TierPreview';
 import { SkillSliders } from './SkillSliders';
@@ -130,14 +130,12 @@ export const TsunamiPage: React.FC = () => {
 
       <div className="tsunami-layout">
         {/* Left/Top: 3D Storm Scene */}
-        <div className="tsunami-scene-panel">
-          <StormScene
-            score={displayScore}
-            wavePercent={wavePercent}
-            daysSinceStart={daysSinceStart}
-            tier={displayTier}
-          />
-        </div>
+        <StormScenePanel
+          score={displayScore}
+          wavePercent={wavePercent}
+          daysSinceStart={daysSinceStart}
+          tier={displayTier}
+        />
 
         {/* Right/Bottom: Controls Panel */}
         <div className="tsunami-controls-panel">

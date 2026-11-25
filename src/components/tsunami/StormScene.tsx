@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import { Suspense, useMemo, useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -255,17 +255,62 @@ function SceneTelemetry({
   return null;
 }
 
-interface StormSceneProps {
+// Mounted inside the ship's Suspense boundary. Its model is attached in a
+// layout effect before Three can draw the first frame of the committed scene.
+function FirstShipFrame({ onReady }: { onReady: () => void }) {
+  const scene = useThree(state => state.scene);
+  useLayoutEffect(() => {
+    const previous = scene.onAfterRender;
+    const afterRender: typeof previous = (...args) => {
+      previous.apply(scene, args);
+      const [renderer] = args;
+      // Ship preparation submits zero-area scissored draws. Only a visible
+      // draw to the display should start the headlines and dismiss feedback.
+      if (renderer.getRenderTarget() || renderer.getScissorTest() || renderer.getContext().isContextLost()) return;
+      scene.onAfterRender = previous;
+      onReady();
+    };
+    scene.onAfterRender = afterRender;
+    return () => {
+      if (scene.onAfterRender === afterRender) scene.onAfterRender = previous;
+    };
+  }, [scene, onReady]);
+  return null;
+}
+
+const contextOptions: WebGLContextAttributes = { alpha: true, antialias: true, powerPreference: 'high-performance' };
+
+export interface StormSceneProps {
   score: number;
   wavePercent: number;
   daysSinceStart: number;
   tier: number;
+  ready: boolean;
+  onReady: () => void;
+  onFailure: () => void;
 }
 
-export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSceneProps) {
+export function StormScene({ score, wavePercent, daysSinceStart, tier, ready, onReady, onFailure }: StormSceneProps) {
   const isMobile = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0, []);
   const controlsRef = useRef<any>(null);
   const sceneContainerRef = useRef<HTMLDivElement>(null);
+  const watchCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
+    if (!canvas) return;
+    // Fiber configures the renderer asynchronously after it measures a nonzero
+    // viewport. Acquire that same canvas's context before a failure can escape
+    // its React error boundary. Three reuses this context for normal rendering.
+    try {
+      if (!canvas.getContext('webgl2', contextOptions)) {
+        onFailure();
+        return;
+      }
+    } catch {
+      onFailure();
+      return;
+    }
+    canvas.addEventListener('webglcontextlost', onFailure);
+    return () => canvas.removeEventListener('webglcontextlost', onFailure);
+  }, [onFailure]);
 
   const reducedMotion = useReducedMotion();
   const isPageVisible = usePageVisible();
@@ -323,12 +368,13 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
       onTouchStart={handleTouchStart}
     >
       <Canvas
+        ref={watchCanvas}
         shadows={{ type: THREE.PCFShadowMap }}
         className="storm-interaction-viewport"
         camera={{ position: [-3, 2.5, 8], fov: isMobile ? 60 : 55, near: 0.1, far: 1000 }}
         dpr={capture.lowQuality ? 1 : [1, 1.75]}
         frameloop={isPageVisible ? 'always' : 'never'}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        gl={contextOptions}
         onCreated={({ gl }) => {
           if (import.meta.env.DEV) gl.info.autoReset = false;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
@@ -395,6 +441,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
             timeUniform={timeUniform}
             reducedMotion={reducedMotion}
           />
+          {!ready && <FirstShipFrame onReady={onReady} />}
         </Suspense>
         
         <OrbitControls
@@ -414,7 +461,7 @@ export function StormScene({ score, wavePercent, daysSinceStart, tier }: StormSc
       </Canvas>
       <div key={`vignette-${tier}`} className="storm-cinematic-vignette" aria-hidden="true" />
       <div className="storm-horizon-haze" aria-hidden="true" />
-      <LightningHeadlines />
+      {ready && <LightningHeadlines />}
       {/* Mobile hint overlay */}
       {showHint && (
         <div className="storm-touch-hint">

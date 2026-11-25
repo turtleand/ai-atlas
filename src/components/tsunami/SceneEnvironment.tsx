@@ -13,20 +13,30 @@ export function SceneEnvironment() {
     const key = new THREE.Vector3(8, 14, 6).normalize();
     const rim = new THREE.Vector3(-10, 7, -8).normalize();
     const direction = new THREE.Vector3();
+    const longitudes = Array.from({ length: width }, (_, x) => {
+      const phi = (x + 0.5) / width * Math.PI * 2;
+      return { cos: Math.cos(phi), sin: Math.sin(phi), cloudPhase: phi * 5 };
+    });
     for (let y = 0; y < height; y++) {
       const theta = Math.PI * (y + 0.5) / height;
+      const sinTheta = Math.sin(theta);
+      const cosTheta = Math.cos(theta);
+      const sky = Math.max(0, cosTheta);
+      const horizon = Math.exp(-cosTheta * cosTheta * 15);
+      const red = 0.025 + sky * 0.12 + horizon * 0.09;
+      const green = 0.048 + sky * 0.18 + horizon * 0.13;
+      const blue = 0.061 + sky * 0.28 + horizon * 0.17;
+      const cloudBand = Math.sin(theta * 13);
       for (let x = 0; x < width; x++) {
-        const phi = (x + 0.5) / width * Math.PI * 2;
-        direction.set(-Math.cos(phi) * Math.sin(theta), Math.cos(theta), Math.sin(phi) * Math.sin(theta));
-        const sky = Math.max(0, direction.y);
-        const horizon = Math.exp(-direction.y * direction.y * 15);
+        const longitude = longitudes[x];
+        direction.set(-longitude.cos * sinTheta, cosTheta, longitude.sin * sinTheta);
         const opening = Math.pow(Math.max(0, direction.dot(key)), 18) * 3.2;
         const edge = Math.pow(Math.max(0, direction.dot(rim)), 12) * 1.1;
-        const cloud = 0.85 + 0.15 * Math.sin(phi * 5 + theta * 7) * Math.sin(theta * 13);
+        const cloud = 0.85 + 0.15 * Math.sin(longitude.cloudPhase + theta * 7) * cloudBand;
         const i = (y * width + x) * 4;
-        pixels[i] = (0.025 + sky * 0.12 + horizon * 0.09) * cloud + opening * 0.86 + edge * 0.37;
-        pixels[i + 1] = (0.048 + sky * 0.18 + horizon * 0.13) * cloud + opening * 0.94 + edge * 0.69;
-        pixels[i + 2] = (0.061 + sky * 0.28 + horizon * 0.17) * cloud + opening + edge * 0.88;
+        pixels[i] = red * cloud + opening * 0.86 + edge * 0.37;
+        pixels[i + 1] = green * cloud + opening * 0.94 + edge * 0.69;
+        pixels[i + 2] = blue * cloud + opening + edge * 0.88;
         pixels[i + 3] = 1;
       }
     }

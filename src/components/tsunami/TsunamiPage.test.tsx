@@ -15,8 +15,8 @@ vi.mock('./TsunamiNav', () => ({
   TsunamiNav: () => <nav aria-label="Tsunami navigation" />,
 }));
 
-vi.mock('./StormScene', () => ({
-  StormScene: ({ score, tier }: { score: number; tier: number }) => (
+vi.mock('./StormScenePanel', () => ({
+  StormScenePanel: ({ score, tier }: { score: number; tier: number }) => (
     <div data-testid="storm-scene" data-score={score} data-tier={tier} />
   ),
 }));

@@ -39,7 +39,7 @@ export default function App() {
         <Route
           path="/tsunami"
           element={
-            <Suspense fallback={<div style={{ background: '#0a1628', width: '100%', height: '100vh' }} />}>
+            <Suspense fallback={<div role="status" style={{ display: 'grid', placeItems: 'center', background: '#0a1628', color: '#e0d8c8', height: '100dvh' }}>Loading the tsunami tracker…</div>}>
               <TsunamiPage />
             </Suspense>
           }

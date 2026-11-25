@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 
-import { Children, isValidElement } from 'react';
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import { Children, isValidElement, Suspense } from 'react';
+import type { CSSProperties, ReactElement, ReactNode, Ref } from 'react';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import type { RootState } from '@react-three/fiber';
 import { OrbitControls as OrbitMarker } from '@react-three/drei';
 import { OrbitControls } from 'three-stdlib';
-import { PerspectiveCamera, TOUCH } from 'three';
+import { PerspectiveCamera, Scene, TOUCH } from 'three';
+import type { WebGLRenderer } from 'three';
 import { StormScene } from './StormScene';
 
 const canvasState = vi.hoisted(() => ({
@@ -23,13 +24,14 @@ let pageVisibility: DocumentVisibilityState = 'visible';
 // Keep the real scene's DOM policy and declared control props, while omitting
 // GPU rendering. Gesture math below runs the installed, real OrbitControls.
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children, className, style, frameloop }: {
+  Canvas: ({ children, className, style, frameloop, ref }: {
     children: ReactNode; className: string; style: CSSProperties;
     frameloop?: 'always' | 'demand' | 'never';
+    ref: Ref<HTMLCanvasElement>;
   }) => {
     canvasState.children = children;
     canvasState.frameloop = frameloop;
-    return <div className={className} style={style}><div><canvas /></div></div>;
+    return <div className={className} style={style}><div><canvas ref={ref} /></div></div>;
   },
   useFrame: vi.fn(),
   useThree: vi.fn(),
@@ -43,6 +45,7 @@ vi.mock('./scene-utils', async (importOriginal) => ({
 }));
 
 beforeEach(() => {
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as ReturnType<HTMLCanvasElement['getContext']>);
   scenePreferences.reducedMotion = false;
   pageVisibility = 'visible';
   Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => pageVisibility });
@@ -75,13 +78,13 @@ describe('scene visibility and resume contract', () => {
     expect(orbitProps().autoRotate).toBe(true);
 
     scenePreferences.reducedMotion = true;
-    rerender(<StormScene score={50} tier={2} wavePercent={80} daysSinceStart={120} />);
+    rerender(<StormScene {...sceneProps} />);
     expect(orbitProps()).toMatchObject({
       autoRotate: false, enableRotate: true, enableZoom: true, enablePan: false,
     });
 
     scenePreferences.reducedMotion = false;
-    rerender(<StormScene score={50} tier={2} wavePercent={80} daysSinceStart={120} />);
+    rerender(<StormScene {...sceneProps} />);
     expect(orbitProps().autoRotate).toBe(true);
   });
 
@@ -146,12 +149,75 @@ describe('scene visibility and resume contract', () => {
   });
 });
 
+const sceneProps = { score: 50, tier: 2, wavePercent: 80, daysSinceStart: 120, ready: true, onReady: vi.fn(), onFailure: vi.fn() };
+
 function renderTouchScene() {
   Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 2 });
-  const result = render(<StormScene score={50} tier={2} wavePercent={80} daysSinceStart={120} />);
+  const result = render(<StormScene {...sceneProps} />);
   const viewport = result.container.querySelector<HTMLElement>('.storm-interaction-viewport')!;
   return { ...result, viewport };
 }
+
+describe('scene startup', () => {
+  it.each(['unavailable', 'denied'])('reports a %s WebGL context before renderer configuration', cause => {
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation(() => {
+      if (cause === 'denied') throw new Error('Context creation disabled');
+      return null;
+    });
+    const onFailure = vi.fn();
+    const { queryByRole } = render(<StormScene {...sceneProps} ready={false} onFailure={onFailure} />);
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    expect(queryByRole('link')).toBeNull();
+  });
+
+  it('reports context loss only while that canvas is mounted', () => {
+    const onFailure = vi.fn();
+    const { container, unmount } = render(<StormScene {...sceneProps} onFailure={onFailure} />);
+    const canvas = container.querySelector('canvas')!;
+    fireEvent(canvas, new Event('webglcontextlost'));
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    unmount();
+    fireEvent(canvas, new Event('webglcontextlost'));
+    expect(onFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it('signals readiness once, after a display render with the ship subtree committed', () => {
+    const onReady = vi.fn();
+    const page = render(<StormScene {...sceneProps} ready={false} onReady={onReady} />);
+    const boundary = Children.toArray(canvasState.children as ReactNode).find(child =>
+      isValidElement(child) && child.type === Suspense) as ReactElement<{ children: ReactNode }>;
+    const marker = Children.toArray(boundary.props.children).find(child =>
+      isValidElement<{ onReady?: () => void }>(child) && child.props.onReady === onReady) as ReactElement;
+    const scene = new Scene();
+    const previous = vi.fn();
+    scene.onAfterRender = previous;
+    vi.mocked(useThree).mockReturnValue(scene);
+    const firstFrame = render(marker);
+    const getRenderTarget = vi.fn().mockReturnValue({});
+    const getScissorTest = vi.fn().mockReturnValue(false);
+    const isContextLost = vi.fn().mockReturnValue(false);
+    const renderer = { getRenderTarget, getScissorTest, getContext: () => ({ isContextLost }) } as unknown as WebGLRenderer;
+    const draw = () => (scene.onAfterRender as (gl: WebGLRenderer) => void)(renderer);
+    draw();
+    getRenderTarget.mockReturnValue(null);
+    getScissorTest.mockReturnValue(true);
+    draw();
+    getScissorTest.mockReturnValue(false);
+    isContextLost.mockReturnValue(true);
+    draw();
+    expect(onReady).not.toHaveBeenCalled();
+    expect(page.queryByRole('link')).toBeNull();
+    isContextLost.mockReturnValue(false);
+    draw();
+    draw();
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(scene.onAfterRender).toBe(previous);
+    expect(previous).toHaveBeenCalledTimes(5);
+    firstFrame.unmount();
+    page.rerender(<StormScene {...sceneProps} ready onReady={onReady} />);
+    expect(page.getByRole('link')).toBeTruthy();
+  });
+});
 
 function touchEvent(type: string, count: number) {
   const event = new Event(type, { bubbles: true, cancelable: true });

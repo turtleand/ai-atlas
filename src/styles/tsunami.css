@@ -116,15 +116,54 @@ body.tsunami-active #root {
 /* ============================================
    3D STORM SCENE
    ============================================ */
-.storm-canvas-container {
+.tsunami-scene-panel {
   position: relative;
   width: 100%;
   height: 45vh;
   max-height: 450px;
   min-height: 250px;
   background: #0c1e35;
+}
+
+.storm-canvas-container {
+  position: absolute;
+  inset: 0;
   cursor: grab;
   touch-action: pan-y;
+}
+
+.storm-scene-status {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  text-align: center;
+  background: linear-gradient(180deg, #0a192b 12%, #183648 65%, #102838 66%, #0c1e35);
+  color: #c2cdd2;
+  font-size: 0.9rem;
+}
+
+.storm-scene-status p { margin: 0; }
+.storm-scene-status .storm-status-title {
+  margin-bottom: 0.45rem;
+  color: #f2e8d4;
+  font: 1.25rem/1.35 'Cinzel', Georgia, serif;
+}
+
+.storm-scene-status button {
+  min-height: 44px;
+  padding: 0.45rem 1.1rem;
+  border: 1px solid #ad986e;
+  border-radius: 6px;
+  background: #102838;
+  color: #fff0cd;
+  font: inherit;
+  cursor: pointer;
 }
 
 .storm-canvas-container:active {
@@ -678,12 +717,9 @@ body.tsunami-active #root {
   .tsunami-scene-panel {
     flex: 1;
     min-width: 0;
-  }
-
-  .storm-canvas-container {
-    height: 100% !important;
-    max-height: none !important;
-    min-height: 0 !important;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
   }
 
   .tsunami-controls-panel {
@@ -740,7 +776,7 @@ body.tsunami-active #root {
     height: 23px;
   }
 
-  .storm-canvas-container {
+  .tsunami-scene-panel {
     height: 40vh;
     max-height: 350px;
   }
@@ -820,8 +856,8 @@ body.tsunami-active #root {
    MOBILE LANDSCAPE — keep canvas small so
    controls are reachable by scrolling
    ============================================ */
-@media (max-width: 900px) and (orientation: landscape) {
-  .storm-canvas-container {
+@media (width < 900px) and (orientation: landscape) {
+  .tsunami-scene-panel {
     height: 35vh;
     max-height: 220px;
     min-height: 160px;
